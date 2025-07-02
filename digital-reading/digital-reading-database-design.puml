@@ -1,0 +1,422 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title 数字阅读平台 - 数据库设计架构
+
+LAYOUT_WITH_LEGEND()
+
+' 用户域数据模型
+package "用户域 (PostgreSQL)" {
+    entity "users" as users {
+        + user_id : UUID [PK]
+        --
+        username : VARCHAR(50) [UK]
+        email : VARCHAR(100) [UK]
+        phone : VARCHAR(20) [UK]
+        password_hash : VARCHAR(255)
+        avatar_url : VARCHAR(500)
+        display_name : VARCHAR(100)
+        reading_level : ENUM
+        preferred_genre : JSONB
+        reading_goal : INTEGER
+        total_reading_time : BIGINT
+        books_completed : INTEGER
+        created_at : TIMESTAMP
+        updated_at : TIMESTAMP
+        last_login_at : TIMESTAMP
+    }
+    
+    entity "user_preferences" as preferences {
+        + preference_id : UUID [PK]
+        + user_id : UUID [FK]
+        --
+        theme_mode : ENUM
+        font_family : VARCHAR(50)
+        font_size : INTEGER
+        line_height : FLOAT
+        page_background : VARCHAR(20)
+        reading_mode : ENUM
+        auto_bookmark : BOOLEAN
+        night_mode_schedule : JSONB
+        language : VARCHAR(10)
+        timezone : VARCHAR(50)
+        created_at : TIMESTAMP
+        updated_at : TIMESTAMP
+    }
+    
+    entity "reading_sessions" as sessions {
+        + session_id : UUID [PK]
+        + user_id : UUID [FK]
+        --
+        device_type : ENUM
+        device_info : JSONB
+        ip_address : INET
+        reading_duration : INTEGER
+        pages_read : INTEGER
+        session_start : TIMESTAMP
+        session_end : TIMESTAMP
+    }
+}
+
+' 图书域数据模型
+package "图书域 (MongoDB)" {
+    entity "books" as books {
+        + _id : ObjectId [PK]
+        --
+        isbn : String
+        title : String
+        subtitle : String
+        authors : Array<String>
+        publisher : String
+        publication_date : Date
+        language : String
+        category : String
+        tags : Array<String>
+        description : String
+        cover_image_url : String
+        file_formats : Array<Object>
+        file_size : Number
+        page_count : Number
+        reading_difficulty : String
+        average_rating : Number
+        rating_count : Number
+        price : Number
+        is_free : Boolean
+        copyright_status : String
+        created_at : Date
+        updated_at : Date
+    }
+    
+    entity "book_content" as content {
+        + _id : ObjectId [PK]
+        + book_id : ObjectId [FK]
+        --
+        format_type : String
+        file_url : String
+        file_path : String
+        content_hash : String
+        encryption_key : String
+        chapter_structure : Array<Object>
+        metadata : Object
+        processing_status : String
+        quality_level : String
+        created_at : Date
+        processed_at : Date
+    }
+    
+    entity "chapters" as chapters {
+        + _id : ObjectId [PK]
+        + book_id : ObjectId [FK]
+        --
+        chapter_number : Number
+        chapter_title : String
+        start_position : Number
+        end_position : Number
+        word_count : Number
+        estimated_reading_time : Number
+        content_preview : String
+        created_at : Date
+    }
+}
+
+' 阅读域数据模型
+package "阅读域 (PostgreSQL)" {
+    entity "user_library" as library {
+        + library_id : UUID [PK]
+        + user_id : UUID [FK]
+        + book_id : UUID [FK]
+        --
+        acquisition_type : ENUM
+        purchase_date : TIMESTAMP
+        price_paid : DECIMAL
+        reading_status : ENUM
+        progress_percentage : FLOAT
+        current_position : JSONB
+        last_read_at : TIMESTAMP
+        is_favorite : BOOLEAN
+        custom_tags : JSONB
+        created_at : TIMESTAMP
+        updated_at : TIMESTAMP
+    }
+    
+    entity "reading_progress" as progress {
+        + progress_id : UUID [PK]
+        + user_id : UUID [FK]
+        + book_id : UUID [FK]
+        --
+        current_chapter : INTEGER
+        current_page : INTEGER
+        current_position : JSONB
+        reading_percentage : FLOAT
+        reading_time : INTEGER
+        pages_read : INTEGER
+        words_read : INTEGER
+        session_count : INTEGER
+        last_updated : TIMESTAMP
+        sync_status : ENUM
+    }
+    
+    entity "bookmarks" as bookmarks {
+        + bookmark_id : UUID [PK]
+        + user_id : UUID [FK]
+        + book_id : UUID [FK]
+        --
+        bookmark_type : ENUM
+        position : JSONB
+        page_number : INTEGER
+        content_excerpt : TEXT
+        note : TEXT
+        color : VARCHAR(20)
+        is_shared : BOOLEAN
+        created_at : TIMESTAMP
+        updated_at : TIMESTAMP
+    }
+    
+    entity "reading_notes" as notes {
+        + note_id : UUID [PK]
+        + user_id : UUID [FK]
+        + book_id : UUID [FK]
+        --
+        note_type : ENUM
+        position : JSONB
+        selected_text : TEXT
+        note_content : TEXT
+        highlight_color : VARCHAR(20)
+        is_private : BOOLEAN
+        tags : JSONB
+        created_at : TIMESTAMP
+        updated_at : TIMESTAMP
+    }
+}
+
+' 社交域数据模型
+package "社交域 (MongoDB)" {
+    entity "book_reviews" as reviews {
+        + _id : ObjectId [PK]
+        --
+        user_id : UUID
+        book_id : ObjectId
+        rating : Number
+        review_title : String
+        review_content : String
+        reading_date : Date
+        like_count : Number
+        helpful_count : Number
+        is_spoiler : Boolean
+        moderation_status : String
+        created_at : Date
+        updated_at : Date
+    }
+    
+    entity "reading_communities" as communities {
+        + _id : ObjectId [PK]
+        --
+        community_name : String
+        description : String
+        category : String
+        member_count : Number
+        book_count : Number
+        creator_id : UUID
+        moderators : Array<UUID>
+        rules : Array<String>
+        is_private : Boolean
+        created_at : Date
+        updated_at : Date
+    }
+    
+    entity "reading_discussions" as discussions {
+        + _id : ObjectId [PK]
+        --
+        book_id : ObjectId
+        community_id : ObjectId
+        user_id : UUID
+        discussion_title : String
+        discussion_content : String
+        discussion_type : String
+        reply_count : Number
+        like_count : Number
+        is_pinned : Boolean
+        created_at : Date
+        updated_at : Date
+    }
+}
+
+' 缓存层数据模型
+package "缓存层 (Redis Cluster)" {
+    entity "reading_cache" as readingCache {
+        Key Pattern: "reading:{user_id}:{book_id}"
+        --
+        progress_data : JSON
+        bookmarks : JSON
+        notes : JSON
+        last_position : JSON
+        ttl : 86400 seconds
+    }
+    
+    entity "recommendation_cache" as recommendCache {
+        Key Pattern: "recommend:{user_id}:{category}"
+        --
+        book_recommendations : List<String>
+        user_preferences : JSON
+        reading_history : JSON
+        ttl : 3600 seconds
+    }
+    
+    entity "book_cache" as bookCache {
+        Key Pattern: "book:{book_id}"
+        --
+        book_metadata : JSON
+        chapter_list : JSON
+        rating_stats : JSON
+        ttl : 7200 seconds
+    }
+    
+    entity "user_session_cache" as userSessionCache {
+        Key Pattern: "session:{user_id}"
+        --
+        reading_settings : JSON
+        current_books : Set
+        recent_activity : List
+        ttl : 14400 seconds
+    }
+}
+
+' 搜索引擎索引
+package "搜索引擎 (Elasticsearch)" {
+    entity "books_index" as booksIndex {
+        Index: "reading-books"
+        --
+        book_id : keyword
+        title : text (analyzed)
+        authors : text (analyzed)
+        description : text (analyzed)
+        category : keyword
+        tags : keyword
+        language : keyword
+        rating : float
+        publication_date : date
+        word_count : integer
+    }
+    
+    entity "content_index" as contentIndex {
+        Index: "book-content"
+        --
+        book_id : keyword
+        chapter_id : keyword
+        content : text (analyzed)
+        chapter_title : text (analyzed)
+        page_number : integer
+        position : keyword
+    }
+}
+
+' 消息队列主题
+package "消息队列 (Apache Kafka)" {
+    entity "reading_events" as readingEvents {
+        Topic: "reading.events"
+        --
+        Partitions: 12
+        Replication: 3
+        Retention: 7 days
+        Message Types:
+        - page.turned
+        - bookmark.created
+        - note.added
+        - reading.completed
+    }
+    
+    entity "user_behavior_events" as behaviorEvents {
+        Topic: "user.behavior"
+        --
+        Partitions: 24
+        Replication: 3
+        Retention: 30 days
+        Message Types:
+        - book.opened
+        - reading.started
+        - reading.paused
+        - book.purchased
+    }
+}
+
+' 数据仓库
+package "数据仓库 (ClickHouse)" {
+    entity "reading_analytics" as analytics {
+        Table: reading_analytics_events
+        Engine: MergeTree
+        --
+        event_id : UUID
+        user_id : UUID
+        book_id : String
+        event_type : String
+        event_data : String (JSON)
+        reading_duration : UInt32
+        pages_read : UInt16
+        device_type : String
+        timestamp : DateTime
+        date : Date
+        hour : UInt8
+    }
+    
+    entity "book_metrics" as bookMetrics {
+        Table: book_metrics_daily
+        Engine: SummingMergeTree
+        --
+        date : Date
+        book_id : String
+        total_readers : UInt64
+        total_reading_time : UInt64
+        pages_read : UInt64
+        completion_rate : Float32
+        average_rating : Float32
+        retention_rate : Float32
+    }
+}
+
+' 关系连接
+users ||--o{ preferences : "user_id"
+users ||--o{ sessions : "user_id"
+users ||--o{ library : "user_id"
+users ||--o{ progress : "user_id"
+users ||--o{ bookmarks : "user_id"
+users ||--o{ notes : "user_id"
+books ||--o{ content : "book_id"
+books ||--o{ chapters : "book_id"
+library }o--|| books : "book_id"
+progress }o--|| books : "book_id"
+bookmarks }o--|| books : "book_id"
+notes }o--|| books : "book_id"
+
+note right of users
+用户核心数据表
+- 阅读偏好设置
+- 阅读目标管理
+- 多设备同步支持
+- 个人阅读统计
+end note
+
+note right of books
+图书元数据模型
+- 多格式文件支持
+- 版权状态管理
+- 分类标签系统
+- 评分统计信息
+end note
+
+note right of readingCache
+阅读状态缓存
+- 实时进度同步
+- 书签笔记缓存
+- 跨设备状态同步
+- 离线阅读支持
+end note
+
+note bottom of analytics
+阅读行为分析
+- 用户阅读习惯
+- 图书热度统计
+- 个性化推荐训练
+- 平台运营分析
+end note
+
+@enduml 

@@ -1,0 +1,124 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Dynamic.puml
+
+title 数字阅读平台 - 用户阅读体验数据流程
+
+LAYOUT_WITH_LEGEND()
+
+Person(reader, "读者用户", "数字阅读用户")
+Person(author, "作者", "内容创作者")
+
+Container(webApp, "Web阅读器", "React + Next.js")
+Container(mobileBFF, "Mobile BFF", "Node.js聚合服务")
+Container(webBFF, "Web BFF", "Next.js API Routes")
+Container(apiGateway, "API网关", "Kong网关")
+
+Container(userService, "用户服务", "用户管理")
+Container(bookService, "图书服务", "图书管理")
+Container(readingService, "阅读服务", "阅读引擎")
+Container(libraryService, "图书馆服务", "书架管理")
+Container(aiService, "AI服务", "智能阅读")
+Container(recommendService, "推荐服务", "个性化推荐")
+Container(searchService, "搜索服务", "图书搜索")
+
+ContainerDb(userDB, "用户数据库", "PostgreSQL")
+ContainerDb(bookDB, "图书数据库", "MongoDB")
+ContainerDb(readingDB, "阅读数据库", "PostgreSQL")
+ContainerDb(fileStorage, "文件存储", "MinIO/S3")
+ContainerDb(recommendCache, "推荐缓存", "Redis")
+Container(messageQueue, "消息队列", "Kafka")
+
+' === 用户注册阅读流程 ===
+Rel_D(reader, webApp, "1. 访问阅读平台", "HTTPS")
+Rel_D(webApp, webBFF, "2. 请求登录页面", "SSR")
+Rel_D(webBFF, apiGateway, "3. 获取用户信息", "HTTP")
+Rel_D(apiGateway, userService, "4. 验证用户身份", "gRPC")
+Rel_D(userService, userDB, "5. 查询用户资料", "SQL")
+Rel_U(userDB, userService, "6. 返回用户信息", "Result")
+Rel_U(userService, apiGateway, "7. 生成阅读会话", "Auth")
+Rel_U(apiGateway, webBFF, "8. 返回认证信息", "JSON")
+Rel_U(webBFF, webApp, "9. 设置阅读状态", "JWT")
+Rel_U(webApp, reader, "10. 进入个人书库", "UI展示")
+
+' === 图书搜索和发现流程 ===
+Rel_D(reader, webApp, "11. 搜索图书", "用户操作")
+Rel_D(webApp, webBFF, "12. 发送搜索请求", "API调用")
+Rel_D(webBFF, apiGateway, "13. 智能搜索查询", "HTTP POST")
+Rel_D(apiGateway, searchService, "14. 执行全文搜索", "Elasticsearch")
+Rel_D(searchService, aiService, "15. 语义搜索增强", "NLP API")
+Rel_D(searchService, bookDB, "16. 查询图书详情", "MongoDB")
+Rel_U(bookDB, searchService, "17. 返回图书信息", "Book Data")
+Rel_U(aiService, searchService, "18. 返回相关推荐", "AI结果")
+Rel_U(searchService, apiGateway, "19. 组装搜索结果", "Search Results")
+Rel_U(apiGateway, webBFF, "20. 返回图书列表", "JSON Array")
+Rel_U(webBFF, webApp, "21. 渲染搜索结果", "React组件")
+Rel_U(webApp, reader, "22. 展示图书选择", "UI展示")
+
+' === 图书添加到书架流程 ===
+Rel_D(reader, webApp, "23. 添加图书到书架", "用户操作")
+Rel_D(webApp, webBFF, "24. 提交书架请求", "API请求")
+Rel_D(webBFF, apiGateway, "25. 书架管理请求", "HTTP POST")
+Rel_D(apiGateway, libraryService, "26. 处理书架逻辑", "业务处理")
+Rel_D(libraryService, userDB, "27. 更新用户书架", "SQL Insert")
+Rel_D(libraryService, messageQueue, "28. 发布阅读事件", "Event Message")
+Rel_U(userDB, libraryService, "29. 返回书架状态", "Success")
+Rel_U(libraryService, apiGateway, "30. 返回添加结果", "Success")
+Rel_U(apiGateway, webBFF, "31. 书架更新成功", "HTTP 201")
+Rel_U(webBFF, webApp, "32. 更新书架UI", "State Update")
+
+' === 个性化推荐触发 ===
+Rel_D(messageQueue, recommendService, "33. 触发推荐更新", "User Behavior Event")
+Rel_D(recommendService, aiService, "34. 计算用户兴趣", "ML API")
+Rel_D(recommendService, bookDB, "35. 查询相似图书", "MongoDB Query")
+Rel_D(recommendService, recommendCache, "36. 更新推荐缓存", "Cache Update")
+
+' === 开始阅读流程 ===
+Rel_D(reader, webApp, "37. 点击开始阅读", "用户操作")
+Rel_D(webApp, webBFF, "38. 请求阅读权限", "API调用")
+Rel_D(webBFF, apiGateway, "39. 验证阅读权限", "HTTP GET")
+Rel_D(apiGateway, readingService, "40. 查询阅读记录", "gRPC")
+Rel_D(readingService, readingDB, "41. 获取阅读进度", "SQL Query")
+Rel_D(readingService, fileStorage, "42. 获取图书文件", "S3 API")
+Rel_U(fileStorage, readingService, "43. 返回图书内容", "File Data")
+Rel_U(readingDB, readingService, "44. 返回阅读状态", "Progress Data")
+Rel_U(readingService, apiGateway, "45. 组装阅读数据", "Reading Data")
+Rel_U(apiGateway, webBFF, "46. 返回阅读内容", "Content")
+Rel_U(webBFF, webApp, "47. 渲染阅读界面", "Reader Engine")
+Rel_U(webApp, reader, "48. 开始阅读体验", "UI展示")
+
+' === 阅读进度同步流程 ===
+Rel_D(reader, webApp, "49. 翻页/做笔记", "阅读操作")
+Rel_D(webApp, webBFF, "50. 同步阅读数据", "实时同步")
+Rel_D(webBFF, apiGateway, "51. 更新阅读进度", "HTTP PUT")
+Rel_D(apiGateway, readingService, "52. 保存阅读状态", "业务处理")
+Rel_D(readingService, readingDB, "53. 更新进度记录", "SQL Update")
+Rel_D(readingService, messageQueue, "54. 发布阅读行为", "Event Message")
+
+note right of messageQueue
+异步处理事件：
+- 阅读行为记录
+- 个性化推荐更新
+- 阅读统计分析
+- 社区动态推送
+- 成就系统触发
+end note
+
+note right of aiService
+AI智能服务：
+- 智能图书推荐
+- 阅读摘要生成
+- 智能问答助手
+- 语音朗读合成
+- 文字识别OCR
+end note
+
+note bottom of recommendCache
+推荐缓存策略：
+- 个性化图书推荐
+- 相似图书关联
+- 热门图书排行
+- 用户兴趣标签
+- 阅读行为模式
+end note
+
+@enduml 

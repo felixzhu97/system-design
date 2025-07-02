@@ -1,0 +1,306 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title 数字阅读平台 - 系统架构设计
+
+LAYOUT_TOP_DOWN()
+
+' 多端客户层
+package "多端客户层" {
+    package "Web端" {
+        [React阅读器] as ReactReader <<React>>
+        [Next.js官网] as NextSite <<Next.js>>
+        [PWA阅读器] as PWAReader <<PWA>>
+    }
+    
+    package "移动端" {
+        [React Native APP] as RNApp <<Mobile>>
+        [Flutter Lite版] as FlutterLite <<Mobile>>
+        [原生iOS阅读器] as iOSApp <<Native>>
+        [原生Android阅读器] as AndroidApp <<Native>>
+    }
+    
+    package "小程序生态" {
+        [微信读书小程序] as WeChatMP <<MiniProgram>>
+        [支付宝阅读小程序] as AlipayMP <<MiniProgram>>
+        [百度阅读小程序] as BaiduMP <<MiniProgram>>
+    }
+    
+    package "桌面端" {
+        [Electron阅读器] as ElectronApp <<Desktop>>
+        [Tauri轻量阅读器] as TauriApp <<Desktop>>
+        [macOS原生应用] as macOSApp <<Native>>
+        [Windows原生应用] as WindowsApp <<Native>>
+    }
+    
+    package "专用设备" {
+        [Kindle设备适配] as KindleDevice <<E-Reader>>
+        [墨水屏设备] as EInkDevice <<E-Reader>>
+        [智能音箱] as SmartSpeaker <<IoT>>
+        [车载系统] as CarSystem <<Automotive>>
+    }
+    
+    package "创作工具" {
+        [作者创作工具] as AuthorTool <<Professional>>
+        [编辑校对工具] as EditorTool <<Professional>>
+        [出版管理工具] as PublisherTool <<Professional>>
+    }
+}
+
+' BFF聚合层
+package "BFF聚合层（Backend for Frontend）" {
+    [Web BFF] as WebBFF <<Node.js>>
+    [Mobile BFF] as MobileBFF <<Node.js>>
+    [Reader BFF] as ReaderBFF <<Node.js>>
+    [Author BFF] as AuthorBFF <<Node.js>>
+    [Device BFF] as DeviceBFF <<Go>>
+    [Publisher BFF] as PublisherBFF <<Java>>
+}
+
+' API网关层
+package "API网关层" {
+    [API网关] as APIGateway <<Kong>>
+    [认证网关] as AuthGateway <<OAuth2>>
+    [内容网关] as ContentGateway <<Go>>
+    [文件网关] as FileGateway <<MinIO>>
+    [AI网关] as AIGateway <<FastAPI>>
+}
+
+' 核心业务域服务
+package "核心业务域服务" {
+    package "用户域" {
+        [用户服务] as UserService <<Java>>
+        [认证服务] as AuthService <<Node.js>>
+        [偏好设置服务] as PreferenceService <<Go>>
+        [阅读历史服务] as HistoryService <<Java>>
+    }
+    
+    package "图书域" {
+        [图书元数据服务] as BookMetadataService <<Node.js>>
+        [图书内容服务] as BookContentService <<Go>>
+        [版本管理服务] as VersionService <<Java>>
+        [版权管理服务] as CopyrightService <<Java>>
+    }
+    
+    package "阅读域" {
+        [阅读引擎服务] as ReadingEngineService <<Go>>
+        [进度同步服务] as ProgressService <<Node.js>>
+        [标注服务] as AnnotationService <<Java>>
+        [离线缓存服务] as OfflineService <<Go>>
+    }
+    
+    package "图书馆域" {
+        [书架管理服务] as ShelfService <<Java>>
+        [收藏服务] as FavoriteService <<Node.js>>
+        [分类服务] as CategoryService <<Go>>
+        [推荐服务] as RecommendationService <<Python>>
+    }
+    
+    package "社交域" {
+        [读书社区服务] as CommunityService <<Node.js>>
+        [评论服务] as CommentService <<Java>>
+        [分享服务] as ShareService <<Node.js>>
+        [读书笔记服务] as NoteService <<Go>>
+    }
+    
+    package "商业域" {
+        [支付服务] as PaymentService <<Java>>
+        [订阅服务] as SubscriptionService <<Java>>
+        [会员服务] as MembershipService <<Java>>
+        [营销服务] as MarketingService <<Python>>
+    }
+    
+    package "内容域" {
+        [内容管理服务] as ContentManagementService <<Java>>
+        [内容审核服务] as ModerationService <<Python>>
+        [格式转换服务] as ConversionService <<Python>>
+        [OCR识别服务] as OCRService <<Python>>
+    }
+    
+    package "搜索域" {
+        [搜索服务] as SearchService <<Java>>
+        [索引服务] as IndexService <<Python>>
+        [智能检索服务] as SmartSearchService <<Python>>
+        [全文搜索服务] as FullTextSearchService <<Elasticsearch>>
+    }
+}
+
+' AI智能服务层
+package "AI智能服务层" {
+    [内容理解AI] as ContentAI <<TensorFlow>>
+    [推荐算法AI] as RecommendAI <<PyTorch>>
+    [OCR识别AI] as OCRAI <<OpenCV>>
+    [NLP处理AI] as NLPAI <<BERT>>
+    [语音合成AI] as TTSAI <<WaveNet>>
+    [翻译AI] as TranslationAI <<Transformer>>
+    [摘要生成AI] as SummaryAI <<GPT>>
+    [问答AI] as QAAI <<ChatGPT>>
+}
+
+' 数据存储层
+package "数据存储层" {
+    package "关系型数据库" {
+        database "用户数据库" as UserDB <<PostgreSQL>>
+        database "图书元数据库" as BookMetaDB <<PostgreSQL>>
+        database "订单数据库" as OrderDB <<PostgreSQL>>
+        database "阅读记录库" as ReadingDB <<PostgreSQL>>
+    }
+    
+    package "文档数据库" {
+        database "图书内容库" as BookContentDB <<MongoDB>>
+        database "社区数据库" as CommunityDB <<MongoDB>>
+        database "日志数据库" as LogDB <<MongoDB>>
+    }
+    
+    package "图数据库" {
+        database "推荐图谱" as RecommendGraphDB <<Neo4j>>
+        database "社交关系图" as SocialGraphDB <<Neo4j>>
+    }
+    
+    package "缓存系统" {
+        database "阅读缓存" as ReadingCache <<Redis>>
+        database "推荐缓存" as RecommendCache <<Redis>>
+        database "会话缓存" as SessionCache <<Redis>>
+    }
+    
+    package "消息队列" {
+        queue "图书事件队列" as BookEventQueue <<Kafka>>
+        queue "阅读事件队列" as ReadingEventQueue <<Kafka>>
+        queue "用户行为队列" as UserBehaviorQueue <<Kafka>>
+    }
+    
+    package "搜索引擎" {
+        database "图书搜索索引" as BookSearchIndex <<Elasticsearch>>
+        database "全文搜索索引" as FullTextIndex <<Elasticsearch>>
+    }
+    
+    package "文件存储" {
+        database "图书文件存储" as BookFileStorage <<MinIO/S3>>
+        database "CDN存储" as CDNStorage <<Cloudflare>>
+        database "封面图片存储" as ImageStorage <<OSS>>
+    }
+    
+    package "数据仓库" {
+        database "阅读行为数仓" as ReadingAnalyticsDB <<ClickHouse>>
+        database "业务数据湖" as DataLake <<HDFS>>
+    }
+}
+
+' 基础设施层
+package "基础设施层" {
+    package "容器化平台" {
+        [Kubernetes集群] as K8sCluster <<Kubernetes>>
+        [Docker容器] as DockerContainer <<Docker>>
+        [服务网格] as ServiceMesh <<Istio>>
+    }
+    
+    package "监控告警" {
+        [Prometheus监控] as PrometheusMonitor <<Prometheus>>
+        [Grafana仪表板] as GrafanaDashboard <<Grafana>>
+        [ELK日志系统] as ELKSystem <<ELK>>
+        [Jaeger链路追踪] as JaegerTracing <<Jaeger>>
+    }
+    
+    package "安全防护" {
+        [API安全网关] as APISecurityGateway <<Security>>
+        [DRM版权保护] as DRMProtection <<Security>>
+        [内容加密服务] as EncryptionService <<Security>>
+    }
+    
+    package "CI/CD流水线" {
+        [Jenkins流水线] as JenkinsCI <<Jenkins>>
+        [GitLab CI] as GitLabCI <<GitLab>>
+        [自动化测试] as AutoTest <<Testing>>
+    }
+}
+
+' 外部服务集成
+package "外部服务集成" {
+    [第三方登录] as OAuthProviders <<OAuth>>
+    [支付网关] as PaymentGateway <<Payment>>
+    [短信邮件服务] as NotificationProviders <<Notification>>
+    [CDN服务商] as CDNProvider <<CDN>>
+    [云存储服务] as CloudStorage <<Cloud>>
+    [AI服务商] as AIProvider <<AI>>
+    [版权方/出版社] as Publishers <<Content>>
+    [OCR服务商] as OCRProvider <<OCR>>
+    [TTS服务商] as TTSProvider <<TTS>>
+}
+
+' 客户端连接关系
+ReactReader --> WebBFF : "HTTPS API"
+NextSite --> WebBFF : "SSR API"
+PWAReader --> WebBFF : "PWA API"
+RNApp --> MobileBFF : "Mobile API"
+FlutterLite --> MobileBFF : "Mobile API"
+ElectronApp --> ReaderBFF : "Desktop API"
+TauriApp --> ReaderBFF : "Desktop API"
+KindleDevice --> DeviceBFF : "Device API"
+AuthorTool --> AuthorBFF : "Creator API"
+PublisherTool --> PublisherBFF : "Publisher API"
+
+' BFF层连接关系
+WebBFF --> APIGateway : "HTTP/gRPC"
+MobileBFF --> APIGateway : "HTTP/gRPC"
+ReaderBFF --> APIGateway : "HTTP/gRPC"
+AuthorBFF --> APIGateway : "HTTP/gRPC"
+DeviceBFF --> APIGateway : "HTTP/gRPC"
+PublisherBFF --> APIGateway : "HTTP/gRPC"
+
+' API网关到业务服务
+APIGateway --> UserService : "用户管理"
+APIGateway --> BookMetadataService : "图书管理"
+APIGateway --> ReadingEngineService : "阅读服务"
+APIGateway --> ShelfService : "书架管理"
+APIGateway --> CommunityService : "社区服务"
+APIGateway --> PaymentService : "支付服务"
+APIGateway --> SearchService : "搜索服务"
+ContentGateway --> BookContentService : "内容服务"
+AuthGateway --> AuthService : "认证服务"
+AIGateway --> RecommendationService : "推荐服务"
+
+' 业务服务层内部连接
+UserService --> HistoryService : "阅读历史"
+BookMetadataService --> BookContentService : "内容关联"
+ReadingEngineService --> ProgressService : "进度同步"
+ShelfService --> RecommendationService : "推荐算法"
+CommunityService --> CommentService : "评论管理"
+PaymentService --> SubscriptionService : "订阅管理"
+SearchService --> IndexService : "索引构建"
+
+' AI服务连接
+RecommendationService --> RecommendAI : "推荐模型"
+ModerationService --> ContentAI : "内容理解"
+OCRService --> OCRAI : "文字识别"
+SearchService --> NLPAI : "语义搜索"
+ContentManagementService --> SummaryAI : "智能摘要"
+
+' 数据存储连接
+UserService --> UserDB : "用户数据"
+BookMetadataService --> BookMetaDB : "图书元数据"
+BookContentService --> BookContentDB : "图书内容"
+ReadingEngineService --> ReadingDB : "阅读记录"
+CommunityService --> CommunityDB : "社区数据"
+RecommendationService --> RecommendGraphDB : "推荐图谱"
+PaymentService --> OrderDB : "订单数据"
+SearchService --> BookSearchIndex : "搜索索引"
+BookContentService --> BookFileStorage : "文件存储"
+ProgressService --> ReadingCache : "进度缓存"
+
+' 基础设施连接
+UserService --> K8sCluster : "容器部署"
+BookMetadataService --> DockerContainer : "容器运行"
+ReadingEngineService --> ServiceMesh : "服务治理"
+APIGateway --> PrometheusMonitor : "监控指标"
+WebBFF --> ELKSystem : "日志收集"
+MobileBFF --> JaegerTracing : "链路追踪"
+
+' 外部服务连接
+AuthService --> OAuthProviders : "第三方登录"
+PaymentService --> PaymentGateway : "支付处理"
+BookContentService --> Publishers : "内容采购"
+OCRService --> OCRProvider : "OCR能力"
+BookFileStorage --> CDNProvider : "内容分发"
+RecommendAI --> AIProvider : "AI算力"
+
+@enduml 

@@ -1,0 +1,161 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Dynamic.puml
+
+title 新闻媒体平台 - 新闻发布与阅读数据流程
+
+LAYOUT_WITH_LEGEND()
+
+Person(reader, "新闻读者", "新闻消费者")
+Person(journalist, "记者", "新闻创作者")
+
+Container(webPortal, "新闻门户", "React + Next.js")
+Container(editorialCMS, "编辑后台", "Vue + TypeScript")
+Container(webBFF, "Web BFF", "Next.js API Routes")
+Container(editorBFF, "Editor BFF", "Node.js")
+
+Container(contentService, "内容服务", "内容管理")
+Container(editorialService, "编辑服务", "编辑工作流")
+Container(moderationService, "审核服务", "内容审核")
+Container(recommendService, "推荐服务", "AI推荐")
+Container(searchService, "搜索服务", "全文搜索")
+Container(pushService, "推送服务", "实时推送")
+
+ContainerDb(contentDB, "内容数据库", "MongoDB")
+ContainerDb(userDB, "用户数据库", "PostgreSQL")
+ContainerDb(searchIndex, "搜索索引", "Elasticsearch")
+ContainerDb(newsCache, "新闻缓存", "Redis")
+ContainerDb(mediaStorage, "媒体存储", "MinIO/S3")
+Container(messageQueue, "消息队列", "Kafka")
+Container(newsCDN, "新闻CDN", "全球内容分发")
+
+' === 新闻创作与编辑流程 ===
+Rel_D(journalist, editorialCMS, "1. 登录编辑系统", "HTTPS")
+Rel_D(editorialCMS, editorBFF, "2. 请求编辑界面", "API调用")
+Rel_D(editorBFF, editorialService, "3. 获取编辑权限", "gRPC")
+Rel_D(editorialService, userDB, "4. 验证记者身份", "SQL")
+Rel_U(userDB, editorialService, "5. 返回用户权限", "User Role")
+Rel_U(editorialService, editorBFF, "6. 生成编辑会话", "Edit Token")
+Rel_U(editorBFF, editorialCMS, "7. 返回编辑环境", "JSON")
+Rel_U(editorialCMS, journalist, "8. 进入新闻编辑", "UI展示")
+
+' === 新闻内容创作流程 ===
+Rel_D(journalist, editorialCMS, "9. 撰写新闻内容", "文本输入")
+Rel_D(editorialCMS, editorBFF, "10. 上传媒体文件", "Multipart")
+Rel_D(editorBFF, contentService, "11. 处理媒体上传", "文件处理")
+Rel_D(contentService, mediaStorage, "12. 存储媒体文件", "S3 API")
+Rel_U(mediaStorage, contentService, "13. 返回文件URL", "Media URL")
+Rel_U(contentService, editorBFF, "14. 返回媒体信息", "Media Meta")
+Rel_U(editorBFF, editorialCMS, "15. 更新编辑器", "Media Info")
+
+' === 新闻草稿保存流程 ===
+Rel_D(journalist, editorialCMS, "16. 保存新闻草稿", "用户操作")
+Rel_D(editorialCMS, editorBFF, "17. 提交草稿数据", "API请求")
+Rel_D(editorBFF, contentService, "18. 保存草稿内容", "内容管理")
+Rel_D(contentService, contentDB, "19. 存储草稿数据", "MongoDB")
+Rel_D(contentService, messageQueue, "20. 发布草稿事件", "Draft Event")
+
+' === 新闻内容审核流程 ===
+Rel_D(journalist, editorialCMS, "21. 提交审核申请", "用户操作")
+Rel_D(editorialCMS, editorBFF, "22. 发送审核请求", "Review Request")
+Rel_D(editorBFF, moderationService, "23. 启动内容审核", "AI审核")
+Rel_D(moderationService, contentDB, "24. 获取文章内容", "MongoDB")
+Rel_D(moderationService, messageQueue, "25. 发布审核事件", "Review Event")
+Rel_U(contentDB, moderationService, "26. 返回文章数据", "Article Data")
+Rel_U(moderationService, editorBFF, "27. 返回审核结果", "Review Result")
+Rel_U(editorBFF, editorialCMS, "28. 更新审核状态", "Status Update")
+Rel_U(editorialCMS, journalist, "29. 显示审核反馈", "UI反馈")
+
+' === 新闻发布流程 ===
+Rel_D(journalist, editorialCMS, "30. 确认发布新闻", "用户操作")
+Rel_D(editorialCMS, editorBFF, "31. 提交发布请求", "Publish Request")
+Rel_D(editorBFF, contentService, "32. 执行新闻发布", "发布逻辑")
+Rel_D(contentService, contentDB, "33. 更新发布状态", "Status Update")
+Rel_D(contentService, searchService, "34. 更新搜索索引", "Index Update")
+Rel_D(searchService, searchIndex, "35. 创建搜索条目", "Elasticsearch")
+Rel_D(contentService, messageQueue, "36. 发布新闻事件", "News Published")
+
+' === 新闻推送和分发流程 ===
+Rel_D(messageQueue, pushService, "37. 触发新闻推送", "Push Event")
+Rel_D(pushService, userDB, "38. 查询订阅用户", "Subscription Query")
+Rel_D(pushService, newsCDN, "39. 分发新闻内容", "CDN Distribution")
+Rel_U(userDB, pushService, "40. 返回用户列表", "User List")
+Rel_U(newsCDN, pushService, "41. 返回分发状态", "Distribution Status")
+
+' === 用户新闻发现流程 ===
+Rel_D(reader, webPortal, "42. 访问新闻网站", "HTTPS")
+Rel_D(webPortal, webBFF, "43. 请求首页内容", "API调用")
+Rel_D(webBFF, recommendService, "44. 获取个性化推荐", "推荐算法")
+Rel_D(recommendService, newsCache, "45. 查询推荐缓存", "Cache Lookup")
+Rel_D(recommendService, contentDB, "46. 查询热门新闻", "MongoDB")
+Rel_U(contentDB, recommendService, "47. 返回新闻列表", "News List")
+Rel_U(newsCache, recommendService, "48. 返回缓存内容", "Cached Data")
+Rel_U(recommendService, webBFF, "49. 生成推荐结果", "Recommendation")
+Rel_U(webBFF, webPortal, "50. 返回首页内容", "JSON Data")
+Rel_U(webPortal, reader, "51. 展示新闻列表", "UI展示")
+
+' === 新闻搜索流程 ===
+Rel_D(reader, webPortal, "52. 搜索新闻", "用户输入")
+Rel_D(webPortal, webBFF, "53. 发送搜索请求", "Search Query")
+Rel_D(webBFF, searchService, "54. 执行新闻搜索", "全文检索")
+Rel_D(searchService, searchIndex, "55. 查询搜索索引", "Elasticsearch")
+Rel_U(searchIndex, searchService, "56. 返回搜索结果", "Search Results")
+Rel_U(searchService, webBFF, "57. 处理搜索结果", "Processed Results")
+Rel_U(webBFF, webPortal, "58. 返回搜索数据", "JSON Results")
+Rel_U(webPortal, reader, "59. 展示搜索结果", "UI展示")
+
+' === 新闻阅读流程 ===
+Rel_D(reader, webPortal, "60. 点击阅读新闻", "用户操作")
+Rel_D(webPortal, webBFF, "61. 请求新闻详情", "Article Request")
+Rel_D(webBFF, contentService, "62. 获取新闻内容", "内容查询")
+Rel_D(contentService, newsCache, "63. 检查内容缓存", "Cache Check")
+Rel_D(contentService, contentDB, "64. 查询新闻详情", "MongoDB")
+Rel_U(contentDB, contentService, "65. 返回新闻内容", "Article Content")
+Rel_U(newsCache, contentService, "66. 返回缓存内容", "Cached Content")
+Rel_U(contentService, webBFF, "67. 组装新闻数据", "Complete Article")
+Rel_U(webBFF, webPortal, "68. 返回新闻详情", "JSON Content")
+Rel_U(webPortal, reader, "69. 展示新闻阅读", "Reader UI")
+
+' === 用户行为记录流程 ===
+Rel_D(webPortal, webBFF, "70. 记录阅读行为", "Analytics Event")
+Rel_D(webBFF, messageQueue, "71. 发布用户行为", "User Behavior")
+Rel_D(messageQueue, recommendService, "72. 更新用户画像", "Profile Update")
+Rel_D(recommendService, newsCache, "73. 刷新推荐缓存", "Cache Refresh")
+
+note right of moderationService
+AI内容审核：
+- 敏感内容检测
+- 虚假信息识别
+- 版权侵权检查
+- 文本质量评估
+- 图片内容审核
+end note
+
+note right of recommendService
+智能推荐算法：
+- 协同过滤推荐
+- 内容相似度匹配
+- 用户兴趣建模
+- 热点新闻推荐
+- 实时个性化调整
+end note
+
+note bottom of messageQueue
+异步事件处理：
+- 新闻发布事件
+- 用户行为记录
+- 推荐模型训练
+- 推送消息调度
+- 数据统计分析
+- 内容审核流程
+end note
+
+note bottom of newsCDN
+全球内容分发：
+- 新闻内容缓存
+- 媒体文件加速
+- 地理位置优化
+- 负载均衡分发
+- 突发流量应对
+end note
+
+@enduml 

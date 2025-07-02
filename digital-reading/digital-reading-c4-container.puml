@@ -1,0 +1,125 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title 数字阅读平台 - 容器图
+
+LAYOUT_WITH_LEGEND()
+
+' 外部用户和系统
+Person(reader, "读者用户", "数字阅读用户")
+Person(author, "作者/出版商", "内容创作和发布者")
+Person(admin, "平台管理员", "平台运营管理人员")
+
+' 多端客户层
+System_Boundary(clientLayer, "多端客户层") {
+    Container(webApp, "Web阅读器", "React 18, TypeScript, Next.js", "基于浏览器的在线阅读界面")
+    Container(mobileApp, "移动阅读器", "React Native, TypeScript", "iOS/Android原生阅读体验")
+    Container(desktopApp, "桌面阅读器", "Electron, React", "Windows/macOS/Linux桌面阅读器")
+    Container(miniProgram, "微信小程序", "TypeScript, 小程序框架", "微信生态内的轻量阅读器")
+    Container(readerDevice, "电子书设备", "Kindle, 墨水屏", "专业电子阅读设备适配")
+    Container(authorStudio, "创作者工具", "Electron, Vue 3", "作者内容创作和管理工具")
+    Container(adminPortal, "管理后台", "Vue 3, TypeScript, Element Plus", "平台管理和运营工具")
+}
+
+' BFF聚合层
+System_Boundary(bffLayer, "BFF聚合层") {
+    Container(webBFF, "Web BFF", "Next.js API Routes, TypeScript", "Web端业务聚合服务")
+    Container(mobileBFF, "Mobile BFF", "Node.js, Fastify, TypeScript", "移动端业务聚合服务")
+    Container(readerBFF, "Reader BFF", "Node.js, Express, TypeScript", "阅读器专用业务聚合")
+    Container(authorBFF, "Author BFF", "Node.js, Express, TypeScript", "创作者专用业务聚合")
+}
+
+' API网关层
+System_Boundary(gatewayLayer, "API网关层") {
+    Container(apiGateway, "API网关", "Kong, Nginx, Lua", "统一API路由、认证、限流、监控")
+    Container(authGateway, "认证网关", "Node.js, Passport.js", "统一身份认证和授权")
+    Container(contentGateway, "内容网关", "Go, 文件处理", "图书文件处理和分发")
+}
+
+' 核心业务服务层
+System_Boundary(serviceLayer, "核心业务服务层") {
+    Container(userService, "用户服务", "Java, Spring Boot", "用户注册、资料、阅读偏好管理")
+    Container(bookService, "图书服务", "Node.js, TypeScript", "图书元数据、分类、版本管理")
+    Container(readingService, "阅读服务", "Go, Gin", "阅读进度、书签、笔记管理")
+    Container(libraryService, "图书馆服务", "Java, Spring Boot", "用户书架、收藏、购买记录")
+    Container(recommendService, "推荐服务", "Python, FastAPI", "个性化图书推荐和发现")
+    Container(socialService, "社交服务", "Node.js, TypeScript", "读书社区、评论、分享")
+    Container(paymentService, "支付服务", "Java, Spring Boot", "图书购买、订阅、会员管理")
+    Container(searchService, "搜索服务", "Python, FastAPI", "图书搜索、全文检索")
+    Container(aiService, "AI服务", "Python, AI模型", "智能摘要、翻译、语音朗读")
+}
+
+' 数据存储层
+System_Boundary(dataLayer, "数据存储层") {
+    ContainerDb(userDB, "用户数据库", "PostgreSQL", "用户信息、偏好设置")
+    ContainerDb(bookDB, "图书数据库", "MongoDB", "图书元数据、内容、评论")
+    ContainerDb(readingDB, "阅读数据库", "PostgreSQL", "阅读进度、书签、笔记")
+    ContainerDb(socialDB, "社交数据库", "MongoDB", "社区内容、评论、互动")
+    ContainerDb(recommendCache, "推荐缓存", "Redis Cluster", "个性化推荐结果缓存")
+    ContainerDb(messageQueue, "消息队列", "Apache Kafka", "异步消息处理")
+    ContainerDb(searchIndex, "搜索引擎", "Elasticsearch", "图书全文搜索索引")
+    ContainerDb(fileStorage, "文件存储", "MinIO, AWS S3", "电子书文件、封面图片存储")
+    ContainerDb(analyticsDB, "数据仓库", "ClickHouse", "用户阅读行为分析数据")
+}
+
+' 基础设施层
+System_Boundary(infraLayer, "基础设施层") {
+    Container_Ext(cdnService, "CDN服务", "Cloudflare", "全球内容分发网络")
+    Container_Ext(monitorService, "监控服务", "Prometheus, Grafana", "系统监控和告警")
+    Container_Ext(logService, "日志服务", "ELK Stack", "日志收集、分析、查询")
+    Container_Ext(aiPlatform, "AI平台", "OpenAI, 自研模型", "智能阅读服务")
+}
+
+' 客户端与BFF层连接
+Rel(webApp, webBFF, "API调用", "HTTPS/REST")
+Rel(mobileApp, mobileBFF, "API调用", "HTTPS/REST")
+Rel(desktopApp, readerBFF, "API调用", "HTTPS/REST")
+Rel(miniProgram, mobileBFF, "API调用", "HTTPS/REST")
+Rel(readerDevice, readerBFF, "同步数据", "HTTPS/REST")
+Rel(authorStudio, authorBFF, "API调用", "HTTPS/REST")
+Rel(adminPortal, webBFF, "管理API", "HTTPS/REST")
+
+' BFF层与API网关连接
+Rel(webBFF, apiGateway, "服务调用", "HTTP/gRPC")
+Rel(mobileBFF, apiGateway, "服务调用", "HTTP/gRPC")
+Rel(readerBFF, apiGateway, "服务调用", "HTTP/gRPC")
+Rel(authorBFF, apiGateway, "服务调用", "HTTP/gRPC")
+
+' API网关与业务服务连接
+Rel(apiGateway, userService, "用户管理", "HTTP/gRPC")
+Rel(apiGateway, bookService, "图书管理", "HTTP/gRPC")
+Rel(apiGateway, readingService, "阅读服务", "HTTP/gRPC")
+Rel(apiGateway, libraryService, "图书馆", "HTTP/gRPC")
+Rel(apiGateway, recommendService, "推荐服务", "HTTP/gRPC")
+Rel(apiGateway, socialService, "社交功能", "HTTP/gRPC")
+Rel(apiGateway, paymentService, "支付服务", "HTTP/gRPC")
+Rel(apiGateway, searchService, "搜索功能", "HTTP/gRPC")
+Rel(apiGateway, aiService, "AI服务", "HTTP/gRPC")
+
+' 业务服务与数据存储连接
+Rel(userService, userDB, "读写操作", "JDBC/连接池")
+Rel(bookService, bookDB, "读写操作", "MongoDB Driver")
+Rel(readingService, readingDB, "读写操作", "JDBC/连接池")
+Rel(socialService, socialDB, "读写操作", "MongoDB Driver")
+Rel(recommendService, recommendCache, "缓存操作", "Redis Protocol")
+Rel(searchService, searchIndex, "搜索查询", "Elasticsearch API")
+Rel(bookService, fileStorage, "文件存储", "S3 API")
+Rel(libraryService, messageQueue, "消息发布", "Kafka Protocol")
+Rel(aiService, analyticsDB, "行为数据", "ClickHouse HTTP")
+
+' 外部服务集成
+Rel(webApp, cdnService, "静态资源", "HTTPS")
+Rel(mobileApp, cdnService, "静态资源", "HTTPS")
+Rel(aiService, aiPlatform, "AI能力", "HTTPS/API")
+Rel(recommendService, aiPlatform, "推荐算法", "HTTPS/API")
+
+' 用户访问
+Rel(reader, webApp, "Web阅读", "HTTPS")
+Rel(reader, mobileApp, "移动阅读", "原生应用")
+Rel(reader, desktopApp, "桌面阅读", "桌面应用")
+Rel(reader, miniProgram, "小程序阅读", "微信生态")
+Rel(reader, readerDevice, "设备阅读", "专用设备")
+Rel(author, authorStudio, "内容创作", "桌面应用")
+Rel(admin, adminPortal, "平台管理", "HTTPS")
+
+@enduml 

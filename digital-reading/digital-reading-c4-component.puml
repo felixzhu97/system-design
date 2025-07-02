@@ -1,0 +1,152 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title 数字阅读平台 - Web阅读器前端组件图
+
+LAYOUT_WITH_LEGEND()
+
+Person(reader, "读者", "平台用户")
+System_Ext(webBFF, "Web BFF", "Next.js API Routes")
+System_Ext(cdnService, "CDN服务", "静态资源分发")
+System_Ext(aiService, "AI服务", "智能阅读功能")
+
+Container_Boundary(webApp, "Web阅读器 (React 18 + Next.js 14)") {
+    
+    ' 路由和导航层
+    Component(appRouter, "应用路由", "Next.js App Router", "页面路由管理和导航控制")
+    Component(navigation, "导航组件", "React Components", "顶部导航、侧边栏、面包屑")
+    Component(authGuard, "路由守卫", "React HOC", "页面访问权限控制")
+    
+    ' 页面组件层
+    Component(homePage, "首页组件", "React Server Components", "书城首页、推荐展示")
+    Component(libraryPage, "书库页面", "React Client Components", "用户书架和图书管理")
+    Component(readerPage, "阅读页面", "React Components", "核心阅读界面")
+    Component(discoverPage, "发现页面", "React Components", "图书发现和推荐")
+    Component(communityPage, "社区页面", "React Components", "读书社区和讨论")
+    Component(profilePage, "个人页面", "React Components", "用户资料和设置")
+    
+    ' 阅读核心组件层
+    Component(readerEngine, "阅读引擎", "React + Canvas/WebGL", "多格式文档渲染引擎")
+    Component(epubReader, "EPUB阅读器", "React + Epub.js", "EPUB格式电子书阅读")
+    Component(pdfViewer, "PDF阅读器", "React + PDF.js", "PDF文档阅读和注释")
+    Component(comicReader, "漫画阅读器", "React + Image Viewer", "漫画图片阅读器")
+    Component(audioPlayer, "音频播放器", "React + Web Audio", "有声书播放器")
+    Component(annotationTool, "标注工具", "React Components", "书签、笔记、高亮标记")
+    Component(progressTracker, "进度追踪", "React Hooks", "阅读进度同步和管理")
+    Component(themeController, "主题控制器", "React Context", "护眼模式、夜间模式、字体调节")
+    
+    ' 业务组件层
+    Component(bookshelf, "书架组件", "React Virtual Grid", "虚拟化书架展示")
+    Component(bookCard, "图书卡片", "React Components", "图书信息展示卡片")
+    Component(searchComponent, "搜索组件", "React + Algolia", "图书搜索和筛选")
+    Component(reviewComponent, "评论组件", "React Components", "图书评论和评分")
+    Component(recommendComponent, "推荐组件", "React Components", "个性化推荐展示")
+    Component(socialComponent, "社交组件", "React Components", "读书动态和分享")
+    Component(purchaseComponent, "购买组件", "React Components", "图书购买和支付")
+    Component(aiAssistant, "AI助手", "React + WebSocket", "智能摘要、翻译、问答")
+    
+    ' 状态管理层
+    Component(globalStore, "全局状态", "Zustand Store", "应用全局状态管理")
+    Component(userStore, "用户状态", "User Store", "用户信息和认证状态")
+    Component(libraryStore, "书库状态", "Library Store", "用户书架和阅读记录")
+    Component(readerStore, "阅读状态", "Reader Store", "阅读设置和进度状态")
+    Component(cacheManager, "缓存管理", "React Query", "API数据缓存和同步")
+    
+    ' 通信服务层
+    Component(apiClient, "API客户端", "Axios + TypeScript", "HTTP请求封装和拦截")
+    Component(websocketClient, "WebSocket客户端", "Socket.io Client", "实时通信管理")
+    Component(syncService, "同步服务", "Background Sync", "离线数据同步")
+    Component(downloadService, "下载服务", "Service Worker", "图书下载和缓存")
+    
+    ' 工具服务层
+    Component(authService, "认证服务", "JWT + OAuth", "用户认证和授权")
+    Component(storageService, "存储服务", "IndexedDB", "本地图书和数据存储")
+    Component(settingsService, "设置服务", "Local Storage", "用户偏好设置管理")
+    Component(analyticsService, "分析服务", "Google Analytics", "阅读行为统计")
+    Component(errorService, "错误服务", "Sentry", "错误监控和上报")
+    Component(performanceService, "性能服务", "Web Vitals", "性能监控和优化")
+    Component(accessibilityService, "无障碍服务", "ARIA Support", "无障碍阅读支持")
+    Component(i18nService, "国际化服务", "react-i18next", "多语言支持")
+    Component(utilsLibrary, "工具库", "TypeScript Utils", "通用工具函数")
+    
+    ' 本地存储层
+    ComponentDb(localStorage, "本地存储", "LocalStorage", "用户偏好设置")
+    ComponentDb(sessionStorage, "会话存储", "SessionStorage", "临时阅读状态")
+    ComponentDb(indexedDB, "离线数据库", "IndexedDB", "图书文件和阅读数据")
+    ComponentDb(serviceWorker, "Service Worker", "PWA Cache", "离线阅读支持")
+}
+
+' 用户交互流
+Rel(reader, navigation, "页面导航", "点击/触摸")
+Rel(reader, readerEngine, "阅读操作", "翻页/缩放/滚动")
+Rel(reader, annotationTool, "标注操作", "书签/笔记/高亮")
+Rel(reader, themeController, "设置调节", "护眼/字体/亮度")
+Rel(reader, searchComponent, "图书搜索", "搜索/筛选")
+
+' 路由和页面管理
+Rel(appRouter, homePage, "路由跳转", "导航")
+Rel(appRouter, libraryPage, "路由跳转", "导航")
+Rel(appRouter, readerPage, "路由跳转", "导航")
+Rel(appRouter, discoverPage, "路由跳转", "导航")
+Rel(appRouter, communityPage, "路由跳转", "导航")
+Rel(appRouter, profilePage, "路由跳转", "导航")
+Rel(authGuard, appRouter, "权限控制", "路由拦截")
+
+' 页面与组件关系
+Rel(homePage, recommendComponent, "使用", "组件引用")
+Rel(libraryPage, bookshelf, "使用", "组件引用")
+Rel(readerPage, readerEngine, "使用", "组件引用")
+Rel(readerPage, annotationTool, "使用", "组件引用")
+Rel(discoverPage, searchComponent, "使用", "组件引用")
+Rel(communityPage, socialComponent, "使用", "组件引用")
+
+' 阅读引擎组件关系
+Rel(readerEngine, epubReader, "格式支持", "EPUB渲染")
+Rel(readerEngine, pdfViewer, "格式支持", "PDF渲染")
+Rel(readerEngine, comicReader, "格式支持", "漫画渲染")
+Rel(readerEngine, audioPlayer, "格式支持", "音频播放")
+Rel(readerEngine, progressTracker, "进度同步", "状态更新")
+Rel(readerEngine, themeController, "主题应用", "样式控制")
+
+' 组件与状态管理
+Rel(readerEngine, readerStore, "状态同步", "数据绑定")
+Rel(bookshelf, libraryStore, "书架数据", "状态订阅")
+Rel(annotationTool, readerStore, "标注数据", "状态更新")
+Rel(purchaseComponent, cacheManager, "支付缓存", "查询缓存")
+Rel(searchComponent, apiClient, "搜索请求", "API调用")
+Rel(aiAssistant, websocketClient, "实时AI", "WebSocket")
+
+' 状态管理层内部关系
+Rel(globalStore, userStore, "状态组合", "store组合")
+Rel(globalStore, libraryStore, "状态组合", "store组合")
+Rel(globalStore, readerStore, "状态组合", "store组合")
+Rel(cacheManager, apiClient, "请求缓存", "拦截器")
+
+' 通信服务层
+Rel(apiClient, webBFF, "API请求", "HTTPS/REST")
+Rel(websocketClient, webBFF, "实时通信", "WebSocket")
+Rel(syncService, storageService, "数据同步", "离线同步")
+Rel(downloadService, cdnService, "图书下载", "文件下载")
+
+' 工具服务层
+Rel(authService, apiClient, "认证拦截", "请求头添加")
+Rel(storageService, indexedDB, "数据存储", "离线存储")
+Rel(settingsService, localStorage, "设置存储", "偏好保存")
+Rel(analyticsService, globalStore, "行为统计", "事件上报")
+Rel(errorService, apiClient, "错误上报", "异常捕获")
+Rel(performanceService, serviceWorker, "性能监控", "指标收集")
+Rel(accessibilityService, readerEngine, "无障碍", "ARIA支持")
+Rel(i18nService, localStorage, "语言存储", "设置保存")
+
+' 本地存储
+Rel(userStore, localStorage, "用户信息", "本地缓存")
+Rel(libraryStore, indexedDB, "书架数据", "离线存储")
+Rel(readerStore, sessionStorage, "阅读状态", "会话存储")
+Rel(serviceWorker, indexedDB, "离线图书", "缓存管理")
+
+' AI智能服务集成
+Rel(aiAssistant, aiService, "AI功能", "HTTPS/API")
+Rel(recommendComponent, aiService, "个性化推荐", "算法调用")
+Rel(searchComponent, aiService, "智能搜索", "语义搜索")
+
+@enduml 

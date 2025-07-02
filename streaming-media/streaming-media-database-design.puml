@@ -1,0 +1,246 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title 流媒体系统 - 数据库设计图
+
+LAYOUT_WITH_LEGEND()
+
+!define RELATIONAL_COLOR #45B7D1
+!define DOCUMENT_COLOR #4ECDC4
+!define CACHE_COLOR #FF6B6B
+!define SEARCH_COLOR #9C27B0
+!define ANALYTICS_COLOR #FFA726
+!define QUEUE_COLOR #96CEB4
+
+System_Boundary(relationDB, "关系型数据库层 (PostgreSQL)") {
+    ContainerDb(userDB, "用户数据库", "PostgreSQL 15", "用户账户、认证、权限管理") <<RELATIONAL_COLOR>>
+    note right of userDB
+        **核心表结构：**
+        - users: 用户基础信息
+        - user_profiles: 用户详细资料
+        - user_preferences: 用户偏好设置
+        - user_subscriptions: 用户订阅关系
+        - user_roles: 用户角色权限
+        - oauth_tokens: 第三方登录凭证
+        - user_devices: 用户设备信息
+        - user_sessions: 用户会话管理
+    end note
+    
+    ContainerDb(transactionDB, "交易数据库", "PostgreSQL 15", "支付订单、财务数据") <<RELATIONAL_COLOR>>
+    note left of transactionDB
+        **交易表结构：**
+        - orders: 订单基础信息
+        - payments: 支付记录
+        - transactions: 交易流水
+        - gifts: 虚拟礼物配置
+        - gift_transactions: 礼物交易记录
+        - wallets: 用户钱包余额
+        - withdrawal_requests: 提现申请
+        - revenue_sharing: 收益分成配置
+    end note
+    
+    ContainerDb(configDB, "配置数据库", "PostgreSQL 15", "系统配置、业务规则") <<RELATIONAL_COLOR>>
+    note right of configDB
+        **配置表结构：**
+        - system_configs: 系统参数配置
+        - feature_flags: 功能开关
+        - rate_limits: 限流配置
+        - streaming_configs: 推流参数配置
+        - quality_presets: 视频质量预设
+        - cdn_configs: CDN配置信息
+        - api_keys: 外部服务API密钥
+    end note
+}
+
+System_Boundary(documentDB, "文档数据库层 (MongoDB)") {
+    ContainerDb(contentDB, "内容数据库", "MongoDB 7.0", "视频元数据、直播信息、频道管理") <<DOCUMENT_COLOR>>
+    note right of contentDB
+        **内容集合结构：**
+        - videos: 视频元数据信息
+        - live_streams: 直播会话信息
+        - channels: 频道/房间信息
+        - playlists: 播放列表
+        - video_transcoding: 转码任务状态
+        - thumbnails: 缩略图信息
+        - video_analytics: 视频分析数据
+        - content_tags: 内容标签体系
+    end note
+    
+    ContainerDb(socialDB, "社交数据库", "MongoDB 7.0", "评论、聊天、互动数据") <<DOCUMENT_COLOR>>
+    note left of socialDB
+        **社交集合结构：**
+        - comments: 视频评论数据
+        - chat_messages: 聊天消息记录
+        - danmaku: 弹幕数据
+        - user_follows: 用户关注关系
+        - social_feeds: 社交动态
+        - notifications: 通知消息
+        - user_interactions: 用户互动记录
+        - moderation_logs: 内容审核日志
+    end note
+    
+    ContainerDb(logDB, "日志数据库", "MongoDB 7.0", "系统日志、操作记录") <<DOCUMENT_COLOR>>
+    note right of logDB
+        **日志集合结构：**
+        - access_logs: 访问日志
+        - error_logs: 错误日志
+        - audit_logs: 审计日志
+        - streaming_logs: 推流日志
+        - performance_logs: 性能日志
+        - security_logs: 安全日志
+        - business_logs: 业务操作日志
+    end note
+}
+
+System_Boundary(cacheLayer, "缓存层 (Redis)") {
+    ContainerDb(sessionCache, "会话缓存", "Redis 7.0 Cluster", "用户会话、认证缓存") <<CACHE_COLOR>>
+    note right of sessionCache
+        **缓存数据类型：**
+        - user_sessions: 用户会话信息
+        - jwt_tokens: JWT令牌缓存
+        - login_attempts: 登录尝试计数
+        - password_reset_tokens: 密码重置令牌
+        - oauth_states: OAuth状态缓存
+        - rate_limit_counters: 限流计数器
+        - captcha_tokens: 验证码缓存
+    end note
+    
+    ContainerDb(contentCache, "内容缓存", "Redis 7.0 Cluster", "热门内容、播放列表缓存") <<CACHE_COLOR>>
+    note left of contentCache
+        **内容缓存类型：**
+        - hot_videos: 热门视频缓存
+        - recommended_content: 推荐内容缓存
+        - trending_topics: 热门话题
+        - live_stream_info: 直播状态缓存
+        - video_metadata: 视频元数据缓存
+        - playlist_cache: 播放列表缓存
+        - category_content: 分类内容缓存
+    end note
+    
+    ContainerDb(realtimeCache, "实时数据缓存", "Redis 7.0 Cluster", "实时聊天、在线用户、实时统计") <<CACHE_COLOR>>
+    note right of realtimeCache
+        **实时数据类型：**
+        - online_users: 在线用户列表
+        - live_chat_rooms: 聊天室状态
+        - real_time_stats: 实时统计数据
+        - concurrent_viewers: 并发观看人数
+        - streaming_quality: 推流质量指标
+        - danmaku_queue: 弹幕队列
+        - gift_animations: 礼物特效队列
+    end note
+}
+
+System_Boundary(searchEngine, "搜索引擎层") {
+    ContainerDb(videoSearchDB, "视频搜索", "Elasticsearch 8.0", "视频内容全文搜索、智能推荐") <<SEARCH_COLOR>>
+    note right of videoSearchDB
+        **搜索索引结构：**
+        - video_index: 视频搜索索引
+        - user_index: 用户搜索索引
+        - live_index: 直播搜索索引
+        - tag_index: 标签搜索索引
+        - transcript_index: 字幕搜索索引
+        - category_index: 分类搜索索引
+        - auto_complete: 自动完成建议
+    end note
+    
+    ContainerDb(logSearchDB, "日志搜索", "Elasticsearch 8.0", "系统日志搜索分析、监控告警") <<SEARCH_COLOR>>
+    note left of logSearchDB
+        **日志索引结构：**
+        - application_logs: 应用日志索引
+        - access_logs: 访问日志索引
+        - error_logs: 错误日志索引
+        - performance_logs: 性能日志索引
+        - security_logs: 安全日志索引
+        - audit_logs: 审计日志索引
+    end note
+}
+
+System_Boundary(analyticsLayer, "数据分析层") {
+    ContainerDb(clickhouseDB, "实时数据仓库", "ClickHouse 23.0", "用户行为分析、实时统计") <<ANALYTICS_COLOR>>
+    note right of clickhouseDB
+        **分析表结构：**
+        - user_behaviors: 用户行为事件
+        - video_play_stats: 视频播放统计
+        - live_stream_stats: 直播统计数据
+        - user_engagement: 用户参与度指标
+        - revenue_analytics: 收益分析数据
+        - content_performance: 内容表现分析
+        - geographic_stats: 地理位置统计
+        - device_analytics: 设备使用分析
+    end note
+    
+    ContainerDb(influxDB, "时序数据库", "InfluxDB 2.0", "系统监控指标、性能数据") <<ANALYTICS_COLOR>>
+    note left of influxDB
+        **时序数据类型：**
+        - system_metrics: 系统性能指标
+        - streaming_quality: 推流质量指标
+        - user_activity: 用户活动指标
+        - api_performance: API性能指标
+        - cdn_metrics: CDN性能指标
+        - database_metrics: 数据库性能指标
+        - network_metrics: 网络质量指标
+    end note
+    
+    ContainerDb(hadoopCluster, "大数据集群", "Hadoop + Hive", "离线数据分析、机器学习") <<ANALYTICS_COLOR>>
+    note right of hadoopCluster
+        **大数据处理：**
+        - 用户行为数据ETL处理
+        - 推荐算法模型训练
+        - 内容质量评估分析
+        - 用户画像构建
+        - 流失用户预测分析
+        - 内容趋势预测
+        - 广告效果分析
+    end note
+}
+
+System_Boundary(queueLayer, "消息队列层") {
+    ContainerDb(kafkaCluster, "消息队列集群", "Apache Kafka 3.0", "事件流处理、异步消息") <<QUEUE_COLOR>>
+    note right of kafkaCluster
+        **消息主题：**
+        - user_events: 用户行为事件
+        - video_events: 视频相关事件
+        - live_events: 直播事件流
+        - payment_events: 支付事件
+        - notification_events: 通知事件
+        - audit_events: 审计事件流
+        - system_events: 系统事件
+        - analytics_events: 分析事件流
+    end note
+    
+    ContainerDb(redisStream, "流数据处理", "Redis Streams", "实时事件流、消息广播") <<QUEUE_COLOR>>
+    note left of redisStream
+        **流数据类型：**
+        - live_chat_stream: 直播聊天流
+        - danmaku_stream: 弹幕数据流
+        - gift_stream: 礼物事件流
+        - notification_stream: 通知流
+        - user_activity_stream: 用户活动流
+        - system_alert_stream: 系统告警流
+    end note
+}
+
+System_Boundary(storageLayer, "文件存储层") {
+    ContainerDb(videoStorage, "视频存储", "MinIO + S3", "原始视频文件、转码后视频") <<ANALYTICS_COLOR>>
+    ContainerDb(imageStorage, "图片存储", "CDN + OSS", "缩略图、头像、封面图") <<ANALYTICS_COLOR>>
+    ContainerDb(backupStorage, "备份存储", "云存储", "数据备份、灾难恢复") <<ANALYTICS_COLOR>>
+}
+
+' 数据流关系
+Rel(userDB, sessionCache, "用户会话同步", "数据同步")
+Rel(contentDB, contentCache, "内容缓存同步", "数据同步")
+Rel(contentDB, videoSearchDB, "搜索索引同步", "数据同步")
+Rel(socialDB, realtimeCache, "实时数据同步", "数据同步")
+Rel(logDB, logSearchDB, "日志索引同步", "数据同步")
+
+' 分析数据流
+Rel(kafkaCluster, clickhouseDB, "实时数据流", "Stream Processing")
+Rel(kafkaCluster, influxDB, "监控数据流", "Time Series Data")
+Rel(clickhouseDB, hadoopCluster, "离线分析", "ETL Process")
+
+' 备份数据流
+Rel(userDB, backupStorage, "数据备份", "定期备份")
+Rel(contentDB, backupStorage, "内容备份", "定期备份")
+Rel(videoStorage, backupStorage, "视频备份", "分布式备份")
+
+@enduml 

@@ -1,0 +1,308 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title 音乐流媒体平台 - API接口设计
+
+LAYOUT_WITH_LEGEND()
+
+' 前端客户端
+Container(webPlayer, "Web播放器", "React + Next.js", "主要前端应用")
+Container(mobileApp, "移动音乐APP", "React Native", "iOS/Android应用")
+Container(desktopApp, "桌面播放器", "Electron", "桌面客户端")
+
+' BFF层
+Container(webBFF, "Web BFF", "Next.js API Routes", "Web端业务聚合")
+Container(mobileBFF, "Mobile BFF", "Node.js + Fastify", "移动端业务聚合")
+
+' API网关
+Container(apiGateway, "API网关", "Kong + Nginx", "统一API入口")
+
+' 核心API服务
+package "用户域API" {
+    Container(userAPI, "用户API服务", "Java Spring Boot", "用户管理接口")
+    note right of userAPI
+    **用户管理API (v1)**
+    
+    **用户认证:**
+    POST /api/v1/auth/register
+    POST /api/v1/auth/login
+    POST /api/v1/auth/logout
+    POST /api/v1/auth/refresh
+    
+    **用户资料:**
+    GET /api/v1/users/profile
+    PUT /api/v1/users/profile
+    GET /api/v1/users/{userId}
+    DELETE /api/v1/users/account
+    
+    **用户偏好:**
+    GET /api/v1/users/preferences
+    PUT /api/v1/users/preferences
+    GET /api/v1/users/listening-stats
+    
+    **技术栈:**
+    - Java 17 + Spring Boot 3
+    - Spring Security + JWT
+    - PostgreSQL + JPA
+    - Redis缓存
+    end note
+}
+
+package "音乐域API" {
+    Container(musicAPI, "音乐API服务", "Node.js + TypeScript", "音乐管理接口")
+    note right of musicAPI
+    **音乐管理API (v1)**
+    
+    **音乐信息:**
+    GET /api/v1/tracks/{trackId}
+    GET /api/v1/tracks
+    GET /api/v1/albums/{albumId}
+    GET /api/v1/artists/{artistId}
+    
+    **音乐发现:**
+    GET /api/v1/music/trending
+    GET /api/v1/music/new-releases
+    GET /api/v1/music/genres
+    GET /api/v1/music/charts
+    
+    **音乐详情:**
+    GET /api/v1/tracks/{trackId}/lyrics
+    GET /api/v1/tracks/{trackId}/audio-features
+    GET /api/v1/albums/{albumId}/tracks
+    GET /api/v1/artists/{artistId}/albums
+    
+    **技术栈:**
+    - Node.js 20 + TypeScript
+    - Fastify框架
+    - MongoDB + Mongoose
+    - Elasticsearch搜索
+    end note
+}
+
+package "播放域API" {
+    Container(playbackAPI, "播放API服务", "Go + Gin", "播放功能接口")
+    note right of playbackAPI
+    **播放服务API (v1)**
+    
+    **播放控制:**
+    POST /api/v1/player/play
+    POST /api/v1/player/pause
+    POST /api/v1/player/next
+    POST /api/v1/player/previous
+    PUT /api/v1/player/seek
+    PUT /api/v1/player/volume
+    
+    **播放状态:**
+    GET /api/v1/player/state
+    PUT /api/v1/player/state
+    GET /api/v1/player/queue
+    PUT /api/v1/player/queue
+    
+    **音频流:**
+    GET /api/v1/audio/{trackId}/stream
+    GET /api/v1/audio/{trackId}/url
+    
+    **技术栈:**
+    - Go + Gin框架
+    - Redis状态缓存
+    - WebSocket实时通信
+    - 音频流处理
+    end note
+}
+
+package "歌单API" {
+    Container(playlistAPI, "歌单API服务", "Go + Gin", "歌单功能接口")
+    note right of playlistAPI
+    **歌单服务API (v1)**
+    
+    **歌单管理:**
+    GET /api/v1/playlists
+    POST /api/v1/playlists
+    PUT /api/v1/playlists/{playlistId}
+    DELETE /api/v1/playlists/{playlistId}
+    
+    **歌单内容:**
+    GET /api/v1/playlists/{playlistId}/tracks
+    POST /api/v1/playlists/{playlistId}/tracks
+    DELETE /api/v1/playlists/{playlistId}/tracks/{trackId}
+    
+    **歌单协作:**
+    POST /api/v1/playlists/{playlistId}/collaborate
+    GET /api/v1/playlists/{playlistId}/followers
+    
+    **技术栈:**
+    - Go + Gin框架
+    - PostgreSQL
+    - Redis缓存
+    - WebSocket协作
+    end note
+}
+
+package "推荐API" {
+    Container(recommendAPI, "推荐API服务", "Python + FastAPI", "智能推荐接口")
+    note right of recommendAPI
+    **推荐服务API (v1)**
+    
+    **个性化推荐:**
+    GET /api/v1/recommendations/tracks
+    GET /api/v1/recommendations/albums
+    GET /api/v1/recommendations/artists
+    GET /api/v1/recommendations/playlists
+    
+    **智能电台:**
+    GET /api/v1/radio/stations
+    POST /api/v1/radio/custom
+    GET /api/v1/radio/{stationId}/tracks
+    
+    **推荐反馈:**
+    POST /api/v1/recommendations/feedback
+    GET /api/v1/recommendations/reasons
+    
+    **技术栈:**
+    - Python 3.11 + FastAPI
+    - TensorFlow推荐模型
+    - Redis缓存层
+    - ClickHouse数据仓库
+    end note
+}
+
+package "搜索API" {
+    Container(searchAPI, "搜索API服务", "Python + FastAPI", "音乐搜索接口")
+    note right of searchAPI
+    **搜索服务API (v1)**
+    
+    **音乐搜索:**
+    GET /api/v1/search/tracks
+    GET /api/v1/search/albums
+    GET /api/v1/search/artists
+    GET /api/v1/search/playlists
+    
+    **智能搜索:**
+    GET /api/v1/search/suggest
+    GET /api/v1/search/similar/{trackId}
+    POST /api/v1/search/audio-recognition
+    
+    **搜索历史:**
+    GET /api/v1/search/history
+    DELETE /api/v1/search/history
+    
+    **技术栈:**
+    - Python + FastAPI
+    - Elasticsearch 8.x
+    - AI音频识别
+    - Redis缓存
+    end note
+}
+
+package "社交API" {
+    Container(socialAPI, "社交API服务", "Node.js + TypeScript", "社交功能接口")
+    note right of socialAPI
+    **社交服务API (v1)**
+    
+    **用户关注:**
+    POST /api/v1/users/{userId}/follow
+    DELETE /api/v1/users/{userId}/unfollow
+    GET /api/v1/users/{userId}/followers
+    GET /api/v1/users/{userId}/following
+    
+    **音乐评论:**
+    GET /api/v1/tracks/{trackId}/comments
+    POST /api/v1/tracks/{trackId}/comments
+    PUT /api/v1/comments/{commentId}
+    DELETE /api/v1/comments/{commentId}
+    
+    **音乐分享:**
+    POST /api/v1/share/track
+    POST /api/v1/share/playlist
+    GET /api/v1/activities/feed
+    
+    **技术栈:**
+    - Node.js + TypeScript
+    - MongoDB + Mongoose
+    - WebSocket实时通信
+    - Redis Pub/Sub
+    end note
+}
+
+package "直播API" {
+    Container(liveAPI, "直播API服务", "Go + WebRTC", "音乐直播接口")
+    note right of liveAPI
+    **直播服务API (v1)**
+    
+    **直播管理:**
+    POST /api/v1/live/streams
+    PUT /api/v1/live/streams/{streamId}
+    DELETE /api/v1/live/streams/{streamId}
+    GET /api/v1/live/streams
+    
+    **K歌功能:**
+    POST /api/v1/karaoke/rooms
+    GET /api/v1/karaoke/rooms/{roomId}
+    POST /api/v1/karaoke/rooms/{roomId}/join
+    
+    **实时互动:**
+    WebSocket /api/v1/live/{streamId}/chat
+    POST /api/v1/live/{streamId}/gifts
+    
+    **技术栈:**
+    - Go + WebRTC
+    - RTMP流媒体
+    - WebSocket实时通信
+    - Redis消息队列
+    end note
+}
+
+package "订阅API" {
+    Container(subscriptionAPI, "订阅API服务", "Java Spring Boot", "会员订阅接口")
+    note right of subscriptionAPI
+    **订阅服务API (v1)**
+    
+    **会员管理:**
+    GET /api/v1/subscriptions/plans
+    POST /api/v1/subscriptions/subscribe
+    PUT /api/v1/subscriptions/upgrade
+    DELETE /api/v1/subscriptions/cancel
+    
+    **支付管理:**
+    POST /api/v1/payments/process
+    GET /api/v1/payments/history
+    GET /api/v1/payments/methods
+    
+    **会员权益:**
+    GET /api/v1/subscriptions/benefits
+    GET /api/v1/subscriptions/status
+    
+    **技术栈:**
+    - Java + Spring Boot
+    - PostgreSQL
+    - 第三方支付网关
+    - 加密安全
+    end note
+}
+
+' API连接关系
+webPlayer --> webBFF : "HTTPS/REST"
+mobileApp --> mobileBFF : "HTTPS/REST"
+desktopApp --> mobileBFF : "HTTPS/REST"
+
+webBFF --> apiGateway : "HTTP/gRPC"
+mobileBFF --> apiGateway : "HTTP/gRPC"
+
+apiGateway --> userAPI : "用户服务"
+apiGateway --> musicAPI : "音乐服务"
+apiGateway --> playbackAPI : "播放服务"
+apiGateway --> playlistAPI : "歌单服务"
+apiGateway --> recommendAPI : "推荐服务"
+apiGateway --> searchAPI : "搜索服务"
+apiGateway --> socialAPI : "社交服务"
+apiGateway --> liveAPI : "直播服务"
+apiGateway --> subscriptionAPI : "订阅服务"
+
+' 服务间通信
+playbackAPI ..> musicAPI : "音乐信息查询"
+recommendAPI ..> playbackAPI : "播放历史分析"
+socialAPI ..> musicAPI : "音乐信息获取"
+liveAPI ..> socialAPI : "社交互动"
+subscriptionAPI ..> userAPI : "用户状态更新"
+
+@enduml 

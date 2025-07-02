@@ -1,0 +1,187 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title 新闻媒体平台 - Web新闻门户前端组件图
+
+LAYOUT_WITH_LEGEND()
+
+Person(reader, "新闻读者", "平台用户")
+System_Ext(webBFF, "Web BFF", "Next.js API Routes")
+System_Ext(newsCDN, "新闻CDN", "内容分发网络")
+System_Ext(aiService, "AI服务", "智能推荐")
+
+Container_Boundary(webPortal, "Web新闻门户 (React 18 + Next.js 14)") {
+    
+    ' 核心新闻组件层
+    Component(newsEngine, "新闻渲染引擎", "React SSR + CSR", "新闻内容渲染和展示引擎")
+    Component(articleReader, "文章阅读器", "React Components", "新闻文章阅读和交互界面")
+    Component(mediaPlayer, "多媒体播放器", "Video.js + Audio API", "视频、音频、图片展示组件")
+    Component(commentSystem, "评论系统", "React + WebSocket", "实时评论和用户互动")
+    Component(shareComponent, "分享组件", "Social Share APIs", "新闻分享到社交平台")
+    Component(bookmarkManager, "收藏管理", "React Hooks", "新闻收藏和稍后阅读")
+    Component(offlineReader, "离线阅读", "Service Worker + Cache API", "离线新闻缓存和阅读")
+    
+    ' 新闻导航组件层
+    Component(newsNavigation, "新闻导航", "React Router", "新闻分类和频道导航")
+    Component(breadcrumb, "面包屑导航", "React Components", "新闻路径和位置导航")
+    Component(topicNavigation, "专题导航", "React Components", "热点专题和话题导航")
+    Component(liveNewsBar, "实时新闻条", "WebSocket + React", "滚动实时新闻推送")
+    Component(weatherWidget, "天气组件", "Weather API", "实时天气信息显示")
+    Component(stockTicker, "股票行情", "Finance API", "实时股票和财经数据")
+    Component(siteHeader, "网站头部", "React Components", "站点标识和主导航")
+    Component(siteFooter, "网站底部", "React Components", "站点信息和次要导航")
+    
+    ' 新闻内容组件层
+    Component(homePageNews, "首页新闻", "React Server Components", "首页新闻聚合和热点展示")
+    Component(categoryNews, "分类新闻", "React Components", "分类新闻列表和筛选")
+    Component(breakingNews, "突发新闻", "React + WebSocket", "紧急新闻推送和弹窗")
+    Component(featuredStories, "头条新闻", "React Components", "重点新闻和头条展示")
+    Component(trendingTopics, "热门话题", "React Components", "热门话题和讨论趋势")
+    Component(newsTimeline, "新闻时间线", "React Virtual Scroll", "时间线新闻展示")
+    Component(relatedNews, "相关新闻", "React Components", "相关新闻推荐和链接")
+    Component(newsGallery, "新闻图库", "React Gallery", "图片新闻和图集展示")
+    
+    ' 个性化推荐组件层
+    Component(recommendEngine, "推荐引擎", "React + AI", "个性化新闻推荐")
+    Component(userInterests, "兴趣管理", "React Components", "用户兴趣设置和管理")
+    Component(readingHistory, "阅读历史", "React Components", "历史阅读记录和追踪")
+    Component(personalizedFeed, "个性化信息流", "React Virtual List", "个人定制新闻流")
+    Component(topicSubscription, "话题订阅", "React Components", "新闻话题订阅管理")
+    Component(notificationSettings, "通知设置", "React Components", "推送通知偏好设置")
+    Component(readingPreferences, "阅读偏好", "React Components", "阅读模式和界面设置")
+    
+    ' 搜索发现组件层
+    Component(newsSearch, "新闻搜索", "React + Elasticsearch", "新闻全文搜索和筛选")
+    Component(advancedSearch, "高级搜索", "React Components", "多条件新闻搜索")
+    Component(searchSuggestions, "搜索建议", "React + Autocomplete", "智能搜索提示和补全")
+    Component(searchHistory, "搜索历史", "React Components", "搜索历史和快速访问")
+    Component(topSearches, "热门搜索", "React Components", "热门搜索词和趋势")
+    Component(newsDiscovery, "新闻发现", "React Components", "新闻探索和随机发现")
+    
+    ' 用户交互组件层
+    Component(userProfile, "用户中心", "React Components", "用户资料和设置管理")
+    Component(subscriptionManager, "订阅管理", "React Components", "付费订阅和会员管理")
+    Component(socialLogin, "社交登录", "OAuth Components", "第三方社交账号登录")
+    Component(userComments, "用户评论", "React Components", "用户评论管理和互动")
+    Component(followSystem, "关注系统", "React Components", "记者和媒体关注功能")
+    Component(newsletterSignup, "邮件订阅", "React Forms", "新闻邮件订阅和退订")
+    
+    ' 状态管理层
+    Component(globalStore, "全局状态", "Redux Toolkit", "应用全局状态管理")
+    Component(newsStore, "新闻状态", "News Slice", "新闻内容和列表状态")
+    Component(userStore, "用户状态", "User Slice", "用户信息和偏好状态")
+    Component(uiStore, "界面状态", "UI Slice", "界面交互和显示状态")
+    Component(cacheManager, "缓存管理", "RTK Query", "API数据缓存和同步")
+    
+    ' 性能优化层
+    Component(lazyLoading, "懒加载", "React Lazy + Suspense", "组件和图片懒加载")
+    Component(imageOptimization, "图片优化", "Next.js Image", "响应式图片和压缩")
+    Component(codeSpitting, "代码分割", "Dynamic Import", "按需加载和性能优化")
+    Component(prefetching, "预加载", "Link Prefetch", "新闻内容预加载")
+    Component(memoryOptimization, "内存优化", "React Memo", "组件渲染优化")
+    
+    ' 通信服务层
+    Component(apiClient, "API客户端", "Axios + TypeScript", "HTTP请求封装")
+    Component(websocketClient, "WebSocket客户端", "Socket.io", "实时通信管理")
+    Component(pushClient, "推送客户端", "Web Push API", "浏览器推送通知")
+    Component(syncService, "同步服务", "Background Sync", "离线数据同步")
+    
+    ' 工具服务层
+    Component(authService, "认证服务", "JWT + OAuth", "用户认证和授权")
+    Component(storageService, "存储服务", "LocalStorage + IndexedDB", "本地数据存储")
+    Component(trackingService, "埋点服务", "Analytics", "用户行为追踪")
+    Component(errorService, "错误服务", "Sentry", "错误监控和上报")
+    Component(performanceService, "性能服务", "Web Vitals", "性能监控和优化")
+    Component(accessibilityService, "无障碍服务", "ARIA", "无障碍功能支持")
+    Component(seoService, "SEO服务", "Meta Tags", "搜索引擎优化")
+    
+    ' 本地存储层
+    ComponentDb(newsCache, "新闻缓存", "Cache API", "新闻内容离线缓存")
+    ComponentDb(userPreferences, "用户偏好", "LocalStorage", "用户设置和偏好")
+    ComponentDb(readingProgress, "阅读进度", "IndexedDB", "阅读进度和书签")
+    ComponentDb(offlineQueue, "离线队列", "IndexedDB", "离线操作队列")
+}
+
+' 用户交互流
+Rel(reader, newsNavigation, "浏览导航", "点击/滑动")
+Rel(reader, newsSearch, "搜索新闻", "文本输入")
+Rel(reader, articleReader, "阅读新闻", "点击阅读")
+Rel(reader, commentSystem, "发表评论", "文本输入")
+Rel(reader, shareComponent, "分享新闻", "社交分享")
+
+' 核心新闻组件关系
+Rel(newsEngine, articleReader, "文章渲染", "内容展示")
+Rel(articleReader, mediaPlayer, "媒体展示", "多媒体内容")
+Rel(articleReader, commentSystem, "评论加载", "用户互动")
+Rel(articleReader, shareComponent, "分享功能", "社交传播")
+Rel(newsEngine, offlineReader, "离线缓存", "内容存储")
+
+' 导航组件关系
+Rel(siteHeader, newsNavigation, "主导航", "菜单展示")
+Rel(newsNavigation, topicNavigation, "专题导航", "话题切换")
+Rel(siteHeader, liveNewsBar, "实时新闻", "滚动播报")
+Rel(siteHeader, weatherWidget, "天气信息", "实时数据")
+Rel(siteHeader, stockTicker, "财经数据", "行情显示")
+
+' 内容组件关系
+Rel(homePageNews, featuredStories, "头条展示", "重点新闻")
+Rel(homePageNews, breakingNews, "突发新闻", "紧急推送")
+Rel(categoryNews, trendingTopics, "热门话题", "趋势展示")
+Rel(articleReader, relatedNews, "相关推荐", "关联内容")
+Rel(newsTimeline, newsGallery, "图片新闻", "可视化展示")
+
+' 推荐组件关系
+Rel(recommendEngine, personalizedFeed, "个性化推荐", "AI算法")
+Rel(userInterests, recommendEngine, "兴趣分析", "偏好数据")
+Rel(readingHistory, recommendEngine, "历史分析", "行为数据")
+Rel(personalizedFeed, topicSubscription, "话题推荐", "订阅建议")
+
+' 搜索组件关系
+Rel(newsSearch, searchSuggestions, "搜索建议", "智能提示")
+Rel(newsSearch, advancedSearch, "高级搜索", "条件筛选")
+Rel(searchHistory, newsSearch, "历史搜索", "快速访问")
+Rel(topSearches, newsSearch, "热门搜索", "趋势词汇")
+
+' 用户交互组件关系
+Rel(socialLogin, userProfile, "登录管理", "账号关联")
+Rel(userProfile, subscriptionManager, "订阅管理", "会员服务")
+Rel(userProfile, followSystem, "关注管理", "社交功能")
+Rel(userComments, commentSystem, "评论管理", "互动记录")
+
+' 状态管理关系
+Rel(newsNavigation, newsStore, "新闻状态", "状态更新")
+Rel(userProfile, userStore, "用户状态", "偏好管理")
+Rel(globalStore, uiStore, "界面状态", "交互状态")
+Rel(cacheManager, apiClient, "缓存策略", "数据缓存")
+
+' 性能优化关系
+Rel(homePageNews, lazyLoading, "懒加载", "性能优化")
+Rel(newsGallery, imageOptimization, "图片优化", "加载优化")
+Rel(newsNavigation, codeSpitting, "代码分割", "按需加载")
+Rel(relatedNews, prefetching, "预加载", "内容预取")
+
+' 通信服务关系
+Rel(apiClient, webBFF, "API请求", "HTTPS/REST")
+Rel(websocketClient, webBFF, "实时通信", "WebSocket")
+Rel(pushClient, webBFF, "推送通知", "Web Push")
+Rel(syncService, storageService, "数据同步", "离线同步")
+
+' 工具服务关系
+Rel(authService, apiClient, "认证拦截", "请求头")
+Rel(storageService, newsCache, "缓存管理", "本地存储")
+Rel(trackingService, userPreferences, "行为追踪", "用户分析")
+Rel(errorService, performanceService, "错误监控", "性能跟踪")
+Rel(seoService, newsEngine, "SEO优化", "搜索优化")
+
+' 本地存储关系
+Rel(offlineReader, newsCache, "新闻缓存", "离线存储")
+Rel(userStore, userPreferences, "偏好存储", "设置保存")
+Rel(articleReader, readingProgress, "阅读进度", "进度保存")
+Rel(syncService, offlineQueue, "离线操作", "队列管理")
+
+' 外部服务集成
+Rel(recommendEngine, aiService, "AI推荐", "算法调用")
+Rel(newsDiscovery, aiService, "智能发现", "推荐API")
+Rel(mediaPlayer, newsCDN, "媒体加载", "CDN分发")
+
+@enduml 

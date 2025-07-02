@@ -1,0 +1,130 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title 音乐流媒体平台 - 容器图
+
+LAYOUT_WITH_LEGEND()
+
+' 外部用户和系统
+Person(listener, "音乐听众", "音乐用户")
+Person(artist, "音乐艺人", "音乐创作者和发布者")
+Person(admin, "平台管理员", "平台运营管理人员")
+
+' 多端客户层
+System_Boundary(clientLayer, "多端客户层") {
+    Container(webPlayer, "Web播放器", "React 18, TypeScript, Next.js", "基于浏览器的在线音乐播放器")
+    Container(mobileApp, "移动音乐APP", "React Native, TypeScript", "iOS/Android原生音乐体验")
+    Container(desktopApp, "桌面播放器", "Electron, React", "Windows/macOS/Linux桌面音乐播放器")
+    Container(miniProgram, "微信小程序", "TypeScript, 小程序音频API", "微信生态内的轻量音乐播放器")
+    Container(carPlayer, "车载播放器", "Android Auto, CarPlay", "汽车音响系统集成")
+    Container(smartDevice, "智能设备", "Alexa, Google Home", "智能音箱、智能家居音乐控制")
+    Container(artistStudio, "艺人工作台", "Vue 3, TypeScript", "音乐上传、数据分析、粉丝管理")
+    Container(adminPortal, "管理后台", "Vue 3, Element Plus", "平台管理和内容审核工具")
+}
+
+' BFF聚合层
+System_Boundary(bffLayer, "BFF聚合层") {
+    Container(webBFF, "Web BFF", "Next.js API Routes, TypeScript", "Web端音乐业务聚合")
+    Container(mobileBFF, "Mobile BFF", "Node.js, Fastify, TypeScript", "移动端音乐业务聚合")
+    Container(playerBFF, "Player BFF", "Node.js, Express, TypeScript", "播放器专用业务聚合")
+    Container(artistBFF, "Artist BFF", "Node.js, Express, TypeScript", "艺人专用业务聚合")
+    Container(deviceBFF, "Device BFF", "Go, Gin", "智能设备业务聚合")
+}
+
+' 实时音频层
+System_Boundary(audioLayer, "实时音频层") {
+    Container(audioGateway, "音频网关", "Go, WebRTC", "音频流路由和质量控制")
+    Container(streamingEngine, "流媒体引擎", "FFmpeg, GStreamer", "音频编码和自适应流")
+    Container(audioCache, "音频缓存", "Redis + CDN", "高频音乐缓存和预加载")
+    Container(drmService, "DRM服务", "Widevine, FairPlay", "数字版权保护")
+}
+
+' 核心业务服务层
+System_Boundary(serviceLayer, "核心业务服务层") {
+    Container(userService, "用户服务", "Java, Spring Boot", "用户注册、资料、音乐偏好管理")
+    Container(musicService, "音乐服务", "Node.js, TypeScript", "音乐元数据、专辑、艺人管理")
+    Container(playlistService, "歌单服务", "Go, Gin", "歌单创建、管理、分享")
+    Container(playerService, "播放服务", "Go, 音频处理", "播放控制、进度同步、音质调节")
+    Container(recommendService, "推荐服务", "Python, ML模型", "个性化音乐推荐和电台")
+    Container(socialService, "社交服务", "Node.js, TypeScript", "音乐社区、评论、分享")
+    Container(subscriptionService, "订阅服务", "Java, Spring Boot", "会员管理、订阅计费")
+    Container(searchService, "搜索服务", "Python, Elasticsearch", "音乐搜索、智能匹配")
+    Container(liveService, "直播服务", "Go, WebRTC", "音乐直播、K歌功能")
+}
+
+' 数据存储层
+System_Boundary(dataLayer, "数据存储层") {
+    ContainerDb(userDB, "用户数据库", "PostgreSQL", "用户信息、偏好设置")
+    ContainerDb(musicDB, "音乐数据库", "MongoDB", "音乐元数据、专辑、艺人信息")
+    ContainerDb(playlistDB, "歌单数据库", "PostgreSQL", "歌单、收藏、播放历史")
+    ContainerDb(socialDB, "社交数据库", "MongoDB", "评论、动态、社区内容")
+    ContainerDb(recommendCache, "推荐缓存", "Redis Cluster", "个性化推荐结果缓存")
+    ContainerDb(playbackCache, "播放缓存", "Redis", "播放状态、进度同步")
+    ContainerDb(messageQueue, "消息队列", "Apache Kafka", "异步音乐事件处理")
+    ContainerDb(searchIndex, "搜索引擎", "Elasticsearch", "音乐全文搜索索引")
+    ContainerDb(audioStorage, "音频存储", "MinIO, AWS S3", "音乐文件、专辑封面存储")
+    ContainerDb(analyticsDB, "数据仓库", "ClickHouse", "用户播放行为分析数据")
+}
+
+' 基础设施层
+System_Boundary(infraLayer, "基础设施层") {
+    Container_Ext(audioCDN, "音频CDN", "专业音频CDN", "全球音频内容分发")
+    Container_Ext(aiPlatform, "AI推荐引擎", "TensorFlow, PyTorch", "音乐推荐算法")
+    Container_Ext(monitorService, "监控服务", "Prometheus, Grafana", "系统监控和音质监测")
+    Container_Ext(logService, "日志服务", "ELK Stack", "播放日志、错误日志收集")
+}
+
+' 客户端与BFF层连接
+Rel(webPlayer, webBFF, "API调用", "HTTPS/REST")
+Rel(mobileApp, mobileBFF, "API调用", "HTTPS/REST")
+Rel(desktopApp, playerBFF, "API调用", "HTTPS/REST")
+Rel(miniProgram, mobileBFF, "API调用", "HTTPS/REST")
+Rel(carPlayer, deviceBFF, "车载API", "HTTPS/REST")
+Rel(smartDevice, deviceBFF, "设备API", "HTTPS/REST")
+Rel(artistStudio, artistBFF, "艺人API", "HTTPS/REST")
+Rel(adminPortal, webBFF, "管理API", "HTTPS/REST")
+
+' BFF层与业务服务连接
+Rel(webBFF, userService, "用户服务", "HTTP/gRPC")
+Rel(mobileBFF, musicService, "音乐服务", "HTTP/gRPC")
+Rel(playerBFF, playerService, "播放服务", "HTTP/gRPC")
+Rel(artistBFF, musicService, "音乐管理", "HTTP/gRPC")
+Rel(deviceBFF, playerService, "设备播放", "HTTP/gRPC")
+
+' 音频流处理
+Rel(webPlayer, audioGateway, "音频流", "WebSocket/WebRTC")
+Rel(mobileApp, audioGateway, "音频流", "HTTP Live Streaming")
+Rel(desktopApp, audioGateway, "音频流", "WebSocket/原生协议")
+Rel(audioGateway, streamingEngine, "流处理", "音频管道")
+Rel(streamingEngine, audioCache, "缓存策略", "Redis Protocol")
+Rel(audioGateway, drmService, "版权验证", "DRM协议")
+
+' 业务服务与数据存储连接
+Rel(userService, userDB, "读写操作", "JDBC/连接池")
+Rel(musicService, musicDB, "读写操作", "MongoDB Driver")
+Rel(playlistService, playlistDB, "读写操作", "JDBC/连接池")
+Rel(socialService, socialDB, "读写操作", "MongoDB Driver")
+Rel(recommendService, recommendCache, "缓存操作", "Redis Protocol")
+Rel(playerService, playbackCache, "状态同步", "Redis Protocol")
+Rel(searchService, searchIndex, "搜索查询", "Elasticsearch API")
+Rel(musicService, audioStorage, "文件存储", "S3 API")
+Rel(playlistService, messageQueue, "事件发布", "Kafka Protocol")
+Rel(liveService, analyticsDB, "直播数据", "ClickHouse HTTP")
+
+' 外部服务集成
+Rel(webPlayer, audioCDN, "音频加载", "HTTPS/HLS")
+Rel(mobileApp, audioCDN, "音频加载", "HTTPS/DASH")
+Rel(recommendService, aiPlatform, "推荐算法", "HTTPS/API")
+Rel(searchService, aiPlatform, "智能搜索", "NLP API")
+
+' 用户访问
+Rel(listener, webPlayer, "Web播放", "HTTPS")
+Rel(listener, mobileApp, "移动播放", "原生应用")
+Rel(listener, desktopApp, "桌面播放", "桌面应用")
+Rel(listener, miniProgram, "小程序播放", "微信生态")
+Rel(listener, carPlayer, "车载播放", "车载系统")
+Rel(listener, smartDevice, "智能设备", "语音控制")
+Rel(artist, artistStudio, "音乐管理", "Web管理台")
+Rel(admin, adminPortal, "平台管理", "HTTPS")
+
+@enduml 

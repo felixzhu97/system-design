@@ -1,0 +1,61 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+title 数字阅读平台 - 系统上下文图
+
+LAYOUT_WITH_LEGEND()
+
+' 内部用户角色
+Person(reader, "读者用户", "使用平台阅读电子书、漫画、文档的普通用户")
+Person(author, "作者/出版商", "发布和管理图书内容的作者和出版机构")
+Person(admin, "平台管理员", "负责内容审核、用户管理、平台运营")
+Person(moderator, "社区版主", "负责读书社区的内容管理和用户互动")
+Person(librarian, "图书管理员", "负责图书分类、标签、元数据管理")
+
+' 核心数字阅读系统
+System(readingSystem, "数字阅读平台", "提供多格式电子书阅读、在线书城、社区互动、智能推荐等功能的综合阅读平台")
+
+' 外部系统集成
+System_Ext(cdnService, "CDN服务", "Cloudflare、AWS CloudFront等内容分发网络")
+System_Ext(aiService, "AI服务", "OpenAI GPT、百度文心一言等智能阅读服务")
+System_Ext(oauthProviders, "第三方登录", "微信、QQ、微博、Google、Apple登录")
+System_Ext(paymentGateway, "支付网关", "微信支付、支付宝、Stripe等支付服务")
+System_Ext(pushService, "推送服务", "极光推送、个推、Firebase等消息推送")
+System_Ext(ocrService, "OCR识别服务", "百度OCR、腾讯OCR、Google Vision等文字识别")
+System_Ext(ttsService, "语音合成服务", "科大讯飞、百度语音、Azure Speech等")
+System_Ext(translationService, "翻译服务", "Google翻译、百度翻译、腾讯翻译君")
+System_Ext(bookProviders, "图书供应商", "出版社、数字图书馆、版权方")
+System_Ext(socialPlatforms, "社交平台", "微信、微博、豆瓣、知乎等分享平台")
+System_Ext(analyticsService, "数据分析", "Google Analytics、百度统计、神策数据")
+System_Ext(emailService, "邮件服务", "SendGrid、阿里云邮件、腾讯企业邮")
+System_Ext(storageService, "云存储服务", "阿里云OSS、腾讯云COS、AWS S3")
+
+' 用户与系统交互
+Rel(reader, readingSystem, "阅读使用", "HTTPS/移动应用/桌面应用")
+Rel(author, readingSystem, "内容发布", "HTTPS/创作工具")
+Rel(admin, readingSystem, "平台管理", "HTTPS/管理后台")
+Rel(moderator, readingSystem, "社区管理", "HTTPS/审核工具")
+Rel(librarian, readingSystem, "图书管理", "HTTPS/管理工具")
+
+' 系统与外部服务交互
+Rel(readingSystem, cdnService, "内容分发", "HTTPS/CDN加速")
+Rel(readingSystem, aiService, "AI功能", "HTTPS/API调用")
+Rel(readingSystem, oauthProviders, "第三方登录", "OAuth 2.0")
+Rel(readingSystem, paymentGateway, "支付处理", "HTTPS/支付API")
+Rel(readingSystem, pushService, "消息推送", "HTTPS/推送API")
+Rel(readingSystem, ocrService, "文字识别", "HTTPS/OCR API")
+Rel(readingSystem, ttsService, "语音朗读", "HTTPS/TTS API")
+Rel(readingSystem, translationService, "翻译功能", "HTTPS/翻译API")
+Rel(readingSystem, bookProviders, "图书采购", "HTTPS/API/FTP")
+Rel(readingSystem, socialPlatforms, "内容分享", "HTTPS/开放API")
+Rel(readingSystem, analyticsService, "数据统计", "HTTPS/埋点数据")
+Rel(readingSystem, emailService, "邮件通知", "SMTP/邮件API")
+Rel(readingSystem, storageService, "文件存储", "HTTPS/存储API")
+
+' 外部用户交互
+Rel_U(reader, oauthProviders, "第三方登录", "OAuth认证")
+Rel_U(author, bookProviders, "版权授权", "商务合作")
+Rel_U(reader, paymentGateway, "图书购买", "在线支付")
+Rel_U(reader, socialPlatforms, "阅读分享", "社交分享")
+
+@enduml 

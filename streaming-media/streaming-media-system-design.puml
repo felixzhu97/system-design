@@ -1,0 +1,209 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title 流媒体系统 - 完整架构设计图
+
+LAYOUT_WITH_LEGEND()
+
+!define CLIENT_COLOR #61DAFB
+!define STREAMING_COLOR #FF6B6B
+!define SERVICE_COLOR #4ECDC4
+!define AI_COLOR #9C27B0
+!define DATA_COLOR #45B7D1
+!define INFRA_COLOR #FFA726
+
+System_Boundary(clientTier, "多端客户层") {
+    package "Web端" {
+        [Web播放器] as WebPlayer <<CLIENT_COLOR>>
+        [创作者工具] as CreatorTool <<CLIENT_COLOR>>
+        [管理后台] as AdminPanel <<CLIENT_COLOR>>
+    }
+    package "移动端" {
+        [移动APP] as MobileApp <<CLIENT_COLOR>>
+        [小程序] as MiniProgram <<CLIENT_COLOR>>
+        [移动直播工具] as MobileLive <<CLIENT_COLOR>>
+    }
+    package "大屏端" {
+        [智能电视APP] as TVApp <<CLIENT_COLOR>>
+        [投屏服务] as CastService <<CLIENT_COLOR>>
+        [车载播放器] as CarPlayer <<CLIENT_COLOR>>
+    }
+    package "桌面端" {
+        [桌面播放器] as DesktopPlayer <<CLIENT_COLOR>>
+        [OBS插件] as OBSPlugin <<CLIENT_COLOR>>
+        [直播助手] as LiveAssistant <<CLIENT_COLOR>>
+    }
+}
+
+System_Boundary(streamingTier, "直播推流层") {
+    package "推流接入" {
+        [RTMP服务器] as RTMPServer <<STREAMING_COLOR>>
+        [WebRTC网关] as WebRTCGateway <<STREAMING_COLOR>>
+        [SRT推流] as SRTServer <<STREAMING_COLOR>>
+    }
+    package "流处理" {
+        [转码集群] as TranscodingCluster <<STREAMING_COLOR>>
+        [切片服务] as SlicingService <<STREAMING_COLOR>>
+        [流分发] as StreamDistribution <<STREAMING_COLOR>>
+    }
+    package "协议支持" {
+        [HLS服务] as HLSService <<STREAMING_COLOR>>
+        [DASH服务] as DASHService <<STREAMING_COLOR>>
+        [FLV服务] as FLVService <<STREAMING_COLOR>>
+    }
+}
+
+System_Boundary(bffTier, "BFF聚合层") {
+    [Web端BFF] as WebBFF <<SERVICE_COLOR>>
+    [移动端BFF] as MobileBFF <<SERVICE_COLOR>>
+    [电视端BFF] as TVBFF <<SERVICE_COLOR>>
+    [GraphQL网关] as GraphQLGateway <<SERVICE_COLOR>>
+}
+
+System_Boundary(businessTier, "核心业务服务层") {
+    package "用户域" {
+        [用户服务] as UserService <<SERVICE_COLOR>>
+        [认证服务] as AuthService <<SERVICE_COLOR>>
+        [权限服务] as PermissionService <<SERVICE_COLOR>>
+    }
+    package "内容域" {
+        [视频服务] as VideoService <<SERVICE_COLOR>>
+        [直播服务] as LiveService <<SERVICE_COLOR>>
+        [频道服务] as ChannelService <<SERVICE_COLOR>>
+    }
+    package "互动域" {
+        [聊天服务] as ChatService <<SERVICE_COLOR>>
+        [弹幕服务] as DanmakuService <<SERVICE_COLOR>>
+        [礼物服务] as GiftService <<SERVICE_COLOR>>
+    }
+    package "推荐域" {
+        [推荐服务] as RecommendService <<SERVICE_COLOR>>
+        [搜索服务] as SearchService <<SERVICE_COLOR>>
+        [标签服务] as TagService <<SERVICE_COLOR>>
+    }
+    package "商业域" {
+        [支付服务] as PaymentService <<SERVICE_COLOR>>
+        [广告服务] as AdService <<SERVICE_COLOR>>
+        [会员服务] as MembershipService <<SERVICE_COLOR>>
+    }
+    package "分析域" {
+        [统计服务] as AnalyticsService <<SERVICE_COLOR>>
+        [监控服务] as MonitoringService <<SERVICE_COLOR>>
+        [报表服务] as ReportService <<SERVICE_COLOR>>
+    }
+}
+
+System_Boundary(aiTier, "AI智能服务层") {
+    package "内容AI" {
+        [内容审核AI] as ContentModerationAI <<AI_COLOR>>
+        [视频分析AI] as VideoAnalysisAI <<AI_COLOR>>
+        [智能剪辑AI] as VideoEditingAI <<AI_COLOR>>
+    }
+    package "推荐AI" {
+        [推荐算法] as RecommendationAI <<AI_COLOR>>
+        [用户画像] as UserProfileAI <<AI_COLOR>>
+        [内容标签AI] as ContentTaggingAI <<AI_COLOR>>
+    }
+    package "交互AI" {
+        [语音识别] as SpeechToText <<AI_COLOR>>
+        [实时翻译] as RealTimeTranslation <<AI_COLOR>>
+        [聊天机器人] as ChatBot <<AI_COLOR>>
+    }
+}
+
+System_Boundary(dataTier, "数据存储层") {
+    package "关系型存储" {
+        database "用户数据库" as UserDB <<DATA_COLOR>>
+        database "订单数据库" as OrderDB <<DATA_COLOR>>
+        database "权限数据库" as PermissionDB <<DATA_COLOR>>
+    }
+    package "文档存储" {
+        database "内容数据库" as ContentDB <<DATA_COLOR>>
+        database "聊天数据库" as ChatDB <<DATA_COLOR>>
+        database "日志数据库" as LogDB <<DATA_COLOR>>
+    }
+    package "缓存层" {
+        database "Redis集群" as RedisCluster <<DATA_COLOR>>
+        database "内存网格" as MemoryGrid <<DATA_COLOR>>
+    }
+    package "搜索引擎" {
+        database "Elasticsearch" as ElasticsearchDB <<DATA_COLOR>>
+        database "Solr集群" as SolrCluster <<DATA_COLOR>>
+    }
+    package "大数据存储" {
+        database "数据仓库" as DataWarehouse <<DATA_COLOR>>
+        database "时序数据库" as TimeSeriesDB <<DATA_COLOR>>
+        database "图数据库" as GraphDB <<DATA_COLOR>>
+    }
+}
+
+System_Boundary(infraTier, "基础设施层") {
+    package "网关层" {
+        [API网关] as APIGateway <<INFRA_COLOR>>
+        [负载均衡] as LoadBalancer <<INFRA_COLOR>>
+        [防火墙] as Firewall <<INFRA_COLOR>>
+    }
+    package "消息中间件" {
+        [消息队列] as MessageQueue <<INFRA_COLOR>>
+        [事件总线] as EventBus <<INFRA_COLOR>>
+        [流处理] as StreamProcessing <<INFRA_COLOR>>
+    }
+    package "存储服务" {
+        [对象存储] as ObjectStorage <<INFRA_COLOR>>
+        [文件系统] as FileSystem <<INFRA_COLOR>>
+        [CDN分发] as CDNDistribution <<INFRA_COLOR>>
+    }
+    package "运维监控" {
+        [监控系统] as Monitoring <<INFRA_COLOR>>
+        [日志系统] as LoggingSystem <<INFRA_COLOR>>
+        [告警系统] as AlertingSystem <<INFRA_COLOR>>
+    }
+}
+
+' 外部系统
+System_Ext(thirdPartyServices, "第三方服务", "支付、推送、社交、AI等外部服务")
+System_Ext(cdnProviders, "CDN供应商", "全球CDN网络和边缘节点")
+System_Ext(cloudServices, "云服务", "云计算、云存储、云网络服务")
+
+' 客户端到BFF层
+WebPlayer --> WebBFF : "API调用"
+MobileApp --> MobileBFF : "移动API"
+TVApp --> TVBFF : "电视API"
+CreatorTool --> GraphQLGateway : "GraphQL"
+
+' 推流层连接
+OBSPlugin --> RTMPServer : "RTMP推流"
+MobileLive --> WebRTCGateway : "WebRTC推流"
+RTMPServer --> TranscodingCluster : "转码处理"
+TranscodingCluster --> HLSService : "HLS切片"
+
+' BFF到业务服务
+WebBFF --> UserService : "用户查询"
+WebBFF --> VideoService : "视频查询"
+WebBFF --> LiveService : "直播查询"
+GraphQLGateway --> RecommendService : "推荐查询"
+
+' 业务服务间调用
+LiveService --> ChatService : "聊天集成"
+VideoService --> ContentModerationAI : "内容审核"
+RecommendService --> RecommendationAI : "推荐算法"
+SearchService --> ElasticsearchDB : "搜索查询"
+
+' 数据存储连接
+UserService --> UserDB : "用户数据"
+VideoService --> ContentDB : "内容数据"
+ChatService --> RedisCluster : "实时数据"
+AnalyticsService --> DataWarehouse : "分析数据"
+
+' 基础设施连接
+APIGateway --> businessTier : "请求路由"
+MessageQueue --> businessTier : "异步消息"
+ObjectStorage --> streamingTier : "文件存储"
+Monitoring --> infraTier : "监控数据"
+
+' 外部服务连接
+PaymentService --> thirdPartyServices : "支付处理"
+CDNDistribution --> cdnProviders : "内容分发"
+infraTier --> cloudServices : "云服务调用"
+
+@enduml 

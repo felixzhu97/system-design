@@ -1,0 +1,64 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+title 流媒体系统 - 上下文图 (Level 1)
+
+LAYOUT_WITH_LEGEND()
+
+' 用户角色定义
+Person(viewer, "观众用户", "观看直播、点播视频、互动聊天、打赏主播的普通用户")
+Person(streamer, "主播", "进行直播、管理直播间、与观众互动、收取打赏的内容创作者")
+Person(creator, "内容创作者", "上传视频、管理频道、制作短视频、经营粉丝的创作者")
+Person(moderator, "内容审核员", "审核直播内容、处理举报、管理违规行为的平台管理员")
+Person(admin, "平台管理员", "系统配置、用户管理、数据分析、运营策略的管理人员")
+
+' 核心流媒体系统
+System(streamingSystem, "流媒体平台", "提供直播、点播、短视频、社交互动、内容创作等服务的综合性流媒体平台")
+
+' 外部系统集成
+System_Ext(cdnService, "CDN分发网络", "全球内容分发、视频加速、边缘缓存服务 (Cloudflare、AWS CloudFront、阿里云CDN)")
+System_Ext(videoProcessing, "视频处理服务", "视频转码、压缩、截图、水印、AI视频分析 (FFmpeg、阿里云视频处理、腾讯云VOD)")
+System_Ext(rtmpService, "推流服务", "RTMP/WebRTC推流、直播分发、流媒体处理 (SRS、Wowza、声网Agora)")
+System_Ext(aiService, "AI智能服务", "内容审核、语音识别、智能推荐、人脸识别 (百度AI、腾讯AI、OpenAI)")
+System_Ext(paymentGateway, "支付网关", "打赏支付、会员订阅、虚拟礼品支付 (微信支付、支付宝、Stripe)")
+System_Ext(pushService, "消息推送", "直播通知、互动消息、活动推送 (JPush、个推、Firebase)")
+System_Ext(socialPlatforms, "社交平台", "第三方登录、内容分享、社交传播 (微信、微博、抖音、Facebook)")
+System_Ext(advertisingPlatform, "广告平台", "视频广告、直播广告、程序化投放 (Google Ads、Facebook Ads、字节广告)")
+System_Ext(analyticsService, "数据分析", "用户行为分析、观看数据、收益统计 (Google Analytics、神策数据、友盟)")
+System_Ext(drmService, "DRM版权保护", "视频版权保护、防盗链、加密播放 (Widevine、FairPlay、腾讯DRM)")
+System_Ext(musicLibrary, "音乐版权库", "背景音乐、音效素材、版权音乐 (网易云音乐、QQ音乐、Spotify)")
+System_Ext(liveCommerce, "直播电商", "商品展示、购买链接、电商集成 (淘宝、京东、Shopify)")
+System_Ext(cloudStorage, "云存储", "视频文件存储、图片存储、数据备份 (AWS S3、阿里云OSS、腾讯云COS)")
+System_Ext(monitoringService, "监控告警", "系统监控、性能分析、故障告警 (Prometheus、Grafana、Sentry)")
+System_Ext(emailService, "邮件服务", "通知邮件、营销邮件、验证邮件 (SendGrid、阿里云邮件、腾讯云SES)")
+
+' 用户与系统的交互
+Rel(viewer, streamingSystem, "观看直播/视频", "Web浏览器、移动APP、智能电视")
+Rel(streamer, streamingSystem, "创建直播", "OBS推流、移动直播、Web推流")
+Rel(creator, streamingSystem, "上传视频", "创作者工具、移动APP、Web后台")
+Rel(moderator, streamingSystem, "内容审核", "审核后台、移动审核工具")
+Rel(admin, streamingSystem, "平台管理", "管理后台、数据分析平台")
+
+' 系统与外部服务的集成
+Rel(streamingSystem, cdnService, "内容分发", "HTTP/HTTPS、HLS、DASH")
+Rel(streamingSystem, videoProcessing, "视频处理", "API调用、异步任务队列")
+Rel(streamingSystem, rtmpService, "推流处理", "RTMP、WebRTC、SRT协议")
+Rel(streamingSystem, aiService, "AI分析", "REST API、实时流分析")
+Rel(streamingSystem, paymentGateway, "支付处理", "支付API、webhook回调")
+Rel(streamingSystem, pushService, "消息推送", "推送API、消息队列")
+Rel(streamingSystem, socialPlatforms, "社交集成", "OAuth登录、分享API")
+Rel(streamingSystem, advertisingPlatform, "广告投放", "广告API、竞价系统")
+Rel(streamingSystem, analyticsService, "数据上报", "埋点数据、实时统计")
+Rel(streamingSystem, drmService, "版权保护", "加密API、许可证服务")
+Rel(streamingSystem, musicLibrary, "音乐授权", "版权API、音乐检索")
+Rel(streamingSystem, liveCommerce, "电商集成", "商品API、订单同步")
+Rel(streamingSystem, cloudStorage, "文件存储", "对象存储API、CDN回源")
+Rel(streamingSystem, monitoringService, "监控上报", "指标数据、日志收集")
+Rel(streamingSystem, emailService, "邮件通知", "SMTP、邮件模板API")
+
+' 外部服务间的依赖关系
+Rel(cdnService, cloudStorage, "回源拉取", "HTTP回源")
+Rel(videoProcessing, cloudStorage, "存储处理后的视频", "对象存储")
+Rel(aiService, videoProcessing, "AI视频分析", "流媒体分析")
+
+@enduml 

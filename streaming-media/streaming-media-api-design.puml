@@ -1,0 +1,181 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title 流媒体系统 - API设计图
+
+LAYOUT_WITH_LEGEND()
+
+!define API_COLOR #45B7D1
+!define STREAMING_COLOR #FF6B6B
+!define REALTIME_COLOR #9C27B0
+!define SERVICE_COLOR #4ECDC4
+
+' API网关层
+Container(apiGateway, "API网关", "Kong + Lua", "统一入口、认证、限流、监控") <<API_COLOR>>
+Container(streamingGateway, "流媒体网关", "Nginx RTMP", "推流协议转换、分发") <<STREAMING_COLOR>>
+Container(websocketGateway, "WebSocket网关", "Socket.io Cluster", "实时通信网关") <<REALTIME_COLOR>>
+
+System_Boundary(coreAPI, "核心API服务") {
+    ' 用户域API
+    Container(userAPI, "用户API", "Java Spring Boot", "用户管理、认证、权限") <<SERVICE_COLOR>>
+    note right of userAPI
+        **用户API端点：**
+        POST /api/users/register - 用户注册
+        POST /api/users/login - 用户登录
+        GET /api/users/profile - 用户信息
+        PUT /api/users/profile - 更新资料
+        POST /api/users/avatar - 上传头像
+        GET /api/users/preferences - 用户偏好
+        POST /api/users/follow - 关注用户
+        GET /api/users/following - 关注列表
+    end note
+
+    ' 视频API
+    Container(videoAPI, "视频API", "Go + Gin", "视频管理、元数据、转码") <<SERVICE_COLOR>>
+    note left of videoAPI
+        **视频API端点：**
+        POST /api/videos/upload - 视频上传
+        GET /api/videos/{id} - 视频详情
+        PUT /api/videos/{id} - 更新视频
+        DELETE /api/videos/{id} - 删除视频
+        GET /api/videos/trending - 热门视频
+        POST /api/videos/transcode - 转码任务
+        GET /api/videos/categories - 视频分类
+    end note
+
+    ' 直播API
+    Container(liveAPI, "直播API", "Node.js + Express", "直播管理、推流、观看") <<SERVICE_COLOR>>
+    note right of liveAPI
+        **直播API端点：**
+        POST /api/live/create - 创建直播间
+        GET /api/live/{id} - 直播间信息
+        POST /api/live/start - 开始直播
+        POST /api/live/stop - 结束直播
+        GET /api/live/stream-url - 获取推流地址
+        GET /api/live/play-url - 获取播放地址
+        GET /api/live/online - 在线直播列表
+    end note
+
+    ' 聊天API
+    Container(chatAPI, "聊天API", "Go + WebSocket", "实时聊天、弹幕、礼物") <<SERVICE_COLOR>>
+    note left of chatAPI
+        **聊天API端点：**
+        WebSocket /ws/chat/{roomId} - 聊天连接
+        POST /api/chat/message - 发送消息
+        GET /api/chat/history - 聊天历史
+        POST /api/chat/danmaku - 发送弹幕
+        POST /api/chat/gift - 发送礼物
+        POST /api/chat/moderate - 消息审核
+    end note
+
+    ' 推荐API
+    Container(recommendAPI, "推荐API", "Python + FastAPI", "个性化推荐、内容发现") <<SERVICE_COLOR>>
+    note right of recommendAPI
+        **推荐API端点：**
+        GET /api/recommend/videos - 推荐视频
+        GET /api/recommend/live - 推荐直播
+        POST /api/recommend/feedback - 推荐反馈
+        GET /api/recommend/trending - 实时热点
+        GET /api/recommend/personalized - 个性化推荐
+        GET /api/recommend/similar/{id} - 相似内容
+    end note
+
+    ' 搜索API
+    Container(searchAPI, "搜索API", "Java + Elasticsearch", "全文搜索、智能建议") <<SERVICE_COLOR>>
+    note left of searchAPI
+        **搜索API端点：**
+        GET /api/search/videos - 搜索视频
+        GET /api/search/users - 搜索用户
+        GET /api/search/live - 搜索直播
+        GET /api/search/suggest - 搜索建议
+        GET /api/search/autocomplete - 自动完成
+        POST /api/search/advanced - 高级搜索
+    end note
+
+    ' 支付API
+    Container(paymentAPI, "支付API", "Java Spring Boot", "支付、打赏、会员") <<SERVICE_COLOR>>
+    note right of paymentAPI
+        **支付API端点：**
+        POST /api/payment/orders - 创建订单
+        GET /api/payment/orders/{id} - 订单状态
+        POST /api/payment/gifts - 打赏支付
+        POST /api/payment/membership - 会员支付
+        GET /api/payment/history - 支付历史
+        POST /api/payment/refund - 申请退款
+    end note
+}
+
+System_Boundary(streamingAPI, "流媒体API层") {
+    Container(rtmpService, "RTMP服务", "SRS + C++", "RTMP推流接收处理") <<STREAMING_COLOR>>
+    Container(hlsService, "HLS服务", "Nginx + FFmpeg", "HLS切片和分发") <<STREAMING_COLOR>>
+    Container(webrtcService, "WebRTC服务", "Kurento + Java", "低延迟实时通信") <<STREAMING_COLOR>>
+    Container(transcodingAPI, "转码API", "FFmpeg + Go", "视频转码处理") <<STREAMING_COLOR>>
+    
+    note top of rtmpService
+        **推流协议支持：**
+        - RTMP: rtmp://server/live/{stream_key}
+        - SRT: srt://server:port/{stream_key}
+        - WebRTC: 浏览器推流
+        - RTSP: IP摄像头推流
+    end note
+}
+
+System_Boundary(realtimeAPI, "实时API层") {
+    Container(chatWebSocket, "聊天WebSocket", "Socket.io", "实时聊天消息") <<REALTIME_COLOR>>
+    Container(liveWebSocket, "直播WebSocket", "Socket.io", "直播状态推送") <<REALTIME_COLOR>>
+    Container(notificationWS, "通知WebSocket", "Socket.io", "实时通知推送") <<REALTIME_COLOR>>
+    
+    note top of chatWebSocket
+        **WebSocket事件：**
+        - message: 聊天消息
+        - danmaku: 弹幕消息  
+        - gift: 礼物特效
+        - join: 用户进入
+        - leave: 用户离开
+        - status: 在线状态
+    end note
+}
+
+' 外部API集成
+System_Boundary(externalAPI, "外部API集成") {
+    Container_Ext(cdnAPI, "CDN API", "CloudFlare + AWS", "内容分发和加速") <<API_COLOR>>
+    Container_Ext(aiAPI, "AI服务API", "百度AI + 腾讯AI", "内容审核和分析") <<API_COLOR>>
+    Container_Ext(paymentGateway, "支付网关", "微信支付 + 支付宝", "第三方支付") <<API_COLOR>>
+    Container_Ext(socialAPI, "社交API", "微信 + QQ + 微博", "第三方登录和分享") <<API_COLOR>>
+    Container_Ext(cloudAPI, "云服务API", "阿里云 + 腾讯云", "云存储和云计算") <<API_COLOR>>
+}
+
+' API网关路由
+Rel(apiGateway, userAPI, "用户请求路由", "HTTP/REST")
+Rel(apiGateway, videoAPI, "视频请求路由", "HTTP/REST")
+Rel(apiGateway, liveAPI, "直播请求路由", "HTTP/REST")
+Rel(apiGateway, chatAPI, "聊天请求路由", "HTTP/REST")
+Rel(apiGateway, recommendAPI, "推荐请求路由", "HTTP/REST")
+Rel(apiGateway, searchAPI, "搜索请求路由", "HTTP/REST")
+Rel(apiGateway, paymentAPI, "支付请求路由", "HTTP/REST")
+
+' 流媒体网关
+Rel(streamingGateway, rtmpService, "RTMP推流", "RTMP协议")
+Rel(streamingGateway, hlsService, "HLS分发", "HTTP/HLS")
+Rel(streamingGateway, webrtcService, "WebRTC连接", "WebRTC协议")
+Rel(streamingGateway, transcodingAPI, "转码请求", "HTTP/gRPC")
+
+' WebSocket网关
+Rel(websocketGateway, chatWebSocket, "聊天连接", "WebSocket")
+Rel(websocketGateway, liveWebSocket, "直播连接", "WebSocket")
+Rel(websocketGateway, notificationWS, "通知连接", "WebSocket")
+
+' 服务间调用
+Rel(liveAPI, chatAPI, "聊天室集成", "HTTP/gRPC")
+Rel(videoAPI, transcodingAPI, "转码任务", "HTTP/gRPC")
+Rel(userAPI, paymentAPI, "用户支付", "HTTP/gRPC")
+Rel(recommendAPI, videoAPI, "内容数据", "HTTP/gRPC")
+
+' 外部服务集成
+Rel(hlsService, cdnAPI, "内容分发", "HTTP/CDN")
+Rel(chatAPI, aiAPI, "内容审核", "HTTP/REST")
+Rel(paymentAPI, paymentGateway, "支付处理", "HTTP/REST")
+Rel(userAPI, socialAPI, "第三方登录", "OAuth 2.0")
+Rel(videoAPI, cloudAPI, "云存储", "S3 API")
+
+@enduml 

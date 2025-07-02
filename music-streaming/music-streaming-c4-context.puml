@@ -1,0 +1,64 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+title 音乐流媒体平台 - 系统上下文图
+
+LAYOUT_WITH_LEGEND()
+
+' 内部用户角色
+Person(listener, "音乐听众", "使用平台听音乐、创建歌单、发现新音乐的普通用户")
+Person(artist, "音乐艺人", "发布音乐作品、管理专辑、与粉丝互动的音乐创作者")
+Person(creator, "内容创作者", "制作播客、音频节目、音乐视频的创作者")
+Person(admin, "平台管理员", "负责内容审核、版权管理、平台运营")
+Person(curator, "音乐策展人", "负责音乐推荐、歌单策划、音乐分类")
+
+' 核心音乐流媒体系统
+System(musicSystem, "音乐流媒体平台", "提供音乐播放、在线电台、歌单管理、社交分享、AI推荐等功能的综合音乐平台")
+
+' 外部系统集成
+System_Ext(cdnService, "音频CDN服务", "专业音频内容分发网络，支持多码率流媒体")
+System_Ext(aiService, "AI推荐服务", "基于机器学习的音乐推荐和个性化算法")
+System_Ext(oauthProviders, "第三方登录", "Spotify、Apple、Google、微信、QQ登录")
+System_Ext(paymentGateway, "支付网关", "会员订阅、专辑购买、打赏支付")
+System_Ext(pushService, "推送服务", "新歌通知、歌单更新、社交动态推送")
+System_Ext(recordLabels, "唱片公司", "环球音乐、索尼音乐、华纳音乐等版权方")
+System_Ext(musicProviders, "音乐供应商", "独立音乐人、音乐发行平台、版权代理")
+System_Ext(socialPlatforms, "社交媒体", "微博、抖音、Instagram等分享平台")
+System_Ext(audioProcessing, "音频处理服务", "音频编码、格式转换、质量优化")
+System_Ext(lyricsProviders, "歌词服务商", "LyricFind、Musixmatch等歌词数据库")
+System_Ext(metadataServices, "音乐元数据", "Gracenote、MusicBrainz等音乐信息数据库")
+System_Ext(drmServices, "DRM版权保护", "数字版权管理和内容保护服务")
+System_Ext(analyticsService, "数据分析", "用户行为分析、音乐趋势统计")
+System_Ext(liveStreamingService, "直播服务", "音乐直播、K歌直播技术支持")
+
+' 用户与系统交互
+Rel(listener, musicSystem, "音乐播放", "HTTPS/移动应用/桌面应用")
+Rel(artist, musicSystem, "音乐发布", "HTTPS/艺人工作台")
+Rel(creator, musicSystem, "内容创作", "HTTPS/创作工具")
+Rel(admin, musicSystem, "平台管理", "HTTPS/管理后台")
+Rel(curator, musicSystem, "内容策展", "HTTPS/策展工具")
+
+' 系统与外部服务交互
+Rel(musicSystem, cdnService, "音频分发", "HTTPS/音频流")
+Rel(musicSystem, aiService, "推荐算法", "HTTPS/API调用")
+Rel(musicSystem, oauthProviders, "第三方登录", "OAuth 2.0")
+Rel(musicSystem, paymentGateway, "订阅支付", "HTTPS/支付API")
+Rel(musicSystem, pushService, "消息推送", "HTTPS/推送API")
+Rel(musicSystem, recordLabels, "版权授权", "HTTPS/API/FTP")
+Rel(musicSystem, musicProviders, "内容采购", "HTTPS/上传API")
+Rel(musicSystem, socialPlatforms, "音乐分享", "HTTPS/开放API")
+Rel(musicSystem, audioProcessing, "音频处理", "HTTPS/处理API")
+Rel(musicSystem, lyricsProviders, "歌词获取", "HTTPS/歌词API")
+Rel(musicSystem, metadataServices, "音乐信息", "HTTPS/元数据API")
+Rel(musicSystem, drmServices, "版权保护", "HTTPS/DRM API")
+Rel(musicSystem, analyticsService, "数据统计", "HTTPS/埋点数据")
+Rel(musicSystem, liveStreamingService, "直播功能", "RTMP/WebRTC")
+
+' 外部用户交互
+Rel_U(listener, oauthProviders, "第三方登录", "OAuth认证")
+Rel_U(artist, recordLabels, "版权签约", "商务合作")
+Rel_U(listener, paymentGateway, "会员订阅", "在线支付")
+Rel_U(listener, socialPlatforms, "音乐分享", "社交分享")
+Rel_U(artist, musicProviders, "音乐发行", "内容分发")
+
+@enduml 

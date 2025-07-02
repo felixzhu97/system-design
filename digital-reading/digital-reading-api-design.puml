@@ -1,0 +1,304 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title 数字阅读平台 - API接口设计
+
+LAYOUT_WITH_LEGEND()
+
+' 前端客户端
+Container(webApp, "Web阅读器", "React + Next.js", "主要前端应用")
+Container(mobileApp, "移动阅读器", "React Native", "iOS/Android应用")
+Container(desktopApp, "桌面阅读器", "Electron", "桌面客户端")
+
+' BFF层
+Container(webBFF, "Web BFF", "Next.js API Routes", "Web端业务聚合")
+Container(mobileBFF, "Mobile BFF", "Node.js + Fastify", "移动端业务聚合")
+
+' API网关
+Container(apiGateway, "API网关", "Kong + Nginx", "统一API入口")
+
+' 核心API服务
+package "用户域API" {
+    Container(userAPI, "用户API服务", "Java Spring Boot", "用户管理接口")
+    note right of userAPI
+    **用户管理API (v1)**
+    
+    **用户认证:**
+    POST /api/v1/auth/register
+    POST /api/v1/auth/login
+    POST /api/v1/auth/logout
+    POST /api/v1/auth/refresh
+    
+    **用户资料:**
+    GET /api/v1/users/profile
+    PUT /api/v1/users/profile
+    GET /api/v1/users/{userId}
+    DELETE /api/v1/users/account
+    
+    **阅读偏好:**
+    GET /api/v1/users/preferences
+    PUT /api/v1/users/preferences
+    POST /api/v1/users/reading-goals
+    GET /api/v1/users/reading-stats
+    
+    **技术栈:**
+    - Java 17 + Spring Boot 3
+    - Spring Security + JWT
+    - PostgreSQL + JPA
+    - Redis缓存
+    end note
+}
+
+package "图书域API" {
+    Container(bookAPI, "图书API服务", "Node.js + TypeScript", "图书管理接口")
+    note right of bookAPI
+    **图书管理API (v1)**
+    
+    **图书信息:**
+    GET /api/v1/books/{bookId}
+    GET /api/v1/books
+    GET /api/v1/books/featured
+    GET /api/v1/books/new-releases
+    
+    **图书分类:**
+    GET /api/v1/categories
+    GET /api/v1/categories/{categoryId}/books
+    GET /api/v1/tags
+    GET /api/v1/tags/{tag}/books
+    
+    **图书内容:**
+    GET /api/v1/books/{bookId}/content
+    GET /api/v1/books/{bookId}/chapters
+    GET /api/v1/books/{bookId}/toc
+    
+    **技术栈:**
+    - Node.js 20 + TypeScript
+    - Fastify框架
+    - MongoDB + Mongoose
+    - MinIO文件存储
+    end note
+}
+
+package "阅读域API" {
+    Container(readingAPI, "阅读API服务", "Go + Gin", "阅读功能接口")
+    note right of readingAPI
+    **阅读服务API (v1)**
+    
+    **阅读进度:**
+    GET /api/v1/reading/{bookId}/progress
+    PUT /api/v1/reading/{bookId}/progress
+    POST /api/v1/reading/{bookId}/start
+    POST /api/v1/reading/{bookId}/complete
+    
+    **书签管理:**
+    GET /api/v1/reading/{bookId}/bookmarks
+    POST /api/v1/reading/{bookId}/bookmarks
+    PUT /api/v1/bookmarks/{bookmarkId}
+    DELETE /api/v1/bookmarks/{bookmarkId}
+    
+    **笔记管理:**
+    GET /api/v1/reading/{bookId}/notes
+    POST /api/v1/reading/{bookId}/notes
+    PUT /api/v1/notes/{noteId}
+    DELETE /api/v1/notes/{noteId}
+    
+    **技术栈:**
+    - Go + Gin框架
+    - PostgreSQL
+    - Redis缓存
+    - JWT认证
+    end note
+}
+
+package "图书馆API" {
+    Container(libraryAPI, "图书馆API服务", "Java Spring Boot", "个人图书馆接口")
+    note right of libraryAPI
+    **图书馆服务API (v1)**
+    
+    **个人书架:**
+    GET /api/v1/library/books
+    POST /api/v1/library/books/{bookId}
+    DELETE /api/v1/library/books/{bookId}
+    PUT /api/v1/library/books/{bookId}/tags
+    
+    **收藏管理:**
+    GET /api/v1/library/favorites
+    POST /api/v1/library/favorites/{bookId}
+    DELETE /api/v1/library/favorites/{bookId}
+    
+    **购买记录:**
+    GET /api/v1/library/purchases
+    GET /api/v1/library/subscriptions
+    
+    **技术栈:**
+    - Java + Spring Boot
+    - PostgreSQL + JPA
+    - Redis缓存
+    - Apache Kafka事件
+    end note
+}
+
+package "推荐API" {
+    Container(recommendAPI, "推荐API服务", "Python + FastAPI", "智能推荐接口")
+    note right of recommendAPI
+    **推荐服务API (v1)**
+    
+    **个性化推荐:**
+    GET /api/v1/recommendations/books
+    GET /api/v1/recommendations/similar/{bookId}
+    GET /api/v1/recommendations/trending
+    GET /api/v1/recommendations/categories
+    
+    **推荐算法:**
+    POST /api/v1/recommendations/feedback
+    GET /api/v1/recommendations/explain/{bookId}
+    PUT /api/v1/recommendations/preferences
+    
+    **技术栈:**
+    - Python 3.11 + FastAPI
+    - TensorFlow推荐模型
+    - Redis缓存层
+    - ClickHouse数据仓库
+    end note
+}
+
+package "搜索API" {
+    Container(searchAPI, "搜索API服务", "Python + FastAPI", "全文搜索接口")
+    note right of searchAPI
+    **搜索服务API (v1)**
+    
+    **图书搜索:**
+    GET /api/v1/search/books
+    GET /api/v1/search/authors
+    GET /api/v1/search/content
+    GET /api/v1/search/suggestions
+    
+    **高级搜索:**
+    POST /api/v1/search/advanced
+    GET /api/v1/search/filters
+    GET /api/v1/search/facets
+    
+    **搜索历史:**
+    GET /api/v1/search/history
+    DELETE /api/v1/search/history
+    
+    **技术栈:**
+    - Python + FastAPI
+    - Elasticsearch 8.x
+    - NLP语义搜索
+    - Redis缓存
+    end note
+}
+
+package "社交API" {
+    Container(socialAPI, "社交API服务", "Node.js + TypeScript", "社交功能接口")
+    note right of socialAPI
+    **社交服务API (v1)**
+    
+    **评论评分:**
+    GET /api/v1/books/{bookId}/reviews
+    POST /api/v1/books/{bookId}/reviews
+    PUT /api/v1/reviews/{reviewId}
+    DELETE /api/v1/reviews/{reviewId}
+    
+    **读书社区:**
+    GET /api/v1/communities
+    POST /api/v1/communities
+    GET /api/v1/communities/{communityId}/discussions
+    POST /api/v1/communities/{communityId}/discussions
+    
+    **分享功能:**
+    POST /api/v1/share/reading-progress
+    POST /api/v1/share/book-quote
+    POST /api/v1/share/reading-note
+    
+    **技术栈:**
+    - Node.js + TypeScript
+    - MongoDB + Mongoose
+    - WebSocket实时通信
+    - Redis Pub/Sub
+    end note
+}
+
+package "支付API" {
+    Container(paymentAPI, "支付API服务", "Java Spring Boot", "支付功能接口")
+    note right of paymentAPI
+    **支付服务API (v1)**
+    
+    **图书购买:**
+    POST /api/v1/payment/books/{bookId}/purchase
+    GET /api/v1/payment/orders
+    GET /api/v1/payment/orders/{orderId}
+    
+    **订阅服务:**
+    POST /api/v1/payment/subscriptions
+    PUT /api/v1/payment/subscriptions/{subscriptionId}
+    DELETE /api/v1/payment/subscriptions/{subscriptionId}
+    
+    **会员服务:**
+    GET /api/v1/payment/membership
+    POST /api/v1/payment/membership/upgrade
+    
+    **技术栈:**
+    - Java + Spring Boot
+    - PostgreSQL
+    - 第三方支付网关
+    - 加密安全
+    end note
+}
+
+package "AI服务API" {
+    Container(aiAPI, "AI服务", "Python + AI模型", "智能功能接口")
+    note right of aiAPI
+    **AI智能API (v1)**
+    
+    **智能摘要:**
+    POST /api/v1/ai/summarize/{bookId}
+    POST /api/v1/ai/summarize/chapter
+    
+    **智能问答:**
+    POST /api/v1/ai/qa/{bookId}
+    POST /api/v1/ai/explain/concept
+    
+    **语音服务:**
+    POST /api/v1/ai/tts/{bookId}
+    POST /api/v1/ai/tts/settings
+    
+    **OCR识别:**
+    POST /api/v1/ai/ocr/image
+    POST /api/v1/ai/ocr/document
+    
+    **技术栈:**
+    - Python + FastAPI
+    - OpenAI GPT模型
+    - TTS语音合成
+    - OCR文字识别
+    end note
+}
+
+' API连接关系
+webApp --> webBFF : "HTTPS/REST"
+mobileApp --> mobileBFF : "HTTPS/REST"
+desktopApp --> mobileBFF : "HTTPS/REST"
+
+webBFF --> apiGateway : "HTTP/gRPC"
+mobileBFF --> apiGateway : "HTTP/gRPC"
+
+apiGateway --> userAPI : "用户服务"
+apiGateway --> bookAPI : "图书服务"
+apiGateway --> readingAPI : "阅读服务"
+apiGateway --> libraryAPI : "图书馆服务"
+apiGateway --> recommendAPI : "推荐服务"
+apiGateway --> searchAPI : "搜索服务"
+apiGateway --> socialAPI : "社交服务"
+apiGateway --> paymentAPI : "支付服务"
+apiGateway --> aiAPI : "AI服务"
+
+' 服务间通信
+readingAPI ..> libraryAPI : "阅读记录同步"
+recommendAPI ..> readingAPI : "用户行为分析"
+socialAPI ..> bookAPI : "图书信息查询"
+aiAPI ..> bookAPI : "内容智能处理"
+paymentAPI ..> libraryAPI : "购买记录更新"
+
+@enduml 

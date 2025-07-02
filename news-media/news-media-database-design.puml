@@ -1,0 +1,445 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title 新闻媒体平台 - 数据库设计架构
+
+LAYOUT_WITH_LEGEND()
+
+' 用户域数据模型
+package "用户域 (PostgreSQL)" {
+    entity "users" as users {
+        + user_id : UUID [PK]
+        --
+        username : VARCHAR(50) [UK]
+        email : VARCHAR(100) [UK]
+        phone : VARCHAR(20) [UK]
+        password_hash : VARCHAR(255)
+        avatar_url : VARCHAR(500)
+        display_name : VARCHAR(100)
+        bio : TEXT
+        birth_date : DATE
+        gender : ENUM
+        location : VARCHAR(100)
+        reading_preferences : JSONB
+        notification_settings : JSONB
+        subscription_type : ENUM
+        subscription_expires_at : TIMESTAMP
+        total_reading_time : BIGINT
+        articles_read : INTEGER
+        comments_count : INTEGER
+        shares_count : INTEGER
+        created_at : TIMESTAMP
+        updated_at : TIMESTAMP
+        last_active_at : TIMESTAMP
+    }
+    
+    entity "user_subscriptions" as subscriptions {
+        + subscription_id : UUID [PK]
+        + user_id : UUID [FK]
+        --
+        plan_type : ENUM
+        plan_name : VARCHAR(50)
+        price : DECIMAL
+        currency : VARCHAR(3)
+        billing_cycle : ENUM
+        start_date : TIMESTAMP
+        end_date : TIMESTAMP
+        auto_renewal : BOOLEAN
+        payment_method : JSONB
+        subscription_status : ENUM
+        trial_used : BOOLEAN
+        created_at : TIMESTAMP
+        updated_at : TIMESTAMP
+    }
+    
+    entity "user_interests" as interests {
+        + interest_id : UUID [PK]
+        + user_id : UUID [FK]
+        --
+        category_id : UUID
+        interest_score : FLOAT
+        last_interaction : TIMESTAMP
+        interaction_count : INTEGER
+        created_at : TIMESTAMP
+        updated_at : TIMESTAMP
+    }
+}
+
+' 新闻分类域数据模型
+package "分类域 (PostgreSQL)" {
+    entity "categories" as categories {
+        + category_id : UUID [PK]
+        --
+        name : VARCHAR(100) [UK]
+        slug : VARCHAR(100) [UK]
+        description : TEXT
+        parent_category_id : UUID [FK]
+        display_order : INTEGER
+        icon_url : VARCHAR(500)
+        color_theme : VARCHAR(20)
+        is_active : BOOLEAN
+        article_count : INTEGER
+        subscriber_count : INTEGER
+        created_at : TIMESTAMP
+        updated_at : TIMESTAMP
+    }
+    
+    entity "tags" as tags {
+        + tag_id : UUID [PK]
+        --
+        name : VARCHAR(100) [UK]
+        slug : VARCHAR(100) [UK]
+        description : TEXT
+        tag_type : ENUM
+        usage_count : INTEGER
+        trending_score : FLOAT
+        created_at : TIMESTAMP
+        updated_at : TIMESTAMP
+    }
+}
+
+' 新闻内容域数据模型
+package "内容域 (MongoDB)" {
+    entity "articles" as articles {
+        + _id : ObjectId [PK]
+        --
+        title : String
+        subtitle : String
+        slug : String [UK]
+        content : String
+        excerpt : String
+        author_id : UUID
+        category_id : UUID
+        tags : Array<UUID>
+        featured_image : Object
+        media_gallery : Array<Object>
+        publication_status : String
+        publication_date : Date
+        last_modified : Date
+        view_count : Number
+        like_count : Number
+        share_count : Number
+        comment_count : Number
+        reading_time : Number
+        language : String
+        is_breaking : Boolean
+        is_featured : Boolean
+        priority_score : Number
+        seo_title : String
+        seo_description : String
+        seo_keywords : Array<String>
+        metadata : Object
+        version : Number
+        created_at : Date
+        updated_at : Date
+    }
+    
+    entity "article_versions" as versions {
+        + _id : ObjectId [PK]
+        + article_id : ObjectId [FK]
+        --
+        version_number : Number
+        title : String
+        content : String
+        changes_summary : String
+        changed_by : UUID
+        change_reason : String
+        created_at : Date
+    }
+    
+    entity "media_files" as media {
+        + _id : ObjectId [PK]
+        --
+        filename : String
+        original_name : String
+        file_type : String
+        file_size : Number
+        mime_type : String
+        file_url : String
+        thumbnail_url : String
+        alt_text : String
+        caption : String
+        copyright_info : String
+        upload_by : UUID
+        usage_count : Number
+        is_public : Boolean
+        metadata : Object
+        created_at : Date
+        updated_at : Date
+    }
+}
+
+' 用户互动域数据模型
+package "互动域 (MongoDB)" {
+    entity "comments" as comments {
+        + _id : ObjectId [PK]
+        --
+        article_id : ObjectId
+        user_id : UUID
+        parent_comment_id : ObjectId
+        content : String
+        like_count : Number
+        dislike_count : Number
+        reply_count : Number
+        is_approved : Boolean
+        is_pinned : Boolean
+        moderation_status : String
+        moderation_reason : String
+        ip_address : String
+        user_agent : String
+        created_at : Date
+        updated_at : Date
+    }
+    
+    entity "user_reactions" as reactions {
+        + _id : ObjectId [PK]
+        --
+        user_id : UUID
+        target_type : String
+        target_id : String
+        reaction_type : String
+        created_at : Date
+    }
+    
+    entity "bookmarks" as bookmarks {
+        + _id : ObjectId [PK]
+        --
+        user_id : UUID
+        article_id : ObjectId
+        folder_name : String
+        notes : String
+        created_at : Date
+    }
+}
+
+' 缓存层数据模型
+package "缓存层 (Redis Cluster)" {
+    entity "article_cache" as articleCache {
+        Key Pattern: "article:{article_id}"
+        --
+        article_data : JSON
+        view_count : Number
+        like_count : Number
+        comment_count : Number
+        last_updated : Timestamp
+        ttl : 3600 seconds
+    }
+    
+    entity "recommendation_cache" as recommendCache {
+        Key Pattern: "recommend:{user_id}:{category}"
+        --
+        recommended_articles : List<String>
+        recommendation_reasons : JSON
+        generated_at : Timestamp
+        ttl : 1800 seconds
+    }
+    
+    entity "trending_cache" as trendingCache {
+        Key Pattern: "trending:{category}:{timeframe}"
+        --
+        trending_articles : List<String>
+        trending_topics : List<String>
+        trending_score : JSON
+        updated_at : Timestamp
+        ttl : 900 seconds
+    }
+    
+    entity "user_session_cache" as sessionCache {
+        Key Pattern: "session:{user_id}"
+        --
+        user_preferences : JSON
+        reading_history : List
+        search_history : List
+        notification_count : Number
+        ttl : 7200 seconds
+    }
+}
+
+' 搜索引擎索引
+package "搜索引擎 (Elasticsearch)" {
+    entity "articles_index" as articlesIndex {
+        Index: "news-articles"
+        --
+        article_id : keyword
+        title : text (analyzed)
+        content : text (analyzed)
+        excerpt : text (analyzed)
+        author_name : text (analyzed)
+        category : keyword
+        tags : keyword
+        publication_date : date
+        view_count : integer
+        priority_score : float
+        language : keyword
+        location : geo_point
+    }
+    
+    entity "users_index" as usersIndex {
+        Index: "news-users"
+        --
+        user_id : keyword
+        username : text (analyzed)
+        display_name : text (analyzed)
+        bio : text (analyzed)
+        interests : keyword
+        location : keyword
+        subscription_type : keyword
+    }
+}
+
+' 时序数据库
+package "时序数据库 (InfluxDB)" {
+    entity "reading_events" as readingEvents {
+        Measurement: reading_events
+        --
+        Tags:
+        - user_id : String
+        - article_id : String
+        - category : String
+        - device_type : String
+        Fields:
+        - reading_time : Integer
+        - scroll_depth : Float
+        - completion_rate : Float
+        - bounce_rate : Float
+        Timestamp: nanosecond precision
+    }
+    
+    entity "trending_metrics" as trendingMetrics {
+        Measurement: trending_metrics
+        --
+        Tags:
+        - article_id : String
+        - category : String
+        - topic : String
+        Fields:
+        - view_count : Integer
+        - share_count : Integer
+        - comment_count : Integer
+        - engagement_rate : Float
+        Timestamp: nanosecond precision
+    }
+}
+
+' 消息队列主题
+package "消息队列 (Apache Kafka)" {
+    entity "news_events" as newsEvents {
+        Topic: "news.events"
+        --
+        Partitions: 12
+        Replication: 3
+        Retention: 7 days
+        Message Types:
+        - article.published
+        - article.updated
+        - comment.posted
+        - user.subscribed
+    }
+    
+    entity "user_behavior_events" as behaviorEvents {
+        Topic: "user.behavior"
+        --
+        Partitions: 24
+        Replication: 3
+        Retention: 30 days
+        Message Types:
+        - article.viewed
+        - article.shared
+        - search.performed
+        - category.browsed
+    }
+}
+
+' 数据仓库
+package "数据仓库 (ClickHouse)" {
+    entity "news_analytics" as analytics {
+        Table: news_analytics_events
+        Engine: MergeTree
+        --
+        event_id : UUID
+        user_id : UUID
+        article_id : String
+        category : String
+        event_type : String
+        event_timestamp : DateTime
+        session_id : String
+        device_type : String
+        user_agent : String
+        referrer : String
+        location : String
+        reading_duration : UInt32
+        scroll_depth : Float32
+        completion_rate : Float32
+        date : Date
+        hour : UInt8
+    }
+    
+    entity "content_metrics" as contentMetrics {
+        Table: content_metrics_daily
+        Engine: SummingMergeTree
+        --
+        date : Date
+        article_id : String
+        category : String
+        author_id : String
+        total_views : UInt64
+        unique_readers : UInt64
+        total_reading_time : UInt64
+        average_reading_time : Float32
+        bounce_rate : Float32
+        engagement_rate : Float32
+        share_count : UInt64
+        comment_count : UInt64
+        like_count : UInt64
+    }
+}
+
+' 关系连接
+users ||--o{ subscriptions : "user_id"
+users ||--o{ interests : "user_id"
+categories ||--o{ categories : "parent_category_id"
+articles }o--|| categories : "category_id"
+articles ||--o{ versions : "article_id"
+articles ||--o{ comments : "article_id"
+users ||--o{ comments : "user_id"
+users ||--o{ reactions : "user_id"
+users ||--o{ bookmarks : "user_id"
+comments ||--o{ comments : "parent_comment_id"
+
+note right of users
+用户核心数据
+- 个人信息管理
+- 阅读偏好设置
+- 订阅状态管理
+- 兴趣标签分析
+- 行为统计数据
+end note
+
+note right of articles
+新闻内容数据
+- 多媒体内容支持
+- 版本控制管理
+- SEO优化字段
+- 社交统计数据
+- 内容状态管理
+end note
+
+note right of articleCache
+新闻内容缓存
+- 热门文章缓存
+- 实时统计数据
+- 推荐内容缓存
+- 用户阅读状态
+- 性能优化支持
+end note
+
+note bottom of analytics
+新闻数据分析
+- 用户阅读行为
+- 内容传播分析
+- 热点趋势监控
+- 个性化推荐训练
+- 商业智能分析
+end note
+
+@enduml 

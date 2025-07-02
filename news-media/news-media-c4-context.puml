@@ -1,0 +1,66 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+title 新闻媒体平台 - 系统上下文图
+
+LAYOUT_WITH_LEGEND()
+
+' 内部用户角色
+Person(reader, "新闻读者", "使用平台阅读新闻、关注热点、参与讨论的普通用户")
+Person(journalist, "记者编辑", "撰写新闻稿件、编辑内容、管理专栏的新闻工作者")
+Person(editor, "主编", "审核新闻内容、管理发布流程、制定编辑策略")
+Person(admin, "平台管理员", "负责内容审核、用户管理、平台运营")
+Person(contributor, "自媒体作者", "发布原创内容、管理个人专栏的内容创作者")
+
+' 核心新闻媒体系统
+System(newsSystem, "新闻媒体平台", "提供新闻发布、个性化推荐、实时资讯、多媒体内容、社交互动等功能的综合新闻平台")
+
+' 外部系统集成
+System_Ext(cdnService, "CDN服务", "全球内容分发网络，支持图片、视频、音频等多媒体内容")
+System_Ext(aiService, "AI内容服务", "智能写作、内容审核、个性化推荐、自动标签等AI功能")
+System_Ext(oauthProviders, "第三方登录", "微信、微博、Google、Facebook等社交登录")
+System_Ext(paymentGateway, "支付网关", "订阅付费、赞赏打赏、广告结算")
+System_Ext(pushService, "推送服务", "新闻推送、突发事件通知、个性化资讯推送")
+System_Ext(newsAgencies, "通讯社", "新华社、路透社、美联社等新闻源")
+System_Ext(socialPlatforms, "社交媒体", "微博、Twitter、Facebook等社交平台")
+System_Ext(videoServices, "视频服务", "腾讯视频、YouTube、Vimeo等视频平台")
+System_Ext(imageServices, "图片服务", "Getty Images、视觉中国等图片库")
+System_Ext(factCheckServices, "事实核查", "第三方事实核查机构和服务")
+System_Ext(translationServices, "翻译服务", "Google翻译、百度翻译等多语言服务")
+System_Ext(analyticsService, "数据分析", "用户行为分析、阅读统计、热点趋势分析")
+System_Ext(adPlatforms, "广告平台", "Google Ads、Facebook Ads等广告投放平台")
+System_Ext(weatherServices, "天气服务", "天气预报、灾害预警等实时信息服务")
+System_Ext(stockServices, "金融数据", "股票行情、财经数据、市场分析")
+
+' 用户与系统交互
+Rel(reader, newsSystem, "新闻阅读", "HTTPS/移动应用/小程序")
+Rel(journalist, newsSystem, "内容创作", "HTTPS/编辑工具")
+Rel(editor, newsSystem, "内容审核", "HTTPS/编辑后台")
+Rel(admin, newsSystem, "平台管理", "HTTPS/管理后台")
+Rel(contributor, newsSystem, "自媒体发布", "HTTPS/创作平台")
+
+' 系统与外部服务交互
+Rel(newsSystem, cdnService, "内容分发", "HTTPS/多媒体传输")
+Rel(newsSystem, aiService, "智能服务", "HTTPS/API调用")
+Rel(newsSystem, oauthProviders, "第三方登录", "OAuth 2.0")
+Rel(newsSystem, paymentGateway, "支付服务", "HTTPS/支付API")
+Rel(newsSystem, pushService, "消息推送", "HTTPS/推送API")
+Rel(newsSystem, newsAgencies, "新闻采集", "RSS/API/爬虫")
+Rel(newsSystem, socialPlatforms, "社交分享", "HTTPS/开放API")
+Rel(newsSystem, videoServices, "视频内容", "HTTPS/嵌入API")
+Rel(newsSystem, imageServices, "图片资源", "HTTPS/图片API")
+Rel(newsSystem, factCheckServices, "事实核查", "HTTPS/核查API")
+Rel(newsSystem, translationServices, "多语言翻译", "HTTPS/翻译API")
+Rel(newsSystem, analyticsService, "数据统计", "HTTPS/埋点数据")
+Rel(newsSystem, adPlatforms, "广告投放", "HTTPS/广告API")
+Rel(newsSystem, weatherServices, "实时信息", "HTTPS/数据API")
+Rel(newsSystem, stockServices, "财经数据", "HTTPS/金融API")
+
+' 外部用户交互
+Rel_U(reader, oauthProviders, "社交登录", "OAuth认证")
+Rel_U(reader, socialPlatforms, "新闻分享", "社交分享")
+Rel_U(journalist, newsAgencies, "新闻线索", "信息获取")
+Rel_U(reader, paymentGateway, "内容付费", "在线支付")
+Rel_U(contributor, paymentGateway, "收益提现", "资金结算")
+
+@enduml 

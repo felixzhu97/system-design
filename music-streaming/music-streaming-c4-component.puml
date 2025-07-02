@@ -1,0 +1,177 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title 音乐流媒体平台 - Web播放器前端组件图
+
+LAYOUT_WITH_LEGEND()
+
+Person(listener, "音乐听众", "平台用户")
+System_Ext(webBFF, "Web BFF", "Next.js API Routes")
+System_Ext(audioCDN, "音频CDN", "音频内容分发")
+System_Ext(aiService, "AI服务", "音乐推荐")
+
+Container_Boundary(webPlayer, "Web播放器 (React 18 + Next.js 14)") {
+    
+    ' 核心播放器组件层
+    Component(audioEngine, "音频播放引擎", "Web Audio API + HTML5", "核心音频播放和处理引擎")
+    Component(playerController, "播放控制器", "React Hooks + Context", "播放、暂停、进度、音量控制")
+    Component(playQueue, "播放队列", "React Components", "当前播放列表和队列管理")
+    Component(audioVisualizer, "音频可视化", "Web Audio + Canvas", "频谱分析和音乐可视化")
+    Component(equalizerComponent, "均衡器", "Web Audio API", "音效调节和音质优化")
+    Component(crossfadeController, "淡入淡出", "Audio Context", "歌曲间平滑过渡")
+    Component(offlinePlayer, "离线播放", "Service Worker + IndexedDB", "离线音乐播放支持")
+    
+    ' 用户界面组件层
+    Component(playerUI, "播放器界面", "React Components", "播放器主界面和控制面板")
+    Component(nowPlaying, "正在播放", "React Components", "当前歌曲信息和进度显示")
+    Component(miniPlayer, "迷你播放器", "React Portal", "悬浮小窗播放器")
+    Component(fullscreenPlayer, "全屏播放器", "React Components", "沉浸式播放界面")
+    Component(lyricsDisplay, "歌词显示", "React + SVG", "滚动歌词和卡拉OK模式")
+    Component(albumArtwork, "专辑封面", "React + Image", "专辑图片展示和动画")
+    Component(playbackProgress, "播放进度", "React Hooks", "进度条和时间显示")
+    
+    ' 音乐内容组件层
+    Component(musicLibrary, "音乐库", "React Virtual List", "用户音乐库和收藏")
+    Component(playlistManager, "歌单管理", "React Components", "歌单创建、编辑、分享")
+    Component(artistProfile, "艺人页面", "React Components", "艺人信息和作品展示")
+    Component(albumView, "专辑页面", "React Components", "专辑详情和歌曲列表")
+    Component(searchResults, "搜索结果", "React Components", "音乐搜索结果展示")
+    Component(discoveryComponent, "音乐发现", "React Components", "新歌推荐和音乐探索")
+    Component(genreExplorer, "风格探索", "React Components", "音乐风格分类浏览")
+    Component(radioStations, "在线电台", "React Components", "主题电台和智能电台")
+    
+    ' 社交互动组件层
+    Component(socialFeed, "音乐动态", "React Components", "朋友音乐动态和分享")
+    Component(commentSystem, "评论系统", "React Components", "歌曲评论和讨论")
+    Component(shareComponent, "分享功能", "React Components", "音乐分享到社交平台")
+    Component(collaborativePlaylist, "协作歌单", "React + WebSocket", "多人协作创建歌单")
+    Component(musicCommunity, "音乐社区", "React Components", "音乐话题和用户互动")
+    Component(liveChat, "直播聊天", "React + WebSocket", "音乐直播实时聊天")
+    
+    ' 个性化推荐组件层
+    Component(recommendationEngine, "推荐引擎", "React + AI", "个性化音乐推荐")
+    Component(dailyMix, "每日歌单", "React Components", "AI生成的每日音乐推荐")
+    Component(moodBasedPlayer, "情景播放", "React + ML", "基于心情和场景的音乐推荐")
+    Component(similarArtists, "相似艺人", "React Components", "基于喜好的艺人推荐")
+    Component(trendingMusic, "热门音乐", "React Components", "流行趋势和榜单")
+    Component(personalRadio, "个人电台", "React Components", "基于历史的个性化电台")
+    
+    ' 状态管理层
+    Component(globalStore, "全局状态", "Redux Toolkit", "应用全局状态管理")
+    Component(playerStore, "播放器状态", "Player Slice", "播放状态和设置管理")
+    Component(musicStore, "音乐状态", "Music Slice", "音乐库和歌单状态")
+    Component(userStore, "用户状态", "User Slice", "用户信息和偏好设置")
+    Component(cacheManager, "缓存管理", "RTK Query", "API数据缓存和同步")
+    
+    ' 音频服务层
+    Component(streamingService, "流媒体服务", "Audio Streaming", "音频流获取和管理")
+    Component(audioDecoder, "音频解码", "Web Audio API", "音频格式解码和处理")
+    Component(audioBuffer, "音频缓冲", "Audio Buffer", "音频预加载和缓存")
+    Component(qualityController, "音质控制", "Adaptive Streaming", "自适应音质调节")
+    Component(crossplatformSync, "跨平台同步", "WebSocket", "多设备播放状态同步")
+    
+    ' 通信服务层
+    Component(apiClient, "API客户端", "Axios + TypeScript", "HTTP请求封装")
+    Component(websocketClient, "WebSocket客户端", "Socket.io", "实时通信管理")
+    Component(audioStreamClient, "音频流客户端", "WebRTC/HLS", "音频流连接管理")
+    Component(syncService, "同步服务", "Background Sync", "离线数据同步")
+    
+    ' 工具服务层
+    Component(authService, "认证服务", "JWT + OAuth", "用户认证和授权")
+    Component(storageService, "存储服务", "IndexedDB", "本地音乐和数据存储")
+    Component(settingsService, "设置服务", "Local Storage", "播放器设置管理")
+    Component(analyticsService, "分析服务", "Music Analytics", "播放行为统计")
+    Component(errorService, "错误服务", "Sentry", "播放错误监控")
+    Component(performanceService, "性能服务", "Audio Metrics", "音频性能监控")
+    Component(keyboardService, "快捷键服务", "Hotkeys", "键盘快捷键支持")
+    Component(notificationService, "通知服务", "Web Notifications", "播放通知和提醒")
+    Component(utilsLibrary, "工具库", "Audio Utils", "音频处理工具函数")
+    
+    ' 本地存储层
+    ComponentDb(audioCache, "音频缓存", "Cache API", "音频文件离线缓存")
+    ComponentDb(metadataCache, "元数据缓存", "IndexedDB", "音乐信息本地存储")
+    ComponentDb(userPreferences, "用户偏好", "LocalStorage", "播放器设置和偏好")
+    ComponentDb(playHistory, "播放历史", "IndexedDB", "播放记录和统计")
+}
+
+' 用户交互流
+Rel(listener, playerController, "播放控制", "点击/快捷键")
+Rel(listener, playQueue, "队列操作", "拖拽/编辑")
+Rel(listener, lyricsDisplay, "歌词互动", "点击/滚动")
+Rel(listener, equalizerComponent, "音效调节", "滑块调节")
+Rel(listener, searchResults, "音乐搜索", "搜索/选择")
+
+' 核心播放器组件关系
+Rel(playerController, audioEngine, "播放控制", "命令调用")
+Rel(audioEngine, audioDecoder, "音频解码", "格式处理")
+Rel(audioEngine, audioVisualizer, "频谱数据", "实时数据")
+Rel(audioEngine, equalizerComponent, "音效处理", "音频管道")
+Rel(playerController, crossfadeController, "过渡控制", "淡入淡出")
+Rel(playerController, playQueue, "队列管理", "播放列表")
+
+' 界面组件关系
+Rel(playerUI, nowPlaying, "组件包含", "界面组合")
+Rel(playerUI, playbackProgress, "组件包含", "进度显示")
+Rel(nowPlaying, albumArtwork, "专辑展示", "图片显示")
+Rel(nowPlaying, lyricsDisplay, "歌词显示", "文本同步")
+Rel(miniPlayer, playerController, "控制交互", "播放操作")
+Rel(fullscreenPlayer, audioVisualizer, "可视化", "全屏效果")
+
+' 音乐内容组件关系
+Rel(musicLibrary, playlistManager, "歌单操作", "数据交互")
+Rel(artistProfile, albumView, "专辑导航", "页面跳转")
+Rel(searchResults, musicLibrary, "添加音乐", "库管理")
+Rel(discoveryComponent, recommendationEngine, "推荐数据", "AI推荐")
+Rel(radioStations, personalRadio, "电台切换", "个性化")
+
+' 社交互动组件关系
+Rel(socialFeed, shareComponent, "分享功能", "社交传播")
+Rel(collaborativePlaylist, websocketClient, "实时协作", "WebSocket")
+Rel(musicCommunity, commentSystem, "评论互动", "社区功能")
+Rel(liveChat, websocketClient, "实时聊天", "WebSocket")
+
+' 推荐引擎组件关系
+Rel(recommendationEngine, dailyMix, "推荐生成", "AI算法")
+Rel(moodBasedPlayer, recommendationEngine, "情景推荐", "智能匹配")
+Rel(similarArtists, recommendationEngine, "艺人推荐", "相似度算法")
+Rel(trendingMusic, analyticsService, "热门统计", "数据分析")
+
+' 状态管理关系
+Rel(playerController, playerStore, "状态更新", "Redux Action")
+Rel(musicLibrary, musicStore, "音乐数据", "状态管理")
+Rel(globalStore, userStore, "用户状态", "状态组合")
+Rel(cacheManager, apiClient, "缓存策略", "请求拦截")
+
+' 音频服务关系
+Rel(audioEngine, streamingService, "音频获取", "流媒体")
+Rel(streamingService, audioBuffer, "音频缓冲", "预加载")
+Rel(qualityController, streamingService, "音质调节", "自适应流")
+Rel(crossplatformSync, websocketClient, "设备同步", "状态同步")
+
+' 通信服务关系
+Rel(apiClient, webBFF, "API请求", "HTTPS/REST")
+Rel(websocketClient, webBFF, "实时通信", "WebSocket")
+Rel(audioStreamClient, audioCDN, "音频流", "CDN加载")
+Rel(syncService, storageService, "数据同步", "离线同步")
+
+' 工具服务关系
+Rel(authService, apiClient, "认证拦截", "请求头")
+Rel(storageService, audioCache, "缓存管理", "本地存储")
+Rel(settingsService, userPreferences, "设置存储", "偏好保存")
+Rel(analyticsService, playHistory, "行为记录", "统计分析")
+Rel(errorService, performanceService, "错误监控", "性能跟踪")
+Rel(keyboardService, playerController, "快捷键", "键盘控制")
+Rel(notificationService, playerController, "播放通知", "系统通知")
+
+' 本地存储关系
+Rel(audioEngine, audioCache, "音频缓存", "文件缓存")
+Rel(musicStore, metadataCache, "元数据", "本地存储")
+Rel(playerStore, userPreferences, "播放设置", "设置保存")
+Rel(analyticsService, playHistory, "播放记录", "历史存储")
+
+' 外部服务集成
+Rel(recommendationEngine, aiService, "AI推荐", "算法调用")
+Rel(discoveryComponent, aiService, "智能发现", "推荐API")
+Rel(streamingService, audioCDN, "音频加载", "CDN分发")
+
+@enduml 

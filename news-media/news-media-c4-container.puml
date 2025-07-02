@@ -1,0 +1,131 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title 新闻媒体平台 - 容器图
+
+LAYOUT_WITH_LEGEND()
+
+' 外部用户和系统
+Person(reader, "新闻读者", "新闻消费者")
+Person(journalist, "记者编辑", "新闻创作者和编辑")
+Person(admin, "平台管理员", "平台运营管理人员")
+
+' 多端客户层
+System_Boundary(clientLayer, "多端客户层") {
+    Container(webPortal, "新闻门户网站", "React 18, TypeScript, Next.js", "基于浏览器的新闻门户和资讯网站")
+    Container(mobileApp, "移动新闻APP", "React Native, TypeScript", "iOS/Android原生新闻阅读体验")
+    Container(newsWidget, "新闻小组件", "Web Components", "可嵌入的新闻组件和插件")
+    Container(miniProgram, "微信小程序", "TypeScript, 小程序框架", "微信生态内的轻量新闻客户端")
+    Container(rssReader, "RSS阅读器", "Standard RSS/Atom", "标准RSS订阅源")
+    Container(smartTV, "智能电视", "Android TV, tvOS", "客厅大屏新闻应用")
+    Container(editorialCMS, "编辑后台", "Vue 3, TypeScript", "新闻编辑和内容管理系统")
+    Container(contributorPortal, "创作者平台", "React, TypeScript", "自媒体作者内容创作和管理")
+    Container(adminDashboard, "管理后台", "Angular, TypeScript", "平台管理和数据分析工具")
+}
+
+' BFF聚合层
+System_Boundary(bffLayer, "BFF聚合层") {
+    Container(webBFF, "Web BFF", "Next.js API Routes, TypeScript", "Web端新闻业务聚合")
+    Container(mobileBFF, "Mobile BFF", "Node.js, Fastify, TypeScript", "移动端新闻业务聚合")
+    Container(editorBFF, "Editor BFF", "Node.js, Express, TypeScript", "编辑专用业务聚合")
+    Container(contributorBFF, "Contributor BFF", "Node.js, Express, TypeScript", "创作者专用业务聚合")
+    Container(adminBFF, "Admin BFF", "Java, Spring Boot", "管理后台业务聚合")
+}
+
+' 实时推送层
+System_Boundary(pushLayer, "实时推送层") {
+    Container(pushGateway, "推送网关", "Go, WebSocket", "实时新闻推送和通知")
+    Container(notificationEngine, "通知引擎", "Node.js, Bull Queue", "智能消息推送和调度")
+    Container(breakingNewsAlert, "突发新闻", "Redis, Pub/Sub", "紧急新闻实时广播")
+    Container(liveUpdates, "实时更新", "Socket.io, Redis", "新闻实时更新和互动")
+}
+
+' 核心业务服务层
+System_Boundary(serviceLayer, "核心业务服务层") {
+    Container(userService, "用户服务", "Java, Spring Boot", "用户注册、资料、阅读偏好管理")
+    Container(contentService, "内容服务", "Node.js, TypeScript", "新闻内容、文章、多媒体管理")
+    Container(categoryService, "分类服务", "Go, Gin", "新闻分类、标签、专题管理")
+    Container(recommendService, "推荐服务", "Python, ML模型", "个性化新闻推荐和热点分析")
+    Container(searchService, "搜索服务", "Python, Elasticsearch", "新闻搜索、全文检索")
+    Container(commentService, "评论服务", "Node.js, TypeScript", "用户评论、互动、社区功能")
+    Container(editorialService, "编辑服务", "Java, Spring Boot", "编辑工作流、内容审核")
+    Container(publishService, "发布服务", "Go, Gin", "内容发布、分发、定时发布")
+    Container(analyticsService, "分析服务", "Python, Apache Spark", "阅读统计、热点分析")
+    Container(moderationService, "审核服务", "Python, AI模型", "内容审核、虚假信息检测")
+    Container(subscriptionService, "订阅服务", "Java, Spring Boot", "付费订阅、会员管理")
+    Container(adService, "广告服务", "Node.js, TypeScript", "广告投放、收益管理")
+}
+
+' 数据存储层
+System_Boundary(dataLayer, "数据存储层") {
+    ContainerDb(userDB, "用户数据库", "PostgreSQL", "用户信息、偏好设置")
+    ContainerDb(contentDB, "内容数据库", "MongoDB", "新闻文章、多媒体内容")
+    ContainerDb(categoryDB, "分类数据库", "PostgreSQL", "新闻分类、标签体系")
+    ContainerDb(commentDB, "评论数据库", "MongoDB", "用户评论、互动数据")
+    ContainerDb(analyticsCache, "分析缓存", "Redis Cluster", "热点新闻、统计缓存")
+    ContainerDb(sessionCache, "会话缓存", "Redis", "用户会话、阅读状态")
+    ContainerDb(messageQueue, "消息队列", "Apache Kafka", "新闻事件、推送消息")
+    ContainerDb(searchIndex, "搜索引擎", "Elasticsearch", "新闻全文搜索索引")
+    ContainerDb(mediaStorage, "媒体存储", "MinIO, AWS S3", "图片、视频、音频文件")
+    ContainerDb(dataWarehouse, "数据仓库", "ClickHouse", "新闻阅读行为分析数据")
+}
+
+' 基础设施层
+System_Boundary(infraLayer, "基础设施层") {
+    Container_Ext(newsCDN, "新闻CDN", "专业内容CDN", "全球新闻内容分发")
+    Container_Ext(aiPlatform, "AI内容平台", "TensorFlow, NLP", "智能写作和内容分析")
+    Container_Ext(monitorService, "监控服务", "Prometheus, Grafana", "系统监控和性能监测")
+    Container_Ext(securityService, "安全服务", "Web安全防护", "反爬虫、DDoS防护")
+}
+
+' 客户端与BFF层连接
+Rel(webPortal, webBFF, "API调用", "HTTPS/REST")
+Rel(mobileApp, mobileBFF, "API调用", "HTTPS/REST")
+Rel(newsWidget, webBFF, "API调用", "HTTPS/REST")
+Rel(miniProgram, mobileBFF, "API调用", "HTTPS/REST")
+Rel(rssReader, webBFF, "RSS订阅", "RSS/XML")
+Rel(smartTV, mobileBFF, "TV API", "HTTPS/REST")
+Rel(editorialCMS, editorBFF, "编辑API", "HTTPS/REST")
+Rel(contributorPortal, contributorBFF, "创作API", "HTTPS/REST")
+Rel(adminDashboard, adminBFF, "管理API", "HTTPS/REST")
+
+' 实时推送连接
+Rel(webPortal, pushGateway, "实时推送", "WebSocket")
+Rel(mobileApp, pushGateway, "推送通知", "Push Notification")
+Rel(pushGateway, notificationEngine, "推送调度", "Message Queue")
+Rel(notificationEngine, breakingNewsAlert, "突发新闻", "Redis Pub/Sub")
+Rel(pushGateway, liveUpdates, "实时更新", "Socket.io")
+
+' BFF层与业务服务连接
+Rel(webBFF, contentService, "内容服务", "HTTP/gRPC")
+Rel(mobileBFF, recommendService, "推荐服务", "HTTP/gRPC")
+Rel(editorBFF, editorialService, "编辑服务", "HTTP/gRPC")
+Rel(contributorBFF, publishService, "发布服务", "HTTP/gRPC")
+Rel(adminBFF, analyticsService, "分析服务", "HTTP/gRPC")
+
+' 业务服务与数据存储连接
+Rel(userService, userDB, "读写操作", "JDBC/连接池")
+Rel(contentService, contentDB, "读写操作", "MongoDB Driver")
+Rel(categoryService, categoryDB, "读写操作", "JDBC/连接池")
+Rel(commentService, commentDB, "读写操作", "MongoDB Driver")
+Rel(recommendService, analyticsCache, "缓存操作", "Redis Protocol")
+Rel(searchService, searchIndex, "搜索查询", "Elasticsearch API")
+Rel(contentService, mediaStorage, "文件存储", "S3 API")
+Rel(publishService, messageQueue, "事件发布", "Kafka Protocol")
+Rel(analyticsService, dataWarehouse, "数据分析", "ClickHouse HTTP")
+
+' 外部服务集成
+Rel(webPortal, newsCDN, "内容加载", "HTTPS/CDN")
+Rel(mobileApp, newsCDN, "媒体加载", "HTTPS/CDN")
+Rel(recommendService, aiPlatform, "推荐算法", "HTTPS/API")
+Rel(moderationService, aiPlatform, "内容审核", "AI API")
+
+' 用户访问
+Rel(reader, webPortal, "Web阅读", "HTTPS")
+Rel(reader, mobileApp, "移动阅读", "原生应用")
+Rel(reader, miniProgram, "小程序阅读", "微信生态")
+Rel(reader, smartTV, "大屏阅读", "智能电视")
+Rel(journalist, editorialCMS, "新闻编辑", "Web编辑器")
+Rel(admin, adminDashboard, "平台管理", "HTTPS")
+
+@enduml 

@@ -1,0 +1,143 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Dynamic.puml
+
+title 音乐流媒体平台 - 用户音乐播放体验数据流程
+
+LAYOUT_WITH_LEGEND()
+
+Person(listener, "音乐听众", "音乐用户")
+Person(artist, "音乐艺人", "音乐创作者")
+
+Container(webPlayer, "Web播放器", "React + Next.js")
+Container(mobileBFF, "Mobile BFF", "Node.js聚合服务")
+Container(webBFF, "Web BFF", "Next.js API Routes")
+Container(audioGateway, "音频网关", "Go音频处理")
+
+Container(userService, "用户服务", "用户管理")
+Container(musicService, "音乐服务", "音乐管理")
+Container(playbackService, "播放服务", "播放控制")
+Container(recommendService, "推荐服务", "AI推荐")
+Container(searchService, "搜索服务", "音乐搜索")
+Container(playlistService, "歌单服务", "歌单管理")
+
+ContainerDb(userDB, "用户数据库", "PostgreSQL")
+ContainerDb(musicDB, "音乐数据库", "MongoDB")
+ContainerDb(playbackCache, "播放缓存", "Redis")
+ContainerDb(audioStorage, "音频存储", "MinIO/S3")
+ContainerDb(recommendCache, "推荐缓存", "Redis")
+Container(messageQueue, "消息队列", "Kafka")
+Container(audioCDN, "音频CDN", "全球音频分发")
+
+' === 用户登录和偏好设置流程 ===
+Rel_D(listener, webPlayer, "1. 访问音乐平台", "HTTPS")
+Rel_D(webPlayer, webBFF, "2. 请求用户认证", "API调用")
+Rel_D(webBFF, userService, "3. 验证用户身份", "gRPC")
+Rel_D(userService, userDB, "4. 查询用户信息", "SQL")
+Rel_U(userDB, userService, "5. 返回用户偏好", "User Data")
+Rel_U(userService, webBFF, "6. 生成播放会话", "Auth Token")
+Rel_U(webBFF, webPlayer, "7. 返回用户状态", "JSON")
+Rel_U(webPlayer, listener, "8. 进入个人音乐界面", "UI展示")
+
+' === 个性化推荐生成流程 ===
+Rel_D(webPlayer, webBFF, "9. 请求个性化推荐", "API调用")
+Rel_D(webBFF, recommendService, "10. 获取推荐内容", "推荐算法")
+Rel_D(recommendService, recommendCache, "11. 查询推荐缓存", "Cache Lookup")
+Rel_D(recommendService, userDB, "12. 分析用户喜好", "行为分析")
+Rel_D(recommendService, musicDB, "13. 查询相似音乐", "MongoDB")
+Rel_U(musicDB, recommendService, "14. 返回相似内容", "Music Data")
+Rel_U(userDB, recommendService, "15. 返回用户画像", "User Profile")
+Rel_U(recommendCache, recommendService, "16. 返回缓存结果", "Cached Data")
+Rel_U(recommendService, webBFF, "17. 生成推荐列表", "Recommendation List")
+Rel_U(webBFF, webPlayer, "18. 返回个性化内容", "JSON Array")
+Rel_U(webPlayer, listener, "19. 展示推荐音乐", "UI展示")
+
+' === 音乐搜索和发现流程 ===
+Rel_D(listener, webPlayer, "20. 搜索音乐", "用户输入")
+Rel_D(webPlayer, webBFF, "21. 发送搜索请求", "Search Query")
+Rel_D(webBFF, searchService, "22. 执行音乐搜索", "搜索算法")
+Rel_D(searchService, musicDB, "23. 查询音乐数据", "Text Search")
+Rel_D(searchService, recommendService, "24. 智能推荐关联", "AI增强")
+Rel_U(musicDB, searchService, "25. 返回搜索结果", "Search Results")
+Rel_U(recommendService, searchService, "26. 返回相关推荐", "Related Music")
+Rel_U(searchService, webBFF, "27. 组装搜索结果", "Combined Results")
+Rel_U(webBFF, webPlayer, "28. 返回搜索列表", "JSON Data")
+Rel_U(webPlayer, listener, "29. 展示搜索结果", "UI展示")
+
+' === 音乐播放准备流程 ===
+Rel_D(listener, webPlayer, "30. 选择播放音乐", "用户操作")
+Rel_D(webPlayer, webBFF, "31. 请求播放权限", "Play Request")
+Rel_D(webBFF, playbackService, "32. 验证播放权限", "权限检查")
+Rel_D(playbackService, userDB, "33. 检查会员状态", "Membership Check")
+Rel_D(playbackService, musicDB, "34. 获取音乐信息", "Music Metadata")
+Rel_D(playbackService, audioStorage, "35. 定位音频文件", "File Location")
+Rel_U(audioStorage, playbackService, "36. 返回文件URL", "Audio URL")
+Rel_U(musicDB, playbackService, "37. 返回音乐元数据", "Metadata")
+Rel_U(userDB, playbackService, "38. 返回权限状态", "Permission")
+Rel_U(playbackService, webBFF, "39. 生成播放配置", "Play Config")
+Rel_U(webBFF, webPlayer, "40. 返回播放准备", "Play Ready")
+
+' === 音频流传输流程 ===
+Rel_D(webPlayer, audioGateway, "41. 请求音频流", "Audio Stream Request")
+Rel_D(audioGateway, audioCDN, "42. 获取音频流", "CDN Request")
+Rel_D(audioGateway, playbackCache, "43. 检查音频缓存", "Cache Check")
+Rel_U(audioCDN, audioGateway, "44. 返回音频流", "Audio Stream")
+Rel_U(playbackCache, audioGateway, "45. 返回缓存音频", "Cached Audio")
+Rel_U(audioGateway, webPlayer, "46. 传输音频数据", "Streaming Audio")
+Rel_U(webPlayer, listener, "47. 开始音乐播放", "Audio Playback")
+
+' === 播放状态同步流程 ===
+Rel_D(webPlayer, webBFF, "48. 同步播放状态", "Playback State")
+Rel_D(webBFF, playbackService, "49. 更新播放进度", "Progress Update")
+Rel_D(playbackService, playbackCache, "50. 缓存播放状态", "State Cache")
+Rel_D(playbackService, messageQueue, "51. 发布播放事件", "Play Event")
+
+' === 歌单和收藏流程 ===
+Rel_D(listener, webPlayer, "52. 添加到歌单", "用户操作")
+Rel_D(webPlayer, webBFF, "53. 歌单操作请求", "Playlist API")
+Rel_D(webBFF, playlistService, "54. 处理歌单逻辑", "Playlist Logic")
+Rel_D(playlistService, userDB, "55. 更新用户歌单", "SQL Update")
+Rel_D(playlistService, messageQueue, "56. 发布歌单事件", "Playlist Event")
+
+' === 异步事件处理 ===
+Rel_D(messageQueue, recommendService, "57. 更新推荐模型", "User Behavior")
+Rel_D(messageQueue, userService, "58. 更新用户画像", "Preference Update")
+Rel_D(recommendService, recommendCache, "59. 刷新推荐缓存", "Cache Refresh")
+
+note right of audioGateway
+音频流处理：
+- 多码率自适应流
+- 音质动态调节
+- 网络状况优化
+- DRM版权保护
+- 跨设备同步
+end note
+
+note right of recommendService
+AI推荐算法：
+- 协同过滤推荐
+- 内容相似度匹配
+- 深度学习模型
+- 实时个性化调整
+- 多维度特征融合
+end note
+
+note bottom of messageQueue
+异步事件处理：
+- 播放行为记录
+- 用户偏好更新
+- 推荐模型训练
+- 社交动态推送
+- 数据统计分析
+- 音乐趋势追踪
+end note
+
+note bottom of playbackCache
+播放状态缓存：
+- 多设备同步播放
+- 断点续播支持
+- 离线播放准备
+- 播放队列管理
+- 跨平台状态同步
+end note
+
+@enduml 

@@ -1,0 +1,485 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title 音乐流媒体平台 - 数据库设计架构
+
+LAYOUT_WITH_LEGEND()
+
+' 用户域数据模型
+package "用户域 (PostgreSQL)" {
+    entity "users" as users {
+        + user_id : UUID [PK]
+        --
+        username : VARCHAR(50) [UK]
+        email : VARCHAR(100) [UK]
+        phone : VARCHAR(20) [UK]
+        password_hash : VARCHAR(255)
+        avatar_url : VARCHAR(500)
+        display_name : VARCHAR(100)
+        birth_date : DATE
+        gender : ENUM
+        country : VARCHAR(50)
+        preferred_genres : JSONB
+        listening_habits : JSONB
+        subscription_type : ENUM
+        subscription_expires_at : TIMESTAMP
+        total_listening_time : BIGINT
+        favorite_artists_count : INTEGER
+        playlists_count : INTEGER
+        created_at : TIMESTAMP
+        updated_at : TIMESTAMP
+        last_active_at : TIMESTAMP
+    }
+    
+    entity "user_preferences" as preferences {
+        + preference_id : UUID [PK]
+        + user_id : UUID [FK]
+        --
+        audio_quality : ENUM
+        streaming_mode : ENUM
+        crossfade_duration : INTEGER
+        equalizer_preset : VARCHAR(50)
+        volume_normalization : BOOLEAN
+        gapless_playback : BOOLEAN
+        shuffle_mode : ENUM
+        repeat_mode : ENUM
+        autoplay_enabled : BOOLEAN
+        offline_sync : BOOLEAN
+        push_notifications : JSONB
+        privacy_settings : JSONB
+        language : VARCHAR(10)
+        timezone : VARCHAR(50)
+        created_at : TIMESTAMP
+        updated_at : TIMESTAMP
+    }
+    
+    entity "user_subscriptions" as subscriptions {
+        + subscription_id : UUID [PK]
+        + user_id : UUID [FK]
+        --
+        plan_type : ENUM
+        plan_name : VARCHAR(50)
+        price : DECIMAL
+        currency : VARCHAR(3)
+        billing_cycle : ENUM
+        start_date : TIMESTAMP
+        end_date : TIMESTAMP
+        auto_renewal : BOOLEAN
+        payment_method : JSONB
+        subscription_status : ENUM
+        trial_used : BOOLEAN
+        created_at : TIMESTAMP
+        updated_at : TIMESTAMP
+    }
+}
+
+' 音乐域数据模型
+package "音乐域 (MongoDB)" {
+    entity "tracks" as tracks {
+        + _id : ObjectId [PK]
+        --
+        isrc : String [UK]
+        title : String
+        subtitle : String
+        duration_ms : Number
+        explicit : Boolean
+        preview_url : String
+        audio_files : Array<Object>
+        genres : Array<String>
+        moods : Array<String>
+        energy_level : Number
+        tempo : Number
+        key : String
+        acousticness : Number
+        danceability : Number
+        instrumentalness : Number
+        liveness : Number
+        loudness : Number
+        speechiness : Number
+        valence : Number
+        popularity_score : Number
+        play_count : Number
+        like_count : Number
+        release_date : Date
+        copyright_info : Object
+        lyrics_sync : Object
+        created_at : Date
+        updated_at : Date
+    }
+    
+    entity "albums" as albums {
+        + _id : ObjectId [PK]
+        --
+        upc : String [UK]
+        title : String
+        album_type : String
+        release_date : Date
+        total_tracks : Number
+        genres : Array<String>
+        label : String
+        copyright : String
+        artwork_urls : Object
+        description : String
+        popularity_score : Number
+        average_rating : Number
+        created_at : Date
+        updated_at : Date
+    }
+    
+    entity "artists" as artists {
+        + _id : ObjectId [PK]
+        --
+        name : String
+        bio : String
+        genres : Array<String>
+        origin_country : String
+        formation_year : Number
+        profile_images : Object
+        social_links : Object
+        verified : Boolean
+        follower_count : Number
+        monthly_listeners : Number
+        popularity_score : Number
+        similar_artists : Array<ObjectId>
+        created_at : Date
+        updated_at : Date
+    }
+}
+
+' 播放域数据模型
+package "播放域 (PostgreSQL)" {
+    entity "playlists" as playlists {
+        + playlist_id : UUID [PK]
+        + user_id : UUID [FK]
+        --
+        name : VARCHAR(200)
+        description : TEXT
+        cover_image_url : VARCHAR(500)
+        is_public : BOOLEAN
+        is_collaborative : BOOLEAN
+        track_count : INTEGER
+        total_duration_ms : BIGINT
+        follower_count : INTEGER
+        play_count : INTEGER
+        tags : JSONB
+        created_at : TIMESTAMP
+        updated_at : TIMESTAMP
+    }
+    
+    entity "playlist_tracks" as playlist_tracks {
+        + id : UUID [PK]
+        + playlist_id : UUID [FK]
+        + track_id : UUID [FK]
+        --
+        position : INTEGER
+        added_by_user_id : UUID
+        added_at : TIMESTAMP
+    }
+    
+    entity "play_history" as play_history {
+        + play_id : UUID [PK]
+        + user_id : UUID [FK]
+        + track_id : UUID [FK]
+        --
+        played_at : TIMESTAMP
+        context_type : ENUM
+        context_id : UUID
+        play_duration_ms : INTEGER
+        completion_percentage : FLOAT
+        skip_reason : ENUM
+        device_type : ENUM
+        device_info : JSONB
+        audio_quality : ENUM
+        location : JSONB
+        shuffle_state : BOOLEAN
+        repeat_state : ENUM
+    }
+    
+    entity "user_libraries" as libraries {
+        + library_id : UUID [PK]
+        + user_id : UUID [FK]
+        + track_id : UUID [FK]
+        --
+        saved_at : TIMESTAMP
+        is_downloaded : BOOLEAN
+        download_quality : ENUM
+        play_count : INTEGER
+        last_played_at : TIMESTAMP
+        rating : INTEGER
+        custom_tags : JSONB
+    }
+}
+
+' 社交域数据模型
+package "社交域 (MongoDB)" {
+    entity "user_follows" as follows {
+        + _id : ObjectId [PK]
+        --
+        follower_id : UUID
+        following_id : UUID
+        follow_type : String
+        followed_at : Date
+        notification_enabled : Boolean
+    }
+    
+    entity "track_comments" as comments {
+        + _id : ObjectId [PK]
+        --
+        track_id : ObjectId
+        user_id : UUID
+        comment_text : String
+        timestamp_ms : Number
+        like_count : Number
+        reply_count : Number
+        parent_comment_id : ObjectId
+        is_pinned : Boolean
+        created_at : Date
+        updated_at : Date
+    }
+    
+    entity "user_activities" as activities {
+        + _id : ObjectId [PK]
+        --
+        user_id : UUID
+        activity_type : String
+        target_type : String
+        target_id : String
+        activity_data : Object
+        visibility : String
+        like_count : Number
+        comment_count : Number
+        created_at : Date
+    }
+}
+
+' 缓存层数据模型
+package "缓存层 (Redis Cluster)" {
+    entity "playback_state" as playbackState {
+        Key Pattern: "playback:{user_id}"
+        --
+        current_track : JSON
+        position_ms : Number
+        is_playing : Boolean
+        volume : Number
+        shuffle : Boolean
+        repeat_mode : String
+        queue : List<JSON>
+        context : JSON
+        device_id : String
+        ttl : 86400 seconds
+    }
+    
+    entity "recommendation_cache" as recommendCache {
+        Key Pattern: "recommend:{user_id}:{type}"
+        --
+        recommended_tracks : List<String>
+        recommendation_reasons : JSON
+        context_metadata : JSON
+        generated_at : Timestamp
+        ttl : 3600 seconds
+    }
+    
+    entity "audio_cache" as audioCache {
+        Key Pattern: "audio:{track_id}:{quality}"
+        --
+        audio_url : String
+        audio_metadata : JSON
+        cache_hit_count : Number
+        last_accessed : Timestamp
+        ttl : 7200 seconds
+    }
+    
+    entity "session_cache" as sessionCache {
+        Key Pattern: "session:{user_id}:{device_id}"
+        --
+        user_preferences : JSON
+        listening_context : JSON
+        recent_searches : List
+        device_capabilities : JSON
+        ttl : 14400 seconds
+    }
+}
+
+' 搜索引擎索引
+package "搜索引擎 (Elasticsearch)" {
+    entity "tracks_index" as tracksIndex {
+        Index: "music-tracks"
+        --
+        track_id : keyword
+        title : text (analyzed)
+        artist_names : text (analyzed)
+        album_title : text (analyzed)
+        genres : keyword
+        lyrics : text (analyzed)
+        duration : integer
+        popularity : float
+        release_date : date
+        audio_features : object
+    }
+    
+    entity "artists_index" as artistsIndex {
+        Index: "music-artists"
+        --
+        artist_id : keyword
+        name : text (analyzed)
+        bio : text (analyzed)
+        genres : keyword
+        country : keyword
+        popularity : float
+        follower_count : integer
+    }
+}
+
+' 时序数据库
+package "时序数据库 (InfluxDB)" {
+    entity "play_events" as playEvents {
+        Measurement: play_events
+        --
+        Tags:
+        - user_id : String
+        - track_id : String
+        - device_type : String
+        - audio_quality : String
+        Fields:
+        - play_duration : Integer
+        - completion_rate : Float
+        - skip_time : Integer
+        Timestamp: nanosecond precision
+    }
+    
+    entity "audio_quality_metrics" as qualityMetrics {
+        Measurement: audio_quality
+        --
+        Tags:
+        - track_id : String
+        - quality_level : String
+        - region : String
+        Fields:
+        - bitrate : Integer
+        - latency_ms : Integer
+        - buffer_health : Float
+        - error_rate : Float
+        Timestamp: nanosecond precision
+    }
+}
+
+' 消息队列主题
+package "消息队列 (Apache Kafka)" {
+    entity "play_events_topic" as playEventsTopic {
+        Topic: "music.play.events"
+        --
+        Partitions: 24
+        Replication: 3
+        Retention: 30 days
+        Message Types:
+        - track.played
+        - track.skipped
+        - track.liked
+        - playlist.created
+    }
+    
+    entity "recommendation_events" as recommendEvents {
+        Topic: "music.recommendation.events"
+        --
+        Partitions: 12
+        Replication: 3
+        Retention: 7 days
+        Message Types:
+        - recommendation.generated
+        - recommendation.clicked
+        - user.preference.updated
+    }
+}
+
+' 数据仓库
+package "数据仓库 (ClickHouse)" {
+    entity "listening_analytics" as analytics {
+        Table: listening_analytics_events
+        Engine: MergeTree
+        --
+        event_id : UUID
+        user_id : UUID
+        track_id : String
+        artist_id : String
+        album_id : String
+        event_type : String
+        event_timestamp : DateTime
+        session_id : String
+        device_type : String
+        audio_quality : String
+        play_duration_ms : UInt32
+        completion_rate : Float32
+        context_type : String
+        location_country : String
+        date : Date
+        hour : UInt8
+    }
+    
+    entity "music_metrics" as musicMetrics {
+        Table: music_metrics_daily
+        Engine: SummingMergeTree
+        --
+        date : Date
+        track_id : String
+        artist_id : String
+        total_plays : UInt64
+        unique_listeners : UInt64
+        total_duration : UInt64
+        skip_rate : Float32
+        completion_rate : Float32
+        average_rating : Float32
+        like_count : UInt64
+        share_count : UInt64
+    }
+}
+
+' 关系连接
+users ||--o{ preferences : "user_id"
+users ||--o{ subscriptions : "user_id"
+users ||--o{ playlists : "user_id"
+users ||--o{ libraries : "user_id"
+users ||--o{ play_history : "user_id"
+playlists ||--o{ playlist_tracks : "playlist_id"
+tracks ||--o{ playlist_tracks : "track_id"
+tracks ||--o{ play_history : "track_id"
+tracks ||--o{ libraries : "track_id"
+albums ||--o{ tracks : "album_id"
+artists ||--o{ tracks : "artist_id (many-to-many)"
+
+note right of users
+用户核心数据
+- 个人信息管理
+- 订阅状态跟踪
+- 听歌偏好分析
+- 多设备同步支持
+- 社交关系维护
+end note
+
+note right of tracks
+音乐核心数据
+- 音频特征分析
+- 版权信息管理
+- 多格式音频文件
+- 播放统计数据
+- 智能推荐特征
+end note
+
+note right of playbackState
+播放状态缓存
+- 实时播放同步
+- 跨设备状态共享
+- 播放队列管理
+- 用户偏好缓存
+- 断点续播支持
+end note
+
+note bottom of analytics
+音乐数据分析
+- 用户听歌行为
+- 音乐流行趋势
+- 个性化推荐训练
+- 艺人数据统计
+- 商业智能分析
+end note
+
+@enduml 

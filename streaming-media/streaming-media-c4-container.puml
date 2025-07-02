@@ -1,0 +1,136 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title 流媒体系统 - 容器图 (Level 2)
+
+LAYOUT_WITH_LEGEND()
+
+!define FRONTEND_COLOR #61DAFB
+!define MOBILE_COLOR #9C27B0
+!define STREAMING_COLOR #FF6B6B
+!define SERVICE_COLOR #4ECDC4
+!define DATA_COLOR #45B7D1
+!define INFRA_COLOR #FFA726
+
+Person(viewer, "观众用户", "观看直播和视频内容")
+Person(streamer, "主播", "进行直播和内容创作")
+Person(admin, "管理员", "平台运营和管理")
+
+System_Boundary(clientLayer, "多端客户层") {
+    Container(webPlayer, "Web播放器", "React 18, TypeScript, WebRTC", "基于浏览器的视频播放器，支持直播和点播") <<FRONTEND_COLOR>>
+    Container(mobileApp, "移动APP", "React Native, TypeScript", "iOS/Android原生体验的移动端应用") <<MOBILE_COLOR>>
+    Container(desktopApp, "桌面播放器", "Electron, React", "Windows/macOS桌面应用程序") <<FRONTEND_COLOR>>
+    Container(smartTVApp, "智能电视APP", "Android TV, tvOS", "大屏电视端应用程序") <<MOBILE_COLOR>>
+    Container(miniProgram, "小程序", "微信小程序, TypeScript", "微信生态内的轻量级应用") <<MOBILE_COLOR>>
+    Container(streamerTool, "主播工具", "OBS插件, Electron", "主播直播和内容管理工具") <<FRONTEND_COLOR>>
+    Container(adminPanel, "管理后台", "Vue 3, TypeScript, Element Plus", "平台运营和管理界面") <<FRONTEND_COLOR>>
+}
+
+System_Boundary(bffLayer, "BFF聚合层") {
+    Container(webBFF, "Web端BFF", "Next.js 14, TypeScript", "为Web端提供定制化API聚合") <<FRONTEND_COLOR>>
+    Container(mobileBFF, "移动端BFF", "Node.js, Fastify", "为移动端优化的API聚合服务") <<SERVICE_COLOR>>
+    Container(tvBFF, "电视端BFF", "Node.js, Express", "为大屏设备优化的API聚合") <<SERVICE_COLOR>>
+    Container(graphqlGateway, "GraphQL网关", "Apollo Server", "统一的GraphQL查询入口") <<SERVICE_COLOR>>
+}
+
+System_Boundary(streamingLayer, "直播推流层") {
+    Container(rtmpServer, "RTMP推流服务", "SRS, C++", "接收主播推流，分发直播流") <<STREAMING_COLOR>>
+    Container(webrtcServer, "WebRTC服务", "Kurento, Java", "低延迟直播和实时互动") <<STREAMING_COLOR>>
+    Container(hlsService, "HLS分发服务", "Nginx-RTMP, C", "HTTP Live Streaming协议支持") <<STREAMING_COLOR>>
+    Container(transcodingService, "转码服务", "FFmpeg, Go", "多码率转码和格式转换") <<STREAMING_COLOR>>
+}
+
+System_Boundary(coreServices, "核心业务服务层") {
+    Container(userService, "用户服务", "Java Spring Boot", "用户注册、认证、权限管理") <<SERVICE_COLOR>>
+    Container(videoService, "视频服务", "Go, Gin", "视频上传、管理、元数据处理") <<SERVICE_COLOR>>
+    Container(liveService, "直播服务", "Node.js, Socket.io", "直播间管理、实时互动") <<SERVICE_COLOR>>
+    Container(chatService, "聊天服务", "Go, WebSocket", "实时聊天、弹幕、礼物系统") <<SERVICE_COLOR>>
+    Container(recommendService, "推荐服务", "Python, TensorFlow", "个性化推荐和内容发现") <<SERVICE_COLOR>>
+    Container(searchService, "搜索服务", "Java, Elasticsearch", "视频搜索和内容检索") <<SERVICE_COLOR>>
+    Container(paymentService, "支付服务", "Java Spring Boot", "打赏、会员、虚拟商品支付") <<SERVICE_COLOR>>
+    Container(analyticsService, "数据分析", "Python, Apache Spark", "实时数据统计和用户行为分析") <<SERVICE_COLOR>>
+}
+
+System_Boundary(aiLayer, "AI智能服务层") {
+    Container(contentModerationAI, "内容审核AI", "Python, TensorFlow", "自动内容审核和违规检测") <<SERVICE_COLOR>>
+    Container(recommendationAI, "推荐算法", "Python, PyTorch", "深度学习推荐系统") <<SERVICE_COLOR>>
+    Container(speechRecognition, "语音识别", "Python, OpenAI Whisper", "直播语音转文字和实时字幕") <<SERVICE_COLOR>>
+    Container(videoAnalysisAI, "视频分析AI", "Python, OpenCV", "视频内容分析和标签生成") <<SERVICE_COLOR>>
+}
+
+System_Boundary(dataLayer, "数据存储层") {
+    ContainerDb(postgresDB, "PostgreSQL", "关系型数据库", "用户数据、订单数据、权限数据") <<DATA_COLOR>>
+    ContainerDb(mongoDB, "MongoDB", "文档数据库", "视频元数据、评论数据、直播记录") <<DATA_COLOR>>
+    ContainerDb(redisCache, "Redis集群", "内存缓存", "会话缓存、热点数据、实时统计") <<DATA_COLOR>>
+    ContainerDb(elasticsearchDB, "Elasticsearch", "搜索引擎", "视频搜索索引、日志分析") <<DATA_COLOR>>
+    ContainerDb(clickhouseDB, "ClickHouse", "列式数据库", "用户行为数据、观看统计") <<DATA_COLOR>>
+    ContainerDb(influxDB, "InfluxDB", "时序数据库", "系统监控指标、直播质量数据") <<DATA_COLOR>>
+}
+
+System_Boundary(infraLayer, "基础设施层") {
+    Container(apiGateway, "API网关", "Kong, Lua", "请求路由、认证、限流、监控") <<INFRA_COLOR>>
+    Container(messageQueue, "消息队列", "Apache Kafka", "异步消息处理、事件流") <<INFRA_COLOR>>
+    Container(fileStorage, "文件存储", "MinIO, Go", "视频文件、图片、头像存储") <<INFRA_COLOR>>
+    Container(monitoring, "监控系统", "Prometheus + Grafana", "系统监控、告警、性能分析") <<INFRA_COLOR>>
+    Container(logAnalysis, "日志分析", "ELK Stack", "日志收集、分析、可视化") <<INFRA_COLOR>>
+}
+
+' 外部系统
+System_Ext(cdnNetwork, "CDN分发网络", "全球内容分发和加速")
+System_Ext(pushNotification, "推送服务", "消息推送和通知")
+System_Ext(socialLogin, "第三方登录", "OAuth认证服务")
+System_Ext(paymentGateway, "支付网关", "第三方支付服务")
+
+' 用户交互关系
+Rel(viewer, webPlayer, "观看视频", "HTTPS/WebSocket")
+Rel(viewer, mobileApp, "移动观看", "HTTPS/WebSocket")
+Rel(viewer, smartTVApp, "电视观看", "HTTPS")
+Rel(streamer, streamerTool, "直播推流", "RTMP/WebRTC")
+Rel(admin, adminPanel, "平台管理", "HTTPS")
+
+' BFF层关系
+Rel(webPlayer, webBFF, "API调用", "HTTPS/GraphQL")
+Rel(mobileApp, mobileBFF, "API调用", "HTTPS/REST")
+Rel(smartTVApp, tvBFF, "API调用", "HTTPS/REST")
+Rel(webBFF, graphqlGateway, "GraphQL查询", "GraphQL")
+
+' 推流层关系
+Rel(streamerTool, rtmpServer, "RTMP推流", "RTMP协议")
+Rel(streamerTool, webrtcServer, "WebRTC推流", "WebRTC协议")
+Rel(rtmpServer, transcodingService, "转码处理", "内部协议")
+Rel(transcodingService, hlsService, "HLS切片", "HTTP")
+
+' 核心服务关系
+Rel(graphqlGateway, userService, "用户查询", "HTTP/gRPC")
+Rel(graphqlGateway, videoService, "视频查询", "HTTP/gRPC")
+Rel(graphqlGateway, liveService, "直播查询", "HTTP/gRPC")
+Rel(liveService, chatService, "聊天集成", "WebSocket/HTTP")
+Rel(videoService, recommendService, "推荐集成", "HTTP/消息队列")
+Rel(searchService, elasticsearchDB, "搜索查询", "REST API")
+
+' AI服务关系
+Rel(videoService, contentModerationAI, "内容审核", "HTTP/gRPC")
+Rel(recommendService, recommendationAI, "推荐计算", "HTTP/gRPC")
+Rel(liveService, speechRecognition, "语音识别", "WebSocket/HTTP")
+Rel(videoService, videoAnalysisAI, "视频分析", "HTTP/异步队列")
+
+' 数据存储关系
+Rel(userService, postgresDB, "用户数据", "SQL")
+Rel(videoService, mongoDB, "视频元数据", "MongoDB协议")
+Rel(chatService, redisCache, "实时数据", "Redis协议")
+Rel(analyticsService, clickhouseDB, "行为数据", "ClickHouse协议")
+Rel(monitoring, influxDB, "监控数据", "InfluxDB协议")
+
+' 基础设施关系
+Rel(apiGateway, coreServices, "请求路由", "HTTP/gRPC")
+Rel(coreServices, messageQueue, "异步消息", "Kafka协议")
+Rel(videoService, fileStorage, "文件存储", "S3 API")
+Rel(monitoring, coreServices, "监控采集", "HTTP/Prometheus")
+
+' 外部服务关系
+Rel(hlsService, cdnNetwork, "内容分发", "HTTP")
+Rel(paymentService, paymentGateway, "支付处理", "HTTPS")
+Rel(userService, socialLogin, "第三方登录", "OAuth 2.0")
+Rel(liveService, pushNotification, "消息推送", "HTTP API")
+
+@enduml 

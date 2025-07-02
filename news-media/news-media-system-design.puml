@@ -1,0 +1,282 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title 新闻媒体平台 - 系统架构设计
+
+LAYOUT_TOP_DOWN()
+
+' 多端客户层
+package "多端客户层" {
+    package "Web端" {
+        [React新闻门户] as ReactPortal <<React>>
+        [Next.js官网] as NextSite <<Next.js>>
+        [Vue新闻小组件] as VueWidget <<Vue>>
+    }
+    
+    package "移动端" {
+        [React Native APP] as RNApp <<Mobile>>
+        [Flutter新闻APP] as FlutterApp <<Mobile>>
+        [原生iOS新闻] as iOSApp <<Native>>
+        [原生Android新闻] as AndroidApp <<Native>>
+    }
+    
+    package "小程序生态" {
+        [微信新闻小程序] as WeChatMP <<MiniProgram>>
+        [百度新闻小程序] as BaiduMP <<MiniProgram>>
+        [抖音新闻小程序] as DouyinMP <<MiniProgram>>
+    }
+    
+    package "智能终端" {
+        [智能电视新闻] as SmartTVApp <<TV>>
+        [车载新闻系统] as CarNewsApp <<Automotive>>
+        [智能音箱新闻] as SmartSpeaker <<Voice>>
+    }
+    
+    package "专业工具" {
+        [编辑后台] as EditorialCMS <<Professional>>
+        [创作者平台] as ContributorPortal <<Professional>>
+        [管理后台] as AdminDashboard <<Professional>>
+    }
+}
+
+' BFF聚合层
+package "BFF聚合层（Backend for Frontend）" {
+    [Web BFF] as WebBFF <<Node.js>>
+    [Mobile BFF] as MobileBFF <<Node.js>>
+    [Editor BFF] as EditorBFF <<Node.js>>
+    [Contributor BFF] as ContributorBFF <<Node.js>>
+    [Admin BFF] as AdminBFF <<Java>>
+    [Widget BFF] as WidgetBFF <<Go>>
+}
+
+' 实时推送层
+package "实时推送层" {
+    [推送网关] as PushGateway <<Go>>
+    [通知引擎] as NotificationEngine <<Node.js>>
+    [突发新闻广播] as BreakingNewsAlert <<Redis>>
+    [实时更新服务] as LiveUpdates <<Socket.io>>
+    [消息调度器] as MessageScheduler <<Bull Queue>>
+}
+
+' 核心业务域服务
+package "核心业务域服务" {
+    package "用户域" {
+        [用户服务] as UserService <<Java>>
+        [认证服务] as AuthService <<Node.js>>
+        [偏好设置服务] as PreferenceService <<Go>>
+        [订阅服务] as SubscriptionService <<Java>>
+    }
+    
+    package "内容域" {
+        [内容管理服务] as ContentService <<Node.js>>
+        [文章服务] as ArticleService <<Node.js>>
+        [多媒体服务] as MediaService <<Python>>
+        [分类标签服务] as CategoryService <<Go>>
+    }
+    
+    package "编辑域" {
+        [编辑工作流服务] as EditorialService <<Java>>
+        [内容审核服务] as ModerationService <<Python>>
+        [发布调度服务] as PublishService <<Go>>
+        [版本控制服务] as VersionControlService <<Git>>
+    }
+    
+    package "推荐域" {
+        [推荐算法服务] as RecommendationService <<Python>>
+        [热点分析服务] as TrendAnalysisService <<Python>>
+        [个性化服务] as PersonalizationService <<ML>>
+        [内容发现服务] as DiscoveryService <<Python>>
+    }
+    
+    package "搜索域" {
+        [搜索服务] as SearchService <<Python>>
+        [全文检索服务] as FullTextSearchService <<Elasticsearch>>
+        [智能匹配服务] as SmartMatchingService <<NLP>>
+        [搜索索引服务] as SearchIndexService <<Elasticsearch>>
+    }
+    
+    package "社交域" {
+        [评论服务] as CommentService <<Node.js>>
+        [用户互动服务] as InteractionService <<Node.js>>
+        [社区管理服务] as CommunityService <<Java>>
+        [举报处理服务] as ReportHandlingService <<Python>>
+    }
+    
+    package "分析域" {
+        [阅读统计服务] as AnalyticsService <<Python>>
+        [用户行为分析] as BehaviorAnalysisService <<Spark>>
+        [热点监控服务] as TrendMonitoringService <<Python>>
+        [数据挖掘服务] as DataMiningService <<ML>>
+    }
+    
+    package "广告域" {
+        [广告投放服务] as AdService <<Node.js>>
+        [广告优化服务] as AdOptimizationService <<Python>>
+        [收益分成服务] as RevenueService <<Java>>
+        [广告审核服务] as AdModerationService <<Python>>
+    }
+}
+
+' AI智能服务层
+package "AI智能服务层" {
+    [新闻推荐AI] as NewsRecommendationAI <<TensorFlow>>
+    [内容审核AI] as ContentModerationAI <<NLP>>
+    [自动写作AI] as AutoWritingAI <<GPT>>
+    [情感分析AI] as SentimentAnalysisAI <<NLP>>
+    [假新闻检测AI] as FakeNewsDetectionAI <<ML>>
+    [智能标签AI] as SmartTaggingAI <<NLP>>
+    [语音转文字AI] as SpeechToTextAI <<ASR>>
+    [图像识别AI] as ImageRecognitionAI <<CV>>
+    [热点预测AI] as TrendPredictionAI <<ML>>
+}
+
+' 数据存储层
+package "数据存储层" {
+    package "关系型数据库" {
+        database "用户数据库" as UserDB <<PostgreSQL>>
+        database "分类数据库" as CategoryDB <<PostgreSQL>>
+        database "订阅数据库" as SubscriptionDB <<PostgreSQL>>
+        database "广告数据库" as AdDB <<PostgreSQL>>
+    }
+    
+    package "文档数据库" {
+        database "内容数据库" as ContentDB <<MongoDB>>
+        database "评论数据库" as CommentDB <<MongoDB>>
+        database "媒体元数据库" as MediaMetaDB <<MongoDB>>
+    }
+    
+    package "图数据库" {
+        database "新闻关系图" as NewsGraphDB <<Neo4j>>
+        database "用户兴趣图" as UserInterestGraphDB <<Neo4j>>
+    }
+    
+    package "时序数据库" {
+        database "阅读行为数据" as ReadingBehaviorDB <<InfluxDB>>
+        database "热点趋势数据" as TrendingDB <<InfluxDB>>
+    }
+    
+    package "缓存系统" {
+        database "新闻缓存" as NewsCache <<Redis>>
+        database "推荐缓存" as RecommendationCache <<Redis>>
+        database "会话缓存" as SessionCache <<Redis>>
+    }
+    
+    package "消息队列" {
+        queue "新闻事件队列" as NewsEventQueue <<Kafka>>
+        queue "推送消息队列" as PushMessageQueue <<Kafka>>
+        queue "用户行为队列" as UserBehaviorQueue <<Kafka>>
+    }
+    
+    package "搜索引擎" {
+        database "新闻搜索索引" as NewsSearchIndex <<Elasticsearch>>
+        database "用户搜索索引" as UserSearchIndex <<Elasticsearch>>
+    }
+    
+    package "文件存储" {
+        database "媒体文件存储" as MediaFileStorage <<MinIO/S3>>
+        database "静态资源存储" as StaticAssetStorage <<CDN>>
+    }
+    
+    package "数据仓库" {
+        database "新闻数据仓库" as NewsDataWarehouse <<ClickHouse>>
+        database "用户行为数仓" as UserBehaviorWarehouse <<ClickHouse>>
+    }
+}
+
+' 基础设施层
+package "基础设施层" {
+    package "内容分发网络" {
+        [全球新闻CDN] as GlobalNewsCDN <<CDN>>
+        [媒体内容CDN] as MediaCDN <<CDN>>
+        [静态资源CDN] as StaticCDN <<CDN>>
+    }
+    
+    package "容器化平台" {
+        [Kubernetes集群] as K8sCluster <<Kubernetes>>
+        [Docker容器] as DockerContainer <<Docker>>
+        [微服务网格] as ServiceMesh <<Istio>>
+    }
+    
+    package "监控告警" {
+        [新闻系统监控] as NewsSystemMonitor <<Prometheus>>
+        [用户体验监控] as UXMonitor <<Grafana>>
+        [内容质量监控] as ContentQualityMonitor <<Custom>>
+    }
+    
+    package "安全防护" {
+        [内容安全防护] as ContentSecurityProtection <<WAF>>
+        [DDoS防护服务] as DDoSProtectionService <<CloudFlare>>
+        [数据加密服务] as DataEncryptionService <<Vault>>
+    }
+}
+
+' 客户端连接关系
+ReactPortal --> WebBFF : "HTTPS API"
+NextSite --> WebBFF : "SSR API"
+VueWidget --> WidgetBFF : "Widget API"
+RNApp --> MobileBFF : "Mobile API"
+FlutterApp --> MobileBFF : "Mobile API"
+SmartTVApp --> MobileBFF : "TV API"
+EditorialCMS --> EditorBFF : "Editor API"
+ContributorPortal --> ContributorBFF : "Contributor API"
+AdminDashboard --> AdminBFF : "Admin API"
+
+' BFF层连接关系
+WebBFF --> ContentService : "内容获取"
+MobileBFF --> RecommendationService : "个性化推荐"
+EditorBFF --> EditorialService : "编辑工作流"
+ContributorBFF --> PublishService : "内容发布"
+AdminBFF --> AnalyticsService : "数据分析"
+WidgetBFF --> SearchService : "搜索服务"
+
+' 实时推送连接
+WebBFF --> PushGateway : "推送订阅"
+MobileBFF --> PushGateway : "移动推送"
+PushGateway --> NotificationEngine : "推送调度"
+NotificationEngine --> BreakingNewsAlert : "突发新闻"
+PushGateway --> LiveUpdates : "实时更新"
+NotificationEngine --> MessageScheduler : "消息队列"
+
+' 业务服务层内部连接
+UserService --> SubscriptionService : "会员管理"
+ContentService --> CategoryService : "内容分类"
+EditorialService --> ModerationService : "内容审核"
+RecommendationService --> PersonalizationService : "个性化推荐"
+SearchService --> SmartMatchingService : "智能匹配"
+CommentService --> CommunityService : "社区管理"
+AnalyticsService --> TrendMonitoringService : "热点监控"
+AdService --> AdOptimizationService : "广告优化"
+
+' AI服务连接
+RecommendationService --> NewsRecommendationAI : "推荐算法"
+ModerationService --> ContentModerationAI : "内容审核"
+ArticleService --> AutoWritingAI : "自动写作"
+CommentService --> SentimentAnalysisAI : "情感分析"
+ModerationService --> FakeNewsDetectionAI : "假新闻检测"
+CategoryService --> SmartTaggingAI : "智能标签"
+MediaService --> ImageRecognitionAI : "图像识别"
+TrendAnalysisService --> TrendPredictionAI : "热点预测"
+
+' 数据存储连接
+UserService --> UserDB : "用户数据"
+ContentService --> ContentDB : "内容数据"
+CategoryService --> CategoryDB : "分类数据"
+CommentService --> CommentDB : "评论数据"
+RecommendationService --> NewsGraphDB : "新闻关系"
+SearchService --> NewsSearchIndex : "搜索索引"
+MediaService --> MediaFileStorage : "媒体文件"
+AnalyticsService --> NewsDataWarehouse : "数据分析"
+RecommendationService --> RecommendationCache : "推荐缓存"
+UserService --> SessionCache : "会话缓存"
+
+' 基础设施连接
+ContentService --> GlobalNewsCDN : "内容分发"
+MediaService --> MediaCDN : "媒体分发"
+WebBFF --> StaticCDN : "静态资源"
+EditorialService --> K8sCluster : "容器部署"
+ContentService --> ServiceMesh : "服务网格"
+AnalyticsService --> NewsSystemMonitor : "系统监控"
+UserService --> UXMonitor : "体验监控"
+ModerationService --> ContentSecurityProtection : "内容安全"
+
+@enduml 

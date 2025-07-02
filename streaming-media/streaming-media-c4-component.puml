@@ -1,0 +1,148 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title 流媒体系统 - Web播放器组件图 (Level 3)
+
+LAYOUT_WITH_LEGEND()
+
+!define PLAYER_COLOR #FF6B6B
+!define UI_COLOR #4ECDC4
+!define SERVICE_COLOR #45B7D1
+!define STREAMING_COLOR #9C27B0
+!define SOCIAL_COLOR #FFA726
+
+Person(viewer, "观众用户", "使用Web播放器观看直播和视频")
+
+System_Boundary(webPlayerContainer, "Web播放器容器 (React 18 + TypeScript)") {
+
+    ' 应用核心层
+    Component(appRouter, "应用路由", "React Router v6", "页面路由管理、懒加载、权限控制") <<UI_COLOR>>
+    Component(appStore, "全局状态", "Zustand + Immer", "应用状态管理、数据缓存") <<SERVICE_COLOR>>
+    Component(authProvider, "认证提供者", "React Context", "用户认证状态管理") <<SERVICE_COLOR>>
+    Component(themeProvider, "主题提供者", "Emotion + React", "UI主题切换、暗黑模式") <<UI_COLOR>>
+
+    ' 视频播放核心
+    Component(videoPlayer, "视频播放器", "Video.js + HLS.js", "核心视频播放功能、格式支持") <<PLAYER_COLOR>>
+    Component(livePlayer, "直播播放器", "WebRTC + Socket.io", "低延迟直播播放、实时流") <<STREAMING_COLOR>>
+    Component(playerCore, "播放器内核", "Native HTML5 Video", "底层视频渲染、解码控制") <<PLAYER_COLOR>>
+    Component(streamManager, "流管理器", "HLS.js + DASH.js", "自适应码率、流切换") <<STREAMING_COLOR>>
+    Component(bufferManager, "缓冲管理", "Custom Buffer Control", "智能预加载、缓冲优化") <<PLAYER_COLOR>>
+
+    ' 播放控制组件
+    Component(playControls, "播放控制器", "React Components", "播放/暂停、快进、音量控制") <<UI_COLOR>>
+    Component(progressBar, "进度条", "React + Canvas", "播放进度、拖拽跳转、缩略图预览") <<UI_COLOR>>
+    Component(qualitySelector, "清晰度选择", "React Dropdown", "多清晰度切换、自动适配") <<UI_COLOR>>
+    Component(speedController, "倍速控制", "React Slider", "播放速度调节、倍速记忆") <<UI_COLOR>>
+    Component(volumeControl, "音量控制", "React Range", "音量调节、静音切换") <<UI_COLOR>>
+    Component(fullscreenManager, "全屏管理", "Fullscreen API", "全屏播放、画中画模式") <<UI_COLOR>>
+
+    ' 直播互动组件
+    Component(liveChat, "直播聊天", "Socket.io + React", "实时聊天、表情、@功能") <<SOCIAL_COLOR>>
+    Component(danmakuSystem, "弹幕系统", "Canvas + WebGL", "弹幕发送、渲染、过滤") <<SOCIAL_COLOR>>
+    Component(giftSystem, "礼物系统", "React + Animation", "虚拟礼物、特效动画") <<SOCIAL_COLOR>>
+    Component(liveInteraction, "直播互动", "WebSocket + React", "点赞、举手、连麦申请") <<SOCIAL_COLOR>>
+    Component(audienceManager, "观众管理", "React + WebSocket", "在线观众列表、互动统计") <<SOCIAL_COLOR>>
+
+    ' 内容展示组件
+    Component(videoInfo, "视频信息", "React Components", "标题、描述、作者信息展示") <<UI_COLOR>>
+    Component(videoThumbnail, "视频缩略图", "React + Lazy Loading", "预览图、悬停预览") <<UI_COLOR>>
+    Component(videoList, "视频列表", "React Virtualized", "推荐视频、播放列表、无限滚动") <<UI_COLOR>>
+    Component(categoryNav, "分类导航", "React Navigation", "视频分类、筛选、排序") <<UI_COLOR>>
+    Component(searchBar, "搜索栏", "React + Debounce", "实时搜索、历史记录、智能建议") <<UI_COLOR>>
+
+    ' 用户功能组件
+    Component(userProfile, "用户中心", "React + Forms", "个人信息、观看历史、收藏管理") <<UI_COLOR>>
+    Component(subscriptionManager, "订阅管理", "React + API", "关注主播、订阅通知") <<SERVICE_COLOR>>
+    Component(commentSystem, "评论系统", "React + Virtualization", "视频评论、回复、点赞") <<SOCIAL_COLOR>>
+    Component(favoriteSystem, "收藏系统", "React + Local Storage", "视频收藏、播放列表管理") <<SERVICE_COLOR>>
+    Component(historyManager, "历史记录", "IndexedDB + React", "观看历史、断点续播") <<SERVICE_COLOR>>
+
+    ' 推荐和发现
+    Component(recommendEngine, "推荐引擎", "React + AI Service", "个性化推荐、相关视频") <<SERVICE_COLOR>>
+    Component(trendingSection, "热门内容", "React + Cache", "热门视频、实时榜单") <<UI_COLOR>>
+    Component(personalizedFeed, "个性化推送", "React + Algorithm", "个人推荐流、智能排序") <<SERVICE_COLOR>>
+
+    ' 技术基础组件
+    Component(apiClient, "API客户端", "Axios + Interceptors", "HTTP请求封装、错误处理") <<SERVICE_COLOR>>
+    Component(websocketClient, "WebSocket客户端", "Socket.io Client", "实时通信、连接管理") <<STREAMING_COLOR>>
+    Component(cacheManager, "缓存管理", "React Query + IndexedDB", "数据缓存、离线支持") <<SERVICE_COLOR>>
+    Component(errorBoundary, "错误边界", "React Error Boundary", "错误捕获、优雅降级") <<SERVICE_COLOR>>
+    Component(performanceMonitor, "性能监控", "Web Vitals + Custom", "性能指标、用户体验监控") <<SERVICE_COLOR>>
+
+    ' 媒体处理组件
+    Component(mediaProcessor, "媒体处理器", "Web Audio API", "音频处理、音效增强") <<PLAYER_COLOR>>
+    Component(subtitleRenderer, "字幕渲染", "WebVTT + Canvas", "多语言字幕、样式自定义") <<PLAYER_COLOR>>
+    Component(videoEffects, "视频特效", "WebGL + Shaders", "滤镜效果、实时处理") <<PLAYER_COLOR>>
+    Component(screenshotCapture, "截图功能", "Canvas API", "视频截图、分享功能") <<PLAYER_COLOR>>
+
+    ' 工具和辅助组件
+    Component(keyboardShortcuts, "键盘快捷键", "React + Event Listeners", "快捷键操作、可自定义") <<UI_COLOR>>
+    Component(touchGestures, "触摸手势", "React + Touch Events", "移动端手势控制") <<UI_COLOR>>
+    Component(accessibilityHelper, "无障碍辅助", "ARIA + Screen Reader", "无障碍访问支持") <<UI_COLOR>>
+    Component(analyticsTracker, "数据埋点", "Google Analytics + Custom", "用户行为追踪、播放统计") <<SERVICE_COLOR>>
+    Component(adRenderer, "广告渲染", "React + VAST", "视频广告、贴片广告播放") <<SERVICE_COLOR>>
+
+    ' 开发和调试工具
+    Component(devTools, "开发工具", "React DevTools + Custom", "调试面板、性能分析") <<SERVICE_COLOR>>
+    Component(logManager, "日志管理", "Winston + Console", "日志收集、错误上报") <<SERVICE_COLOR>>
+    Component(configManager, "配置管理", "Environment Config", "环境配置、功能开关") <<SERVICE_COLOR>>
+}
+
+' 外部依赖
+System_Ext(videoAPI, "视频API", "视频数据和元信息服务")
+System_Ext(liveAPI, "直播API", "直播流和聊天服务")
+System_Ext(userAPI, "用户API", "用户认证和信息服务")
+System_Ext(cdnService, "CDN服务", "视频内容分发网络")
+System_Ext(analyticsService, "分析服务", "数据统计和分析")
+
+' 用户交互
+Rel(viewer, appRouter, "页面访问", "HTTPS")
+Rel(viewer, videoPlayer, "视频播放", "用户操作")
+Rel(viewer, liveChat, "直播互动", "实时聊天")
+
+' 核心播放流程
+Rel(appRouter, videoPlayer, "路由到播放器", "React组件")
+Rel(videoPlayer, playerCore, "播放控制", "HTML5 Video API")
+Rel(playerCore, streamManager, "流管理", "HLS/DASH协议")
+Rel(streamManager, bufferManager, "缓冲控制", "Buffer API")
+Rel(videoPlayer, playControls, "控制界面", "React Props")
+
+' 直播相关流程
+Rel(livePlayer, websocketClient, "实时通信", "WebSocket")
+Rel(liveChat, websocketClient, "聊天消息", "Socket.io")
+Rel(danmakuSystem, liveChat, "弹幕显示", "实时数据")
+Rel(giftSystem, liveInteraction, "礼物互动", "WebSocket事件")
+
+' 状态管理流程
+Rel(appStore, authProvider, "认证状态", "状态同步")
+Rel(authProvider, userProfile, "用户信息", "Context Provider")
+Rel(appStore, cacheManager, "数据缓存", "状态持久化")
+Rel(historyManager, appStore, "历史同步", "状态更新")
+
+' API交互流程
+Rel(apiClient, videoAPI, "获取视频", "HTTP/REST")
+Rel(apiClient, liveAPI, "获取直播", "HTTP/REST")
+Rel(apiClient, userAPI, "用户操作", "HTTP/REST")
+Rel(websocketClient, liveAPI, "实时连接", "WebSocket")
+
+' 推荐系统流程
+Rel(recommendEngine, videoAPI, "推荐请求", "HTTP API")
+Rel(recommendEngine, personalizedFeed, "推荐结果", "数据传递")
+Rel(videoList, recommendEngine, "推荐触发", "用户行为")
+
+' 媒体处理流程
+Rel(videoPlayer, mediaProcessor, "音频处理", "Web Audio API")
+Rel(videoPlayer, subtitleRenderer, "字幕渲染", "WebVTT")
+Rel(videoPlayer, videoEffects, "视频特效", "WebGL")
+Rel(screenshotCapture, videoPlayer, "截图功能", "Canvas API")
+
+' 监控和分析
+Rel(performanceMonitor, analyticsTracker, "性能数据", "数据收集")
+Rel(analyticsTracker, analyticsService, "数据上报", "HTTP API")
+Rel(errorBoundary, logManager, "错误日志", "错误处理")
+
+' 外部内容分发
+Rel(streamManager, cdnService, "视频流获取", "HLS/HTTP")
+Rel(videoThumbnail, cdnService, "缩略图加载", "HTTP")
+
+@enduml 

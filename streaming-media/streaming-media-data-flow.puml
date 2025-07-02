@@ -1,0 +1,132 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Dynamic.puml
+
+title 流媒体系统 - 完整数据流程图
+
+LAYOUT_WITH_LEGEND()
+
+Person(viewer, "观众用户", "观看直播和视频的用户")
+Person(streamer, "主播", "进行直播的内容创作者")
+
+Container(webApp, "Web应用", "React + TypeScript", "用户前端界面")
+Container(mobileApp, "移动APP", "React Native", "移动端应用")
+Container(streamingTool, "推流工具", "OBS/移动直播", "主播推流工具")
+
+Container(apiGateway, "API网关", "Kong", "统一API入口")
+Container(userService, "用户服务", "Java Spring Boot", "用户管理")
+Container(authService, "认证服务", "OAuth 2.0", "身份认证")
+Container(liveService, "直播服务", "Node.js", "直播管理")
+Container(videoService, "视频服务", "Go", "视频管理")
+Container(chatService, "聊天服务", "WebSocket", "实时聊天")
+Container(paymentService, "支付服务", "Java", "支付处理")
+Container(recommendService, "推荐服务", "Python AI", "内容推荐")
+
+Container(rtmpServer, "RTMP服务器", "SRS", "推流接收")
+Container(transcodingService, "转码服务", "FFmpeg", "视频转码")
+Container(cdnService, "CDN服务", "CloudFlare", "内容分发")
+
+ContainerDb(userDB, "用户数据库", "PostgreSQL", "用户信息")
+ContainerDb(liveDB, "直播数据库", "MongoDB", "直播数据")
+ContainerDb(videoMetaDB, "视频元数据", "MongoDB", "视频信息")
+ContainerDb(chatCache, "聊天缓存", "Redis", "实时聊天")
+ContainerDb(analytics, "数据仓库", "ClickHouse", "用户行为")
+
+' 用户注册和认证流程 (步骤 1-8)
+Rel_D(viewer, webApp, "1. 访问平台", "HTTPS")
+Rel_D(webApp, apiGateway, "2. 注册请求", "HTTPS/REST")
+Rel_D(apiGateway, userService, "3. 创建用户", "HTTP")
+Rel_D(userService, userDB, "4. 存储用户信息", "SQL")
+Rel_U(userDB, userService, "5. 返回用户ID", "SQL Result")
+Rel_U(userService, authService, "6. 生成JWT Token", "HTTP")
+Rel_U(authService, apiGateway, "7. 返回认证信息", "HTTP")
+Rel_U(apiGateway, webApp, "8. 注册成功响应", "JSON")
+
+' 主播开始直播流程 (步骤 9-18)
+Rel_D(streamer, streamingTool, "9. 配置直播参数", "用户操作")
+Rel_D(streamingTool, apiGateway, "10. 创建直播间", "HTTPS/REST")
+Rel_D(apiGateway, liveService, "11. 创建直播会话", "HTTP")
+Rel_D(liveService, liveDB, "12. 存储直播信息", "MongoDB")
+Rel_U(liveDB, liveService, "13. 返回直播间ID", "MongoDB Result")
+Rel_U(liveService, streamingTool, "14. 返回推流地址", "HTTP")
+Rel_D(streamingTool, rtmpServer, "15. 开始RTMP推流", "RTMP协议")
+Rel_D(rtmpServer, transcodingService, "16. 发送原始流", "流媒体")
+Rel_D(transcodingService, cdnService, "17. 上传转码后流", "HLS/DASH")
+Rel_D(liveService, chatService, "18. 初始化聊天室", "WebSocket")
+
+' 观众进入直播间流程 (步骤 19-28)
+Rel_D(viewer, webApp, "19. 搜索直播内容", "用户操作")
+Rel_D(webApp, apiGateway, "20. 搜索请求", "HTTPS/REST")
+Rel_D(apiGateway, recommendService, "21. 获取推荐直播", "HTTP")
+Rel_D(recommendService, liveDB, "22. 查询直播列表", "MongoDB")
+Rel_U(liveDB, recommendService, "23. 返回直播数据", "MongoDB Result")
+Rel_U(recommendService, webApp, "24. 显示推荐直播", "JSON")
+Rel_D(viewer, webApp, "25. 选择进入直播间", "用户点击")
+Rel_D(webApp, apiGateway, "26. 获取播放地址", "HTTPS/REST")
+Rel_D(apiGateway, liveService, "27. 验证权限并获取流", "HTTP")
+Rel_U(liveService, webApp, "28. 返回HLS播放地址", "JSON")
+
+' 视频播放流程 (步骤 29-35)
+Rel_D(webApp, cdnService, "29. 请求视频流", "HLS/HTTP")
+Rel_U(cdnService, webApp, "30. 返回视频切片", "HLS Segments")
+Rel_D(webApp, "播放器内核", "31. 开始视频播放", "HTML5 Video")
+Rel_D(webApp, apiGateway, "32. 上报播放事件", "HTTPS/REST")
+Rel_D(apiGateway, analytics, "33. 记录观看数据", "HTTP")
+Rel_D(analytics, "实时统计", "34. 更新观看人数", "数据流")
+Rel_U("实时统计", webApp, "35. 显示实时数据", "WebSocket")
+
+' 实时聊天流程 (步骤 36-42)
+Rel_D(viewer, webApp, "36. 发送聊天消息", "用户输入")
+Rel_D(webApp, chatService, "37. 发送聊天请求", "WebSocket")
+Rel_D(chatService, chatCache, "38. 缓存聊天消息", "Redis")
+Rel_D(chatService, "内容审核", "39. 消息内容审核", "AI API")
+Rel_U("内容审核", chatService, "40. 审核结果", "HTTP")
+Rel_U(chatService, webApp, "41. 广播聊天消息", "WebSocket")
+Rel_U(webApp, viewer, "42. 显示聊天消息", "实时显示")
+
+' 打赏支付流程 (步骤 43-50)
+Rel_D(viewer, webApp, "43. 选择打赏礼物", "用户操作")
+Rel_D(webApp, apiGateway, "44. 创建支付订单", "HTTPS/REST")
+Rel_D(apiGateway, paymentService, "45. 处理支付请求", "HTTP")
+Rel_D(paymentService, "支付网关", "46. 调用第三方支付", "API")
+Rel_U("支付网关", paymentService, "47. 支付结果回调", "Webhook")
+Rel_U(paymentService, liveService, "48. 通知打赏成功", "HTTP")
+Rel_U(liveService, chatService, "49. 发送礼物特效", "WebSocket")
+Rel_U(chatService, webApp, "50. 显示礼物动画", "实时特效")
+
+' 推荐算法流程 (步骤 51-55)
+Rel_D(webApp, "用户行为收集", "51. 收集用户行为", "埋点数据")
+Rel_D("用户行为收集", analytics, "52. 存储行为数据", "数据流")
+Rel_D(recommendService, analytics, "53. 读取用户画像", "数据查询")
+Rel_D(recommendService, "AI推荐引擎", "54. 计算个性化推荐", "机器学习")
+Rel_U("AI推荐引擎", webApp, "55. 更新推荐内容", "实时推荐")
+
+' 直播结束流程 (步骤 56-62)
+Rel_D(streamer, streamingTool, "56. 结束直播", "用户操作")
+Rel_D(streamingTool, rtmpServer, "57. 停止推流", "断开连接")
+Rel_D(rtmpServer, liveService, "58. 通知直播结束", "Webhook")
+Rel_D(liveService, videoService, "59. 生成录播文件", "HTTP")
+Rel_D(videoService, videoMetaDB, "60. 保存录播信息", "MongoDB")
+Rel_D(liveService, chatService, "61. 关闭聊天室", "WebSocket")
+Rel_D(liveService, analytics, "62. 统计直播数据", "数据上报")
+
+note right of analytics
+    **数据收集包含：**
+    - 观看时长和人数
+    - 用户互动数据
+    - 打赏收入统计
+    - 视频播放质量
+    - 用户设备信息
+    - 地理位置分布
+end note
+
+note left of chatService
+    **实时功能包含：**
+    - 聊天消息
+    - 弹幕系统
+    - 在线用户列表
+    - 礼物特效
+    - 点赞动画
+    - 直播状态更新
+end note
+
+@enduml 

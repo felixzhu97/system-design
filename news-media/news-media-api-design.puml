@@ -1,0 +1,243 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title 新闻媒体系统 - API设计图
+
+LAYOUT_WITH_LEGEND()
+
+!define API_COLOR #45B7D1
+!define GRAPHQL_COLOR #E535AB
+!define WEBSOCKET_COLOR #FF6B6B
+!define REST_COLOR #4ECDC4
+!define GRPC_COLOR #9C27B0
+
+' API网关层
+Container(apiGateway, "API网关", "Kong/Nginx Plus", "请求路由、认证授权、限流、监控") <<API_COLOR>>
+Container(graphqlGateway, "GraphQL网关", "Apollo Server/Hasura", "GraphQL查询聚合、缓存、订阅") <<GRAPHQL_COLOR>>
+Container(websocketGateway, "WebSocket网关", "Socket.io/ws", "实时推送、在线状态、直播") <<WEBSOCKET_COLOR>>
+
+System_Boundary(apiServices, "API服务域") {
+
+    ' 用户域API
+    Container(userAPI, "用户域API", "Node.js/Express", "用户注册、登录、profile、权限管理") <<REST_COLOR>>
+    note right of userAPI
+        **用户域API端点：**
+        POST /api/users/register - 用户注册
+        POST /api/users/login - 用户登录
+        GET /api/users/profile - 获取用户信息
+        PUT /api/users/profile - 更新用户信息
+        POST /api/users/preferences - 设置阅读偏好
+        GET /api/users/subscriptions - 获取订阅列表
+        POST /api/users/follow - 关注作者
+        GET /api/users/reading-history - 阅读历史
+        POST /api/users/avatar - 上传头像
+        DELETE /api/users/account - 删除账户
+    end note
+
+    ' 内容域API
+    Container(contentAPI, "内容域API", "Java/Spring Boot", "文章管理、分类、标签、媒体文件") <<REST_COLOR>>
+    note right of contentAPI
+        **内容域API端点：**
+        GET /api/articles - 获取文章列表
+        GET /api/articles/{id} - 获取文章详情
+        POST /api/articles - 创建文章
+        PUT /api/articles/{id} - 更新文章
+        DELETE /api/articles/{id} - 删除文章
+        GET /api/categories - 获取分类列表
+        GET /api/tags - 获取标签列表
+        POST /api/articles/{id}/publish - 发布文章
+        GET /api/articles/drafts - 获取草稿列表
+        POST /api/media/upload - 上传媒体文件
+        GET /api/articles/trending - 热门文章
+        GET /api/articles/breaking - 突发新闻
+    end note
+
+    ' 评论域API
+    Container(commentAPI, "评论域API", "Node.js/Fastify", "评论管理、回复、点赞、举报") <<REST_COLOR>>
+    note left of commentAPI
+        **评论域API端点：**
+        GET /api/comments - 获取评论列表
+        POST /api/comments - 发表评论
+        PUT /api/comments/{id} - 更新评论
+        DELETE /api/comments/{id} - 删除评论
+        POST /api/comments/{id}/like - 点赞评论
+        POST /api/comments/{id}/reply - 回复评论
+        POST /api/comments/{id}/report - 举报评论
+        GET /api/comments/{id}/replies - 获取回复列表
+        POST /api/comments/moderate - 审核评论
+    end note
+
+    ' 推荐域API
+    Container(recommendAPI, "推荐API", "Python/FastAPI", "个性化推荐、相关文章、热门推荐") <<REST_COLOR>>
+    note left of recommendAPI
+        **推荐API端点：**
+        GET /api/recommend/articles - 推荐文章
+        GET /api/recommend/categories - 推荐分类
+        GET /api/recommend/authors - 推荐作者
+        POST /api/recommend/feedback - 推荐反馈
+        GET /api/recommend/trending - 实时热点
+        GET /api/recommend/personalized - 个性化推荐
+        GET /api/recommend/similar/{articleId} - 相似文章
+        GET /api/recommend/hot-topics - 热门话题
+    end note
+
+    ' 搜索域API
+    Container(searchAPI, "搜索API", "Go/Gin", "全文搜索、过滤、排序、建议") <<REST_COLOR>>
+    note right of searchAPI
+        **搜索API端点：**
+        GET /api/search/articles - 搜索文章
+        GET /api/search/authors - 搜索作者
+        GET /api/search/suggest - 搜索建议
+        GET /api/search/autocomplete - 自动完成
+        POST /api/search/advanced - 高级搜索
+        GET /api/search/history - 搜索历史
+        GET /api/search/hot-keywords - 热门关键词
+        GET /api/search/facets - 搜索面板
+    end note
+
+    ' 社交域API
+    Container(socialAPI, "社交API", "Node.js/Koa", "关注、分享、收藏、消息通知") <<REST_COLOR>>
+    note left of socialAPI
+        **社交API端点：**
+        POST /api/social/follow - 关注用户
+        DELETE /api/social/unfollow - 取消关注
+        GET /api/social/followers - 获取关注者
+        GET /api/social/following - 获取关注列表
+        POST /api/social/share - 分享文章
+        POST /api/social/bookmark - 收藏文章
+        GET /api/social/bookmarks - 获取收藏列表
+        GET /api/social/notifications - 获取通知
+        POST /api/social/notifications/read - 标记已读
+        GET /api/social/feed - 社交动态
+    end note
+
+    ' 广告域API
+    Container(adAPI, "广告API", "Java/Spring Boot", "广告投放、计费、统计、定向") <<REST_COLOR>>
+    note right of adAPI
+        **广告API端点：**
+        GET /api/ads/display - 获取展示广告
+        GET /api/ads/native - 获取原生广告
+        POST /api/ads/click - 广告点击统计
+        POST /api/ads/impression - 广告曝光统计
+        GET /api/ads/config - 广告配置
+        POST /api/ads/campaign - 创建广告活动
+        GET /api/ads/performance - 广告效果统计
+        POST /api/ads/targeting - 设置广告定向
+    end note
+
+    ' 订阅域API
+    Container(subscriptionAPI, "订阅API", "Python/Django", "订阅管理、会员、付费内容") <<REST_COLOR>>
+    note left of subscriptionAPI
+        **订阅API端点：**
+        GET /api/subscriptions/plans - 获取订阅计划
+        POST /api/subscriptions/subscribe - 订阅服务
+        DELETE /api/subscriptions/unsubscribe - 取消订阅
+        GET /api/subscriptions/status - 订阅状态
+        POST /api/subscriptions/payment - 支付处理
+        GET /api/subscriptions/history - 订阅历史
+        GET /api/subscriptions/benefits - 会员权益
+        POST /api/subscriptions/gift - 赠送会员
+    end note
+
+    ' 通知域API
+    Container(notificationAPI, "通知API", "Go/Echo", "推送通知、邮件、短信、消息队列") <<REST_COLOR>>
+    note right of notificationAPI
+        **通知API端点：**
+        POST /api/notifications/push - 推送通知
+        POST /api/notifications/email - 发送邮件
+        POST /api/notifications/sms - 发送短信
+        GET /api/notifications/list - 通知列表
+        PUT /api/notifications/{id}/read - 标记已读
+        POST /api/notifications/settings - 通知设置
+        GET /api/notifications/templates - 通知模板
+        POST /api/notifications/bulk - 批量通知
+    end note
+}
+
+' GraphQL API层
+System_Boundary(graphqlAPI, "GraphQL API层") {
+    Container(articleQuery, "文章查询", "GraphQL Schema", "文章、评论、作者统一查询") <<GRAPHQL_COLOR>>
+    Container(userQuery, "用户查询", "GraphQL Schema", "用户信息、社交关系查询") <<GRAPHQL_COLOR>>
+    Container(subscriptionQuery, "实时订阅", "GraphQL Subscription", "实时评论、文章更新") <<GRAPHQL_COLOR>>
+    
+    note top of articleQuery
+        **GraphQL文章查询：**
+        query {
+          articles(limit: 10, category: "tech") {
+            id, title, content, publishedAt
+            author { name, avatar }
+            comments { content, author }
+            tags
+          }
+        }
+    end note
+}
+
+' WebSocket API层
+System_Boundary(realtimeAPI, "实时API层") {
+    Container(liveNews, "实时新闻", "WebSocket", "突发新闻推送、实时更新") <<WEBSOCKET_COLOR>>
+    Container(liveComments, "实时评论", "WebSocket", "评论实时更新、在线讨论") <<WEBSOCKET_COLOR>>
+    Container(userPresence, "在线状态", "WebSocket", "用户在线状态、阅读状态") <<WEBSOCKET_COLOR>>
+    
+    note top of liveNews
+        **WebSocket事件：**
+        - breaking_news: 突发新闻推送
+        - article_updated: 文章更新
+        - comment_added: 新评论
+        - user_online: 用户上线
+        - reading_progress: 阅读进度
+    end note
+}
+
+' 外部API集成
+System_Boundary(externalAPI, "外部API集成") {
+    Container_Ext(aiAPI, "AI内容API", "OpenAI/百度AI", "内容生成、摘要、翻译") <<API_COLOR>>
+    Container_Ext(mediaAPI, "媒体处理API", "FFmpeg/ImageMagick", "图片视频处理") <<API_COLOR>>
+    Container_Ext(factheckAPI, "事实核查API", "第三方核查服务", "新闻真实性验证") <<API_COLOR>>
+    Container_Ext(weatherAPI, "天气API", "OpenWeatherMap", "天气数据集成") <<API_COLOR>>
+    Container_Ext(financeAPI, "金融API", "Alpha Vantage", "股票财经数据") <<API_COLOR>>
+}
+
+' 数据存储API
+System_Boundary(dataAPI, "数据存储API") {
+    ContainerDb(postgresAPI, "PostgreSQL API", "REST/GraphQL", "用户、权限数据") <<API_COLOR>>
+    ContainerDb(mongoAPI, "MongoDB API", "REST", "文章、评论数据") <<API_COLOR>>
+    ContainerDb(redisAPI, "Redis API", "Key-Value", "缓存、会话数据") <<API_COLOR>>
+    ContainerDb(elasticAPI, "Elasticsearch API", "REST", "搜索、聚合查询") <<API_COLOR>>
+}
+
+' API网关关系
+Rel(apiGateway, userAPI, "路由用户请求", "HTTP/REST")
+Rel(apiGateway, contentAPI, "路由内容请求", "HTTP/REST")
+Rel(apiGateway, commentAPI, "路由评论请求", "HTTP/REST")
+Rel(apiGateway, recommendAPI, "路由推荐请求", "HTTP/REST")
+Rel(apiGateway, searchAPI, "路由搜索请求", "HTTP/REST")
+Rel(apiGateway, socialAPI, "路由社交请求", "HTTP/REST")
+Rel(apiGateway, adAPI, "路由广告请求", "HTTP/REST")
+Rel(apiGateway, subscriptionAPI, "路由订阅请求", "HTTP/REST")
+Rel(apiGateway, notificationAPI, "路由通知请求", "HTTP/REST")
+
+' GraphQL网关关系
+Rel(graphqlGateway, articleQuery, "文章查询", "GraphQL")
+Rel(graphqlGateway, userQuery, "用户查询", "GraphQL")
+Rel(graphqlGateway, subscriptionQuery, "实时订阅", "GraphQL Subscription")
+
+' WebSocket网关关系
+Rel(websocketGateway, liveNews, "实时新闻", "WebSocket")
+Rel(websocketGateway, liveComments, "实时评论", "WebSocket")
+Rel(websocketGateway, userPresence, "在线状态", "WebSocket")
+
+' 服务间通信
+Rel(contentAPI, aiAPI, "内容AI处理", "HTTP/REST")
+Rel(contentAPI, mediaAPI, "媒体处理", "HTTP/REST")
+Rel(contentAPI, factheckAPI, "事实核查", "HTTP/REST")
+Rel(recommendAPI, weatherAPI, "天气数据", "HTTP/REST")
+Rel(recommendAPI, financeAPI, "金融数据", "HTTP/REST")
+
+' 数据存储关系
+Rel(userAPI, postgresAPI, "用户数据", "SQL")
+Rel(contentAPI, mongoAPI, "内容数据", "NoSQL")
+Rel(searchAPI, elasticAPI, "搜索数据", "REST")
+Rel(socialAPI, redisAPI, "缓存数据", "Key-Value")
+
+@enduml 

@@ -1,0 +1,302 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title 音乐流媒体平台 - 系统架构设计
+
+LAYOUT_TOP_DOWN()
+
+' 多端客户层
+package "多端客户层" {
+    package "Web端" {
+        [React播放器] as ReactPlayer <<React>>
+        [Next.js官网] as NextSite <<Next.js>>
+        [PWA播放器] as PWAPlayer <<PWA>>
+    }
+    
+    package "移动端" {
+        [React Native APP] as RNApp <<Mobile>>
+        [Flutter APP] as FlutterApp <<Mobile>>
+        [原生iOS音乐] as iOSApp <<Native>>
+        [原生Android音乐] as AndroidApp <<Native>>
+    }
+    
+    package "小程序生态" {
+        [微信音乐小程序] as WeChatMP <<MiniProgram>>
+        [QQ音乐小程序] as QQMusicMP <<MiniProgram>>
+        [支付宝音乐] as AlipayMP <<MiniProgram>>
+    }
+    
+    package "桌面端" {
+        [Electron播放器] as ElectronApp <<Desktop>>
+        [Tauri音乐播放器] as TauriApp <<Desktop>>
+        [macOS原生应用] as macOSApp <<Native>>
+        [Windows原生应用] as WindowsApp <<Native>>
+    }
+    
+    package "智能设备" {
+        [车载音响系统] as CarAudio <<Automotive>>
+        [智能音箱] as SmartSpeaker <<IoT>>
+        [智能手表] as SmartWatch <<Wearable>>
+        [VR音乐空间] as VRMusicSpace <<VR>>
+    }
+    
+    package "专业工具" {
+        [艺人工作台] as ArtistStudio <<Professional>>
+        [音乐制作工具] as MusicProduction <<Professional>>
+        [版权管理平台] as CopyrightManagement <<Professional>>
+    }
+}
+
+' BFF聚合层
+package "BFF聚合层（Backend for Frontend）" {
+    [Web BFF] as WebBFF <<Node.js>>
+    [Mobile BFF] as MobileBFF <<Node.js>>
+    [Player BFF] as PlayerBFF <<Node.js>>
+    [Artist BFF] as ArtistBFF <<Node.js>>
+    [Device BFF] as DeviceBFF <<Go>>
+    [Live BFF] as LiveBFF <<Go>>
+}
+
+' 实时音频层
+package "实时音频层" {
+    [音频网关] as AudioGateway <<Go>>
+    [流媒体引擎] as StreamingEngine <<FFmpeg>>
+    [音频转码服务] as AudioTranscoding <<Python>>
+    [DRM保护服务] as DRMService <<Security>>
+    [音质自适应] as AdaptiveQuality <<Algorithm>>
+}
+
+' 核心业务域服务
+package "核心业务域服务" {
+    package "用户域" {
+        [用户服务] as UserService <<Java>>
+        [认证服务] as AuthService <<Node.js>>
+        [偏好设置服务] as PreferenceService <<Go>>
+        [会员服务] as MembershipService <<Java>>
+    }
+    
+    package "音乐域" {
+        [音乐元数据服务] as MusicMetadataService <<Node.js>>
+        [专辑管理服务] as AlbumService <<Node.js>>
+        [艺人管理服务] as ArtistService <<Java>>
+        [歌词服务] as LyricsService <<Python>>
+    }
+    
+    package "播放域" {
+        [播放控制服务] as PlaybackService <<Go>>
+        [播放列表服务] as PlaylistService <<Go>>
+        [播放历史服务] as PlayHistoryService <<Java>>
+        [音频处理服务] as AudioProcessingService <<Python>>
+    }
+    
+    package "推荐域" {
+        [推荐算法服务] as RecommendationService <<Python>>
+        [音乐发现服务] as DiscoveryService <<Python>>
+        [个性化电台] as PersonalRadioService <<Python>>
+        [趋势分析服务] as TrendAnalysisService <<Python>>
+    }
+    
+    package "社交域" {
+        [音乐社区服务] as CommunityService <<Node.js>>
+        [评论服务] as CommentService <<Java>>
+        [分享服务] as ShareService <<Node.js>>
+        [协作歌单服务] as CollaborativePlaylistService <<Go>>
+    }
+    
+    package "内容域" {
+        [内容管理服务] as ContentManagementService <<Java>>
+        [版权管理服务] as CopyrightService <<Java>>
+        [音频上传服务] as AudioUploadService <<Go>>
+        [内容审核服务] as ModerationService <<Python>>
+    }
+    
+    package "直播域" {
+        [音乐直播服务] as LiveStreamingService <<Go>>
+        [K歌服务] as KaraokeService <<Go>>
+        [实时互动服务] as RealTimeInteractionService <<Node.js>>
+        [礼物打赏服务] as GiftService <<Java>>
+    }
+    
+    package "搜索域" {
+        [音乐搜索服务] as SearchService <<Python>>
+        [智能匹配服务] as SmartMatchingService <<Python>>
+        [歌曲识别服务] as SongRecognitionService <<Python>>
+        [搜索索引服务] as SearchIndexService <<Elasticsearch>>
+    }
+}
+
+' AI智能服务层
+package "AI智能服务层" {
+    [音乐推荐AI] as MusicRecommendationAI <<TensorFlow>>
+    [音频分析AI] as AudioAnalysisAI <<PyTorch>>
+    [音乐生成AI] as MusicGenerationAI <<AI>>
+    [情感识别AI] as EmotionRecognitionAI <<NLP>>
+    [歌曲识别AI] as SongIdentificationAI <<ML>>
+    [个性化算法] as PersonalizationAI <<ML>>
+    [音质增强AI] as AudioEnhancementAI <<DSP>>
+}
+
+' 数据存储层
+package "数据存储层" {
+    package "关系型数据库" {
+        database "用户数据库" as UserDB <<PostgreSQL>>
+        database "音乐元数据库" as MusicMetaDB <<PostgreSQL>>
+        database "播放记录库" as PlayHistoryDB <<PostgreSQL>>
+        database "订阅数据库" as SubscriptionDB <<PostgreSQL>>
+    }
+    
+    package "文档数据库" {
+        database "音乐内容库" as MusicContentDB <<MongoDB>>
+        database "社区数据库" as CommunityDB <<MongoDB>>
+        database "歌词数据库" as LyricsDB <<MongoDB>>
+    }
+    
+    package "图数据库" {
+        database "音乐关系图" as MusicGraphDB <<Neo4j>>
+        database "用户兴趣图" as UserInterestGraphDB <<Neo4j>>
+    }
+    
+    package "时序数据库" {
+        database "播放行为数据" as PlayBehaviorDB <<InfluxDB>>
+        database "音频质量监控" as AudioQualityDB <<InfluxDB>>
+    }
+    
+    package "缓存系统" {
+        database "播放缓存" as PlaybackCache <<Redis>>
+        database "推荐缓存" as RecommendationCache <<Redis>>
+        database "音频缓存" as AudioCacheRedis <<Redis>>
+    }
+    
+    package "消息队列" {
+        queue "音乐事件队列" as MusicEventQueue <<Kafka>>
+        queue "播放事件队列" as PlayEventQueue <<Kafka>>
+        queue "用户行为队列" as UserBehaviorQueue <<Kafka>>
+    }
+    
+    package "搜索引擎" {
+        database "音乐搜索索引" as MusicSearchIndex <<Elasticsearch>>
+        database "歌词搜索索引" as LyricsSearchIndex <<Elasticsearch>>
+    }
+    
+    package "文件存储" {
+        database "音频文件存储" as AudioFileStorage <<MinIO/S3>>
+        database "专辑封面存储" as AlbumArtStorage <<CDN>>
+        database "MV视频存储" as VideoStorage <<CDN>>
+    }
+    
+    package "数据仓库" {
+        database "音乐数据仓库" as MusicDataWarehouse <<ClickHouse>>
+        database "用户行为数仓" as UserBehaviorWarehouse <<ClickHouse>>
+    }
+}
+
+' 基础设施层
+package "基础设施层" {
+    package "音频CDN" {
+        [全球音频CDN] as GlobalAudioCDN <<CDN>>
+        [音频边缘节点] as AudioEdgeNodes <<Edge>>
+        [自适应流分发] as AdaptiveStreaming <<HLS/DASH>>
+    }
+    
+    package "容器化平台" {
+        [Kubernetes集群] as K8sCluster <<Kubernetes>>
+        [Docker容器] as DockerContainer <<Docker>>
+        [音频处理Pod] as AudioProcessingPods <<Pods>>
+    }
+    
+    package "监控告警" {
+        [音频质量监控] as AudioQualityMonitor <<Prometheus>>
+        [播放性能监控] as PlaybackMonitor <<Grafana>>
+        [用户体验监控] as UXMonitor <<RUM>>
+    }
+    
+    package "安全防护" {
+        [音频DRM保护] as AudioDRMProtection <<Security>>
+        [版权内容保护] as CopyrightProtection <<Security>>
+        [反盗链服务] as AntiHotlinkService <<Security>>
+    }
+}
+
+' 外部服务集成
+package "外部服务集成" {
+    [第三方音乐平台] as ThirdPartyMusicPlatforms <<Integration>>
+    [唱片公司API] as RecordLabelAPIs <<Integration>>
+    [歌词服务商] as LyricsProviders <<Integration>>
+    [音频识别服务] as AudioRecognitionServices <<Integration>>
+    [社交平台API] as SocialPlatformAPIs <<Integration>>
+    [支付网关] as PaymentGateways <<Payment>>
+    [推送服务] as PushNotificationServices <<Notification>>
+    [短信邮件服务] as SMSEmailServices <<Notification>>
+}
+
+' 客户端连接关系
+ReactPlayer --> WebBFF : "HTTPS API"
+NextSite --> WebBFF : "SSR API"
+PWAPlayer --> WebBFF : "PWA API"
+RNApp --> MobileBFF : "Mobile API"
+FlutterApp --> MobileBFF : "Mobile API"
+ElectronApp --> PlayerBFF : "Desktop API"
+TauriApp --> PlayerBFF : "Desktop API"
+CarAudio --> DeviceBFF : "Car API"
+SmartSpeaker --> DeviceBFF : "Voice API"
+ArtistStudio --> ArtistBFF : "Artist API"
+
+' BFF层连接关系
+WebBFF --> AudioGateway : "音频流"
+MobileBFF --> AudioGateway : "音频流"
+PlayerBFF --> AudioGateway : "音频流"
+ArtistBFF --> ContentManagementService : "内容管理"
+DeviceBFF --> PlaybackService : "播放控制"
+LiveBFF --> LiveStreamingService : "直播服务"
+
+' 音频层连接关系
+AudioGateway --> StreamingEngine : "流处理"
+StreamingEngine --> AudioTranscoding : "格式转换"
+AudioGateway --> DRMService : "版权保护"
+StreamingEngine --> AdaptiveQuality : "音质调节"
+
+' 业务服务层内部连接
+UserService --> MembershipService : "会员管理"
+MusicMetadataService --> AlbumService : "专辑关联"
+PlaybackService --> PlaylistService : "播放列表"
+RecommendationService --> PersonalRadioService : "个性化电台"
+CommunityService --> CommentService : "评论管理"
+ContentManagementService --> CopyrightService : "版权验证"
+LiveStreamingService --> RealTimeInteractionService : "实时互动"
+SearchService --> SmartMatchingService : "智能匹配"
+
+' AI服务连接
+RecommendationService --> MusicRecommendationAI : "推荐算法"
+AudioProcessingService --> AudioAnalysisAI : "音频分析"
+PersonalRadioService --> PersonalizationAI : "个性化"
+SongRecognitionService --> SongIdentificationAI : "歌曲识别"
+ModerationService --> EmotionRecognitionAI : "情感分析"
+
+' 数据存储连接
+UserService --> UserDB : "用户数据"
+MusicMetadataService --> MusicMetaDB : "音乐元数据"
+PlaybackService --> PlayHistoryDB : "播放记录"
+CommunityService --> CommunityDB : "社区数据"
+RecommendationService --> MusicGraphDB : "音乐关系"
+SearchService --> MusicSearchIndex : "搜索索引"
+AudioUploadService --> AudioFileStorage : "音频文件"
+PlaybackService --> PlaybackCache : "播放缓存"
+
+' 基础设施连接
+StreamingEngine --> GlobalAudioCDN : "内容分发"
+AudioGateway --> AudioEdgeNodes : "边缘分发"
+PlaybackService --> K8sCluster : "容器部署"
+AudioProcessingService --> AudioProcessingPods : "音频处理"
+StreamingEngine --> AudioQualityMonitor : "质量监控"
+PlaybackService --> PlaybackMonitor : "性能监控"
+DRMService --> AudioDRMProtection : "DRM保护"
+
+' 外部服务连接
+ContentManagementService --> RecordLabelAPIs : "内容采购"
+LyricsService --> LyricsProviders : "歌词获取"
+SongRecognitionService --> AudioRecognitionServices : "识别服务"
+ShareService --> SocialPlatformAPIs : "社交分享"
+MembershipService --> PaymentGateways : "支付处理"
+UserService --> PushNotificationServices : "消息推送"
+
+@enduml 
