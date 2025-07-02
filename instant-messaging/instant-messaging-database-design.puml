@@ -1,0 +1,258 @@
+@startuml
+!define MONGO_COLOR #47A248
+!define POSTGRES_COLOR #336791
+!define REDIS_COLOR #DC382D
+
+title 即时通讯系统 - 数据库设计
+
+package "用户数据存储 (MongoDB)" <<MONGO_COLOR>> {
+    entity "用户信息 (users)" {
+        * user_id : ObjectId
+        --
+        * username : String
+        * email : String
+        * phone : String
+        password_hash : String
+        avatar_url : String
+        nickname : String
+        bio : String
+        status : String
+        last_seen : Date
+        created_at : Date
+        updated_at : Date
+        is_verified : Boolean
+        language : String
+        timezone : String
+    }
+    
+    entity "用户关系 (user_relationships)" {
+        * _id : ObjectId
+        --
+        * user_id : ObjectId
+        * target_user_id : ObjectId
+        * relationship_type : String
+        status : String
+        created_at : Date
+        updated_at : Date
+    }
+    
+    entity "用户设置 (user_settings)" {
+        * user_id : ObjectId
+        --
+        notification_settings : Object
+        privacy_settings : Object
+        chat_settings : Object
+        theme_settings : Object
+        language : String
+        timezone : String
+        updated_at : Date
+    }
+}
+
+package "消息数据存储 (MongoDB分片)" <<MONGO_COLOR>> {
+    entity "私聊消息 (private_messages)" {
+        * message_id : ObjectId
+        --
+        * sender_id : ObjectId
+        * receiver_id : ObjectId
+        * message_type : String
+        * content : Object
+        reply_to : ObjectId
+        forward_from : ObjectId
+        file_attachments : Array
+        delivery_status : String
+        read_status : String
+        created_at : Date
+        updated_at : Date
+        expires_at : Date
+        is_deleted : Boolean
+    }
+    
+    entity "群组消息 (group_messages)" {
+        * message_id : ObjectId
+        --
+        * group_id : ObjectId
+        * sender_id : ObjectId
+        * message_type : String
+        * content : Object
+        reply_to : ObjectId
+        forward_from : ObjectId
+        file_attachments : Array
+        mentions : Array
+        read_by : Array
+        created_at : Date
+        updated_at : Date
+        is_deleted : Boolean
+    }
+    
+    entity "频道消息 (channel_messages)" {
+        * message_id : ObjectId
+        --
+        * channel_id : ObjectId
+        * sender_id : ObjectId
+        * message_type : String
+        * content : Object
+        file_attachments : Array
+        view_count : Number
+        reaction_stats : Object
+        created_at : Date
+        updated_at : Date
+        is_pinned : Boolean
+    }
+}
+
+package "群组数据存储 (PostgreSQL)" <<POSTGRES_COLOR>> {
+    entity "群组信息 (groups)" {
+        * group_id : BIGSERIAL
+        --
+        * group_name : VARCHAR(100)
+        * creator_id : BIGINT
+        description : TEXT
+        avatar_url : VARCHAR(500)
+        group_type : VARCHAR(20)
+        max_members : INTEGER
+        is_public : BOOLEAN
+        invite_link : VARCHAR(100)
+        created_at : TIMESTAMP
+        updated_at : TIMESTAMP
+        is_active : BOOLEAN
+    }
+    
+    entity "群组成员 (group_members)" {
+        * group_id : BIGINT
+        * user_id : BIGINT
+        --
+        role : VARCHAR(20)
+        joined_at : TIMESTAMP
+        invited_by : BIGINT
+        is_muted : BOOLEAN
+        is_banned : BOOLEAN
+        permissions : JSONB
+    }
+    
+    entity "频道信息 (channels)" {
+        * channel_id : BIGSERIAL
+        --
+        * channel_name : VARCHAR(100)
+        * creator_id : BIGINT
+        description : TEXT
+        avatar_url : VARCHAR(500)
+        is_public : BOOLEAN
+        subscriber_count : INTEGER
+        created_at : TIMESTAMP
+        updated_at : TIMESTAMP
+        is_active : BOOLEAN
+    }
+    
+    entity "频道订阅 (channel_subscriptions)" {
+        * channel_id : BIGINT
+        * user_id : BIGINT
+        --
+        subscribed_at : TIMESTAMP
+        notification_enabled : BOOLEAN
+        is_muted : BOOLEAN
+    }
+}
+
+package "缓存数据存储 (Redis)" <<REDIS_COLOR>> {
+    entity "在线状态 (online_users)" {
+        key: "online:{user_id}"
+        --
+        value: {
+            status: "online|away|busy",
+            last_seen: timestamp,
+            client_info: object,
+            connection_id: string
+        }
+        ttl: 300秒
+    }
+    
+    entity "会话信息 (user_sessions)" {
+        key: "session:{session_id}"
+        --
+        value: {
+            user_id: string,
+            device_info: object,
+            login_time: timestamp,
+            last_activity: timestamp
+        }
+        ttl: 30天
+    }
+    
+    entity "消息缓存 (message_cache)" {
+        key: "chat:{chat_id}:messages"
+        --
+        value: [
+            recent_messages_list
+        ]
+        ttl: 1小时
+    }
+    
+    entity "未读计数 (unread_counts)" {
+        key: "unread:{user_id}"
+        --
+        value: {
+            total_unread: number,
+            chat_unreads: {
+                chat_id: count
+            }
+        }
+        ttl: 持久化
+    }
+}
+
+package "文件存储 (MinIO/S3)" {
+    entity "聊天文件 (chat_files)" {
+        * file_id : String
+        --
+        * original_name : String
+        * file_type : String
+        * file_size : Number
+        * uploader_id : String
+        * chat_id : String
+        file_path : String
+        thumbnail_path : String
+        upload_time : Date
+        is_deleted : Boolean
+    }
+}
+
+' 关系定义
+用户信息 ||--o{ 用户关系 : "用户关系链"
+用户信息 ||--|| 用户设置 : "个人设置"
+用户信息 ||--o{ 私聊消息 : "发送消息"
+用户信息 ||--o{ 群组成员 : "群组参与"
+用户信息 ||--o{ 频道订阅 : "频道订阅"
+
+群组信息 ||--o{ 群组成员 : "成员关系"
+群组信息 ||--o{ 群组消息 : "群组聊天"
+
+频道信息 ||--o{ 频道订阅 : "订阅关系"
+频道信息 ||--o{ 频道消息 : "频道内容"
+
+' 分片策略说明
+note right of 私聊消息
+  分片策略:
+  - 按sender_id + receiver_id哈希分片
+  - 每片存储500万条消息
+  - 按月份创建时间分区
+  - 冷数据自动归档
+end note
+
+note right of 群组消息
+  分片策略:
+  - 按group_id哈希分片
+  - 热门群组独立分片
+  - 按时间分区存储
+  - 自动清理过期消息
+end note
+
+note right of 在线状态
+  缓存策略:
+  - 用户上线时写入
+  - 5分钟自动过期
+  - 定时刷新状态
+  - 集群同步状态
+end note
+
+@enduml 

@@ -1,0 +1,56 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+title 饮食健康系统 - 上下文图
+
+LAYOUT_WITH_LEGEND()
+
+' 用户角色
+Person(user, "用户", "关注饮食健康、进行营养管理的个人用户")
+Person(nutritionist, "营养师", "提供专业营养建议、制定饮食计划的专业人员")
+Person(doctor, "医生", "临床医生，提供疾病相关的饮食医疗建议")
+Person(nutritionChef, "营养厨师", "制作健康食谱、提供烹饪指导的专业厨师")
+Person(researcher, "研究员", "营养学研究人员，进行饮食健康数据分析")
+Person(admin, "管理员", "系统管理、内容审核、用户管理")
+
+' 核心系统
+System(nutritionSystem, "饮食健康系统", "提供营养分析、饮食记录、健康计划、食谱推荐等功能")
+
+' 外部系统
+System_Ext(foodDatabase, "食物数据库", "USDA、中国食物成分表等权威营养数据库")
+System_Ext(barcodeService, "条码识别", "食品条码扫描、产品信息识别服务")
+System_Ext(imageRecognition, "图像识别", "食物图像识别、份量估算AI服务")
+System_Ext(wearableDevices, "可穿戴设备", "智能手环、体重秤、血糖仪等健康设备")
+System_Ext(healthPlatforms, "健康平台", "Apple Health、Google Fit、华为健康等")
+System_Ext(recipeService, "食谱服务", "菜谱数据、烹饪指导、营养食谱库")
+System_Ext(groceryService, "食材配送", "生鲜电商、食材配送、购物清单服务")
+System_Ext(restaurantAPI, "餐厅接口", "餐厅菜单、营养信息、点餐系统接口")
+System_Ext(medicalSystem, "医疗系统", "电子病历、健康档案、医疗建议系统")
+System_Ext(fitnessApps, "健身应用", "运动记录、卡路里消耗、健身计划应用")
+System_Ext(socialMedia, "社交媒体", "饮食分享、健康打卡、社区互动平台")
+System_Ext(reminderService, "提醒服务", "用餐提醒、喝水提醒、用药提醒")
+System_Ext(analyticsService, "数据分析", "营养趋势分析、健康指标统计")
+
+' 关系
+Rel(user, nutritionSystem, "饮食记录、营养查询、健康管理", "移动应用/Web")
+Rel(nutritionist, nutritionSystem, "营养咨询、饮食方案制定", "专业营养师端")
+Rel(doctor, nutritionSystem, "医疗营养建议、饮食处方", "医生工作站")
+Rel(nutritionChef, nutritionSystem, "食谱创作、烹饪指导", "厨师创作端")
+Rel(researcher, nutritionSystem, "营养数据分析、研究统计", "研究端")
+Rel(admin, nutritionSystem, "系统管理、内容审核", "管理后台")
+
+Rel(nutritionSystem, foodDatabase, "营养成分查询", "营养数据API")
+Rel(nutritionSystem, barcodeService, "产品识别", "条码API")
+Rel(nutritionSystem, imageRecognition, "食物识别", "图像识别API")
+Rel(nutritionSystem, wearableDevices, "健康数据同步", "设备SDK/蓝牙")
+Rel(nutritionSystem, healthPlatforms, "健康数据集成", "HealthKit/Google Fit")
+Rel(nutritionSystem, recipeService, "食谱推荐", "食谱API")
+Rel(nutritionSystem, groceryService, "食材推荐、购买", "电商API")
+Rel(nutritionSystem, restaurantAPI, "外食营养信息", "餐厅API")
+Rel(nutritionSystem, medicalSystem, "健康档案、医疗建议", "医疗接口")
+Rel(nutritionSystem, fitnessApps, "运动数据、卡路里平衡", "健身API")
+Rel(nutritionSystem, socialMedia, "饮食分享、社区互动", "社交API")
+Rel(nutritionSystem, reminderService, "健康提醒、习惯养成", "推送API")
+Rel(nutritionSystem, analyticsService, "数据分析、趋势预测", "分析API")
+
+@enduml 

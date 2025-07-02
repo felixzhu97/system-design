@@ -1,0 +1,122 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title 健身运动系统 - 容器图
+
+LAYOUT_WITH_LEGEND()
+
+' 客户端应用
+Container(mobileApp, "移动健身应用", "React Native, TypeScript", "iOS/Android健身应用，运动记录、计划制定")
+Container(webApp, "Web健身平台", "Next.js 14, TypeScript", "浏览器端健身平台，课程观看、数据分析")
+Container(wearableApp, "可穿戴应用", "WatchOS, Wear OS", "智能手表应用，实时监测、快速记录")
+Container(trainerApp, "教练管理端", "Vue 3, TypeScript", "私人教练管理学员、制定计划")
+Container(adminApp, "管理后台", "React, TypeScript, Ant Design", "系统管理、内容审核、数据统计")
+
+' 接入层
+Container(apiGateway, "API网关", "Kong, Nginx", "统一API入口、认证、限流")
+Container(iotGateway, "IoT设备网关", "Go, MQTT, CoAP", "设备连接、数据采集、协议转换")
+Container(loadBalancer, "负载均衡", "Nginx, HAProxy", "流量分发和高可用")
+
+' 核心微服务
+Container(userService, "用户服务", "Java, Spring Boot, JPA", "用户注册、认证、个人资料管理")
+Container(workoutService, "运动服务", "Go, Gin, GORM", "运动记录、训练计划、运动库管理")
+Container(planService, "计划服务", "Python, FastAPI, SQLAlchemy", "健身计划制定、个性化推荐")
+Container(nutritionService, "营养服务", "Node.js, Express, Prisma", "营养记录、饮食建议、热量计算")
+Container(socialService, "社交服务", "Go, Fiber, Redis", "好友系统、动态分享、运动打卡")
+Container(courseService, "课程服务", "Java, Spring Boot, MyBatis", "健身视频、直播课程、教练课程")
+Container(deviceService, "设备服务", "Go, Echo, InfluxDB", "设备管理、数据采集、同步服务")
+Container(aiCoachService, "AI教练服务", "Python, FastAPI, TensorFlow", "动作识别、智能纠错、个性化指导")
+Container(achievementService, "成就服务", "Node.js, Fastify, MongoDB", "成就系统、积分奖励、排行榜")
+
+' 数据存储
+ContainerDb(userDb, "用户数据库", "PostgreSQL 15", "用户信息、个人资料、社交关系")
+ContainerDb(workoutDb, "运动数据库", "PostgreSQL 15", "运动记录、训练计划、运动库")
+ContainerDb(nutritionDb, "营养数据库", "MySQL 8.0", "食物库、营养记录、饮食计划")
+ContainerDb(courseDb, "课程数据库", "MongoDB 6.0", "视频课程、教练内容、学习进度")
+ContainerDb(deviceDataDb, "设备数据库", "InfluxDB 2.0", "时序健康数据、运动指标、生理参数")
+ContainerDb(cacheDb, "缓存数据库", "Redis 7.0", "用户状态、热点数据、会话信息")
+ContainerDb(analyticsDb, "分析数据库", "ClickHouse", "用户行为、运动统计、趋势分析")
+
+' 文件存储
+Container(mediaService, "媒体服务", "Go, MinIO", "视频、图片、音频文件管理")
+ContainerDb(fileStorage, "文件存储", "MinIO Cluster", "健身视频、用户照片、语音指导")
+
+' 消息队列和流处理
+Container(messageQueue, "消息队列", "Apache Kafka", "异步消息、事件驱动")
+Container(streamProcessor, "流处理", "Apache Flink", "实时数据处理、指标计算")
+
+' 监控和分析
+Container(monitoring, "监控服务", "Prometheus, Grafana", "系统监控、设备状态监控")
+Container(dataAnalytics, "数据分析", "Apache Spark", "运动数据挖掘、健康趋势分析")
+
+' 外部服务
+Container_Ext(healthKitAPI, "健康平台", "Apple Health, Google Fit", "健康数据同步")
+Container_Ext(wearableSDK, "可穿戴SDK", "Apple Watch, Fitbit", "设备数据接口")
+Container_Ext(musicAPI, "音乐服务", "Spotify, 网易云音乐", "运动音乐播放")
+
+' 客户端到接入层
+Rel(mobileApp, loadBalancer, "API请求", "HTTPS")
+Rel(webApp, loadBalancer, "页面请求", "HTTPS")
+Rel(wearableApp, iotGateway, "设备数据", "蓝牙/WiFi")
+Rel(trainerApp, loadBalancer, "教练操作", "HTTPS")
+Rel(adminApp, loadBalancer, "管理操作", "HTTPS")
+
+' 接入层路由
+Rel(loadBalancer, apiGateway, "负载分发", "HTTP")
+Rel(iotGateway, deviceService, "设备数据", "MQTT/HTTP")
+
+' API网关到微服务
+Rel(apiGateway, userService, "用户相关", "HTTP/REST")
+Rel(apiGateway, workoutService, "运动相关", "HTTP/REST")
+Rel(apiGateway, planService, "计划相关", "HTTP/REST")
+Rel(apiGateway, nutritionService, "营养相关", "HTTP/REST")
+Rel(apiGateway, socialService, "社交相关", "HTTP/REST")
+Rel(apiGateway, courseService, "课程相关", "HTTP/REST")
+Rel(apiGateway, deviceService, "设备相关", "HTTP/REST")
+Rel(apiGateway, aiCoachService, "AI教练", "HTTP/REST")
+Rel(apiGateway, achievementService, "成就相关", "HTTP/REST")
+
+' 微服务间通信
+Rel(workoutService, userService, "用户验证", "gRPC")
+Rel(planService, workoutService, "运动数据", "gRPC")
+Rel(aiCoachService, workoutService, "动作分析", "gRPC")
+Rel(achievementService, workoutService, "成就计算", "gRPC")
+Rel(deviceService, workoutService, "设备数据", "gRPC")
+Rel(nutritionService, planService, "营养计划", "gRPC")
+
+' 微服务到数据库
+Rel(userService, userDb, "用户数据", "JDBC")
+Rel(workoutService, workoutDb, "运动数据", "JDBC")
+Rel(nutritionService, nutritionDb, "营养数据", "JDBC")
+Rel(courseService, courseDb, "课程数据", "MongoDB Driver")
+Rel(deviceService, deviceDataDb, "设备数据", "InfluxDB API")
+Rel(dataAnalytics, analyticsDb, "分析数据", "ClickHouse Driver")
+
+' 缓存层
+Rel(userService, cacheDb, "用户缓存", "Redis")
+Rel(workoutService, cacheDb, "运动缓存", "Redis")
+Rel(socialService, cacheDb, "社交缓存", "Redis")
+
+' 媒体服务
+Rel(courseService, mediaService, "视频管理", "S3 API")
+Rel(socialService, mediaService, "图片管理", "S3 API")
+Rel(mediaService, fileStorage, "文件存储", "MinIO API")
+
+' 消息队列和流处理
+Rel(workoutService, messageQueue, "运动事件", "Kafka")
+Rel(deviceService, messageQueue, "设备数据", "Kafka")
+Rel(achievementService, messageQueue, "成就事件", "Kafka")
+Rel(streamProcessor, messageQueue, "数据消费", "Kafka")
+Rel(streamProcessor, deviceDataDb, "实时指标", "InfluxDB")
+
+' 外部服务集成
+Rel(deviceService, healthKitAPI, "健康数据同步", "HealthKit API")
+Rel(deviceService, wearableSDK, "设备连接", "SDK/蓝牙")
+Rel(courseService, musicAPI, "音乐集成", "API")
+
+' 监控
+Rel(monitoring, workoutService, "服务监控", "Metrics")
+Rel(monitoring, deviceService, "设备监控", "Metrics")
+Rel(monitoring, iotGateway, "网关监控", "Metrics")
+
+@enduml 

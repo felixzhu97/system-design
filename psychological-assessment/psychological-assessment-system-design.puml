@@ -1,0 +1,181 @@
+@startuml
+title 心理检测系统 - 系统架构设计
+
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+LAYOUT_WITH_LEGEND()
+
+package "客户端层" {
+    package "Web应用" {
+        [来访者端] as ClientWeb
+        [心理医生端] as DoctorWeb  
+        [咨询师端] as CounselorWeb
+        [督导师端] as SupervisorWeb
+        [研究端] as ResearchWeb
+        [管理后台] as AdminWeb
+    }
+    package "移动端" {
+        [来访者移动端] as ClientMobile
+        [医生移动端] as DoctorMobile
+    }
+}
+
+package "安全接入层" {
+    [API网关] as APIGateway
+    [身份认证] as AuthService  
+    [权限管理] as AuthzService
+    [数据脱敏] as DataMasking
+    [审计日志] as AuditLog
+}
+
+package "业务应用层" {
+    package "核心业务服务" {
+        [用户服务] as UserService
+        [量表服务] as ScaleService
+        [测评服务] as AssessmentService
+        [结果分析服务] as AnalysisService
+        [咨询管理服务] as CounselingService
+        [督导管理服务] as SupervisionService
+        [报告生成服务] as ReportService
+    }
+    
+    package "专业服务" {
+        [AI分析服务] as AIService
+        [危机干预服务] as CrisisService
+        [质量控制服务] as QualityService
+        [统计分析服务] as StatisticsService
+    }
+    
+    package "辅助服务" {
+        [通知服务] as NotificationService
+        [文件服务] as FileService
+        [预约服务] as AppointmentService
+        [培训服务] as TrainingService
+    }
+}
+
+package "数据服务层" {
+    package "主数据库" {
+        database "用户数据库\n(PostgreSQL)" as UserDB
+        database "量表数据库\n(PostgreSQL)" as ScaleDB
+        database "测评记录库\n(PostgreSQL)" as AssessmentDB
+        database "咨询记录库\n(PostgreSQL)" as CounselingDB
+    }
+    
+    package "专用存储" {
+        database "敏感数据库\n(加密存储)" as SensitiveDB
+        database "审计数据库\n(不可篡改)" as AuditDB
+        database "统计数据库\n(ClickHouse)" as StatsDB
+        database "文件存储\n(加密MinIO)" as FileStorage
+    }
+    
+    package "缓存层" {
+        database "Redis集群\n(会话缓存)" as RedisCache
+        database "量表缓存\n(Redis)" as ScaleCache
+    }
+}
+
+package "安全保障层" {
+    [数据加密服务] as EncryptionService
+    [密钥管理] as KeyManagement
+    [安全审计] as SecurityAudit
+    [入侵检测] as IntrusionDetection
+    [数据备份] as BackupService
+    [灾难恢复] as DisasterRecovery
+}
+
+package "监控运维层" {
+    [系统监控] as SystemMonitor
+    [性能监控] as PerformanceMonitor
+    [日志分析] as LogAnalysis
+    [告警系统] as AlertSystem
+}
+
+package "外部系统集成" {
+    cloud "量表库\n(标准量表)" as ExternalScales
+    cloud "AI分析引擎\n(心理AI)" as ExternalAI
+    cloud "医疗系统\n(HIS集成)" as MedicalSystem
+    cloud "应急服务\n(危机干预)" as EmergencyService
+    cloud "研究数据库\n(学术资源)" as ResearchDB
+}
+
+' 客户端到安全层
+ClientWeb --> APIGateway : HTTPS
+ClientMobile --> APIGateway : HTTPS
+DoctorWeb --> APIGateway : HTTPS
+CounselorWeb --> APIGateway : HTTPS
+SupervisorWeb --> APIGateway : HTTPS
+ResearchWeb --> APIGateway : HTTPS
+AdminWeb --> APIGateway : HTTPS
+DoctorMobile --> APIGateway : HTTPS
+
+' 安全层内部
+APIGateway --> AuthService : 身份验证
+APIGateway --> AuthzService : 权限检查
+APIGateway --> DataMasking : 数据脱敏
+APIGateway --> AuditLog : 操作记录
+
+' 安全层到业务层
+AuthService --> UserService : 用户验证
+APIGateway --> ScaleService : 量表调用
+APIGateway --> AssessmentService : 测评服务
+APIGateway --> AnalysisService : 结果分析
+APIGateway --> CounselingService : 咨询管理
+APIGateway --> SupervisionService : 督导管理
+APIGateway --> ReportService : 报告生成
+
+' 业务服务间调用
+AssessmentService --> ScaleService : 获取量表
+AssessmentService --> AnalysisService : 结果分析
+AnalysisService --> AIService : AI分析
+AnalysisService --> CrisisService : 危机评估
+CounselingService --> AssessmentService : 测评结果
+SupervisionService --> CounselingService : 督导审查
+ReportService --> AnalysisService : 分析数据
+StatisticsService --> AssessmentService : 统计数据
+
+' 辅助服务调用
+NotificationService --> AppointmentService : 预约提醒
+FileService --> ReportService : 报告存储
+TrainingService --> UserService : 培训记录
+
+' 业务层到数据层
+UserService --> UserDB : 用户数据
+ScaleService --> ScaleDB : 量表数据
+AssessmentService --> AssessmentDB : 测评记录
+CounselingService --> CounselingDB : 咨询记录
+AnalysisService --> SensitiveDB : 敏感分析
+StatisticsService --> StatsDB : 统计数据
+FileService --> FileStorage : 文件存储
+
+' 缓存使用
+UserService --> RedisCache : 用户会话
+ScaleService --> ScaleCache : 量表缓存
+AssessmentService --> RedisCache : 测评状态
+
+' 安全保障
+SensitiveDB --> EncryptionService : 数据加密
+EncryptionService --> KeyManagement : 密钥管理
+AuditLog --> AuditDB : 审计记录
+SecurityAudit --> AuditDB : 安全审计
+BackupService --> SensitiveDB : 数据备份
+DisasterRecovery --> BackupService : 灾难恢复
+
+' 监控运维
+SystemMonitor --> UserService : 服务监控
+PerformanceMonitor --> AssessmentService : 性能监控
+LogAnalysis --> AuditLog : 日志分析
+AlertSystem --> SystemMonitor : 告警处理
+
+' 外部系统集成
+ScaleService --> ExternalScales : 标准量表
+AIService --> ExternalAI : AI分析
+AnalysisService --> MedicalSystem : 医疗集成
+CrisisService --> EmergencyService : 应急干预
+StatisticsService --> ResearchDB : 研究数据
+
+note right of SensitiveDB : 所有心理测评数据\n均进行加密存储\n符合医疗数据标准
+note right of AuditDB : 完整的操作审计\n不可篡改的日志\n满足合规要求
+note right of CrisisService : 自动识别危险信号\n立即触发干预机制\n保障来访者安全
+
+@enduml 
+@enduml 

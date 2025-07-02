@@ -1,0 +1,126 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title 办公协作系统 - 容器图
+
+LAYOUT_WITH_LEGEND()
+
+Person(employee, "员工", "普通办公员工")
+Person(manager, "管理者", "团队管理人员")
+Person(admin, "管理员", "系统管理员")
+
+System_Boundary(officeSystem, "办公协作系统") {
+    ' 前端应用
+    Container(webPortal, "Web办公门户", "React, TypeScript", "浏览器端办公平台")
+    Container(mobileApp, "移动办公应用", "React Native", "移动端办公工具")
+    Container(desktopApp, "桌面客户端", "Electron, React", "桌面办公应用")
+    Container(adminPortal, "管理后台", "Vue.js, Element Plus", "系统管理界面")
+    
+    ' 网关和服务层
+    Container(apiGateway, "API网关", "Spring Cloud Gateway", "统一API入口")
+    Container(ssoService, "单点登录", "Keycloak", "身份认证中心")
+    Container(webSocketGateway, "WebSocket网关", "Node.js, Socket.io", "实时通信")
+    
+    ' 核心业务服务
+    Container(userService, "用户服务", "Java, Spring Boot", "用户管理和组织架构")
+    Container(documentService, "文档服务", "Node.js, Express", "文档协作和版本管理")
+    Container(meetingService, "会议服务", "Go, Gin", "会议安排和管理")
+    Container(projectService, "项目服务", "Java, Spring Boot", "项目管理和任务分配")
+    Container(chatService, "即时通讯服务", "Node.js, Socket.io", "内部聊天和群组")
+    Container(calendarService, "日历服务", "Python, FastAPI", "日程安排和提醒")
+    Container(workflowService, "工作流服务", "Java, Activiti", "审批流程管理")
+    Container(fileService, "文件服务", "Go, Echo", "文件存储和分享")
+    
+    ' 数据存储层
+    ContainerDb(userDb, "用户数据库", "PostgreSQL", "用户和组织信息")
+    ContainerDb(documentDb, "文档数据库", "MongoDB", "文档内容和版本")
+    ContainerDb(projectDb, "项目数据库", "PostgreSQL", "项目和任务数据")
+    ContainerDb(chatDb, "聊天数据库", "MongoDB", "聊天记录和群组")
+    ContainerDb(calendarDb, "日历数据库", "PostgreSQL", "日程和事件数据")
+    ContainerDb(workflowDb, "工作流数据库", "PostgreSQL", "流程定义和实例")
+    ContainerDb(cacheLayer, "缓存层", "Redis Cluster", "会话和热点数据缓存")
+    
+    ' 文件存储
+    ContainerDb(fileStorage, "文件存储", "MinIO/AWS S3", "文档和附件存储")
+    ContainerDb(searchEngine, "搜索引擎", "Elasticsearch", "全文搜索服务")
+    
+    ' 消息和任务
+    Container(messageQueue, "消息队列", "RabbitMQ", "异步任务处理")
+    Container(taskScheduler, "任务调度", "Quartz", "定时任务和提醒")
+    Container(notificationService, "通知服务", "Node.js", "消息推送服务")
+}
+
+' 外部系统
+System_Ext(emailSystem, "邮件系统", "Exchange、Gmail等")
+System_Ext(videoConference, "视频会议", "Zoom、腾讯会议等")
+System_Ext(hrSystem, "人力资源系统", "HRIS、考勤系统")
+System_Ext(financeSystem, "财务系统", "ERP、报销系统")
+
+' 用户交互
+Rel(employee, webPortal, "日常办公", "HTTPS")
+Rel(employee, mobileApp, "移动办公", "HTTPS")
+Rel(manager, webPortal, "团队管理", "HTTPS")
+Rel(admin, adminPortal, "系统管理", "HTTPS")
+
+' 前端到网关
+Rel(webPortal, apiGateway, "API调用", "HTTPS/REST")
+Rel(mobileApp, apiGateway, "API调用", "HTTPS/REST")
+Rel(desktopApp, apiGateway, "API调用", "HTTPS/REST")
+Rel(adminPortal, apiGateway, "API调用", "HTTPS/REST")
+
+' 实时通信
+Rel(webPortal, webSocketGateway, "实时通信", "WebSocket")
+Rel(mobileApp, webSocketGateway, "实时通信", "WebSocket")
+
+' 身份认证
+Rel(apiGateway, ssoService, "身份验证", "OAuth/SAML")
+
+' API网关到微服务
+Rel(apiGateway, userService, "用户操作", "HTTP/gRPC")
+Rel(apiGateway, documentService, "文档操作", "HTTP/gRPC")
+Rel(apiGateway, meetingService, "会议操作", "HTTP/gRPC")
+Rel(apiGateway, projectService, "项目操作", "HTTP/gRPC")
+Rel(apiGateway, calendarService, "日历操作", "HTTP/gRPC")
+Rel(apiGateway, workflowService, "流程操作", "HTTP/gRPC")
+Rel(apiGateway, fileService, "文件操作", "HTTP/gRPC")
+
+' WebSocket到聊天服务
+Rel(webSocketGateway, chatService, "聊天消息", "HTTP/WebSocket")
+
+' 微服务到数据库
+Rel(userService, userDb, "读写", "SQL")
+Rel(documentService, documentDb, "读写", "MongoDB")
+Rel(projectService, projectDb, "读写", "SQL")
+Rel(chatService, chatDb, "读写", "MongoDB")
+Rel(calendarService, calendarDb, "读写", "SQL")
+Rel(workflowService, workflowDb, "读写", "SQL")
+
+' 文件存储
+Rel(documentService, fileStorage, "存储", "S3 API")
+Rel(fileService, fileStorage, "存储", "S3 API")
+
+' 搜索功能
+Rel(documentService, searchEngine, "索引", "HTTP")
+Rel(projectService, searchEngine, "索引", "HTTP")
+
+' 缓存使用
+Rel(userService, cacheLayer, "缓存", "Redis")
+Rel(documentService, cacheLayer, "缓存", "Redis")
+Rel(chatService, cacheLayer, "缓存", "Redis")
+
+' 消息队列
+Rel(projectService, messageQueue, "发布", "AMQP")
+Rel(workflowService, messageQueue, "发布", "AMQP")
+Rel(notificationService, messageQueue, "订阅", "AMQP")
+
+' 定时任务
+Rel(taskScheduler, calendarService, "日程提醒", "HTTP")
+Rel(taskScheduler, notificationService, "推送通知", "HTTP")
+
+' 外部系统集成
+Rel(calendarService, emailSystem, "邮件集成", "IMAP/SMTP")
+Rel(meetingService, videoConference, "会议集成", "API")
+Rel(userService, hrSystem, "人员同步", "API")
+Rel(workflowService, financeSystem, "财务流程", "API")
+
+@enduml 

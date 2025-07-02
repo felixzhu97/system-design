@@ -1,0 +1,54 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+title 办公协作系统 - 上下文图
+
+LAYOUT_WITH_LEGEND()
+
+' 用户角色
+Person(employee, "员工", "普通员工，使用系统进行日常办公、协作、沟通")
+Person(manager, "管理者", "团队负责人，管理项目、分配任务、查看团队绩效")
+Person(hr, "HR人员", "人力资源管理、员工入离职、考勤管理")
+Person(itSupport, "IT支持", "系统管理、权限配置、技术支持")
+Person(executive, "高管", "查看企业数据、决策支持、战略规划")
+Person(guest, "外部用户", "合作伙伴、客户、临时访问者")
+
+' 核心系统
+System(collaborationSystem, "办公协作系统", "提供文档协作、项目管理、即时通讯、视频会议等办公功能")
+
+' 外部系统
+System_Ext(emailService, "邮件服务", "Exchange、Gmail、企业邮箱等邮件系统")
+System_Ext(videoConference, "视频会议", "Zoom、Teams、腾讯会议等视频会议服务")
+System_Ext(cloudStorage, "云存储", "OneDrive、Google Drive、阿里云盘等文件存储")
+System_Ext(calendarService, "日历服务", "Outlook Calendar、Google Calendar等日程管理")
+System_Ext(ssoProvider, "单点登录", "Azure AD、LDAP、企业身份认证系统")
+System_Ext(erpSystem, "ERP系统", "SAP、用友、金蝶等企业资源管理系统")
+System_Ext(crmSystem, "CRM系统", "Salesforce、HubSpot、客户关系管理系统")
+System_Ext(hrSystem, "HR系统", "人力资源管理、薪酬、考勤系统")
+System_Ext(printService, "打印服务", "企业打印机、扫描仪等办公设备")
+System_Ext(securityService, "安全服务", "防病毒、数据防泄漏、安全审计系统")
+System_Ext(backupService, "备份服务", "数据备份、灾难恢复服务")
+System_Ext(analyticsService, "分析服务", "企业BI、数据分析、报表系统")
+
+' 关系
+Rel(employee, collaborationSystem, "日常办公、文档协作", "桌面应用/Web/移动端")
+Rel(manager, collaborationSystem, "团队管理、项目跟踪", "管理仪表板")
+Rel(hr, collaborationSystem, "人员管理、考勤统计", "HR管理端")
+Rel(itSupport, collaborationSystem, "系统管理、用户支持", "管理后台")
+Rel(executive, collaborationSystem, "数据查看、决策支持", "高管仪表板")
+Rel(guest, collaborationSystem, "临时访问、外部协作", "访客门户")
+
+Rel(collaborationSystem, emailService, "邮件集成、通知", "SMTP/IMAP/Exchange")
+Rel(collaborationSystem, videoConference, "会议集成", "SDK/API")
+Rel(collaborationSystem, cloudStorage, "文件同步", "API/WebDAV")
+Rel(collaborationSystem, calendarService, "日程同步", "CalDAV/API")
+Rel(collaborationSystem, ssoProvider, "身份认证", "SAML/OAuth")
+Rel(collaborationSystem, erpSystem, "业务数据", "API/数据库")
+Rel(collaborationSystem, crmSystem, "客户信息", "API集成")
+Rel(collaborationSystem, hrSystem, "人员信息", "API/数据同步")
+Rel(collaborationSystem, printService, "文档打印", "打印协议")
+Rel(collaborationSystem, securityService, "安全防护", "安全API")
+Rel(collaborationSystem, backupService, "数据备份", "备份协议")
+Rel(collaborationSystem, analyticsService, "数据分析", "BI接口")
+
+@enduml 

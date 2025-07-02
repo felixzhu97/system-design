@@ -37,7 +37,7 @@ package "多端客户层" {
         [智能音箱APP] as VoiceApp <<IoT>>
         [智能电视APP] as TVApp <<Smart TV>>
         [VR/AR应用] as VRApp <<Immersive>>
-    }
+}
 }
 
 ' BFF聚合层
@@ -168,8 +168,8 @@ package "数据存储层" {
         database "对象存储" as ObjectStorage <<MinIO/S3>>
         database "CDN存储" as CDNStorage <<Cloudflare>>
         database "分布式文件系统" as DFS <<HDFS>>
-    }
-    
+}
+
     package "数据仓库" {
         database "ClickHouse" as ClickHouseDB <<ClickHouse>>
         database "Hive数仓" as HiveDB <<Hive>>
@@ -183,8 +183,8 @@ package "基础设施层" {
         [Kubernetes集群] as K8sCluster <<Kubernetes>>
         [Docker容器] as DockerContainer <<Docker>>
         [服务网格] as ServiceMesh <<Istio>>
-    }
-    
+}
+
     package "监控告警" {
         [Prometheus监控] as PrometheusMonitor <<Prometheus>>
         [Grafana仪表板] as GrafanaDashboard <<Grafana>>
@@ -202,7 +202,7 @@ package "基础设施层" {
         [Jenkins] as JenkinsCI <<Jenkins>>
         [GitLab CI] as GitLabCI <<GitLab>>
         [GitHub Actions] as GitHubActions <<GitHub>>
-    }
+}
 }
 
 ' 外部服务集成

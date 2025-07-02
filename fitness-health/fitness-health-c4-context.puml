@@ -1,0 +1,63 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+title 健身运动系统 - 系统上下文图
+
+LAYOUT_WITH_LEGEND()
+
+' 内部用户角色
+Person(user, "健身用户", "进行运动锻炼、记录健身数据的普通用户")
+Person(trainer, "私人教练", "制定训练计划、指导用户健身的专业教练")
+Person(nutritionist, "营养师", "制定饮食计划、提供营养指导的专业人士")
+Person(admin, "系统管理员", "负责平台运营、内容管理、用户服务")
+Person(contentCreator, "健身博主", "分享健身知识、创作运动内容的KOL")
+
+' 核心健身运动系统
+System(fitnessSystem, "健身运动系统", "提供运动记录、训练计划、健康监测、社区互动等综合健身服务")
+
+' 外部系统集成
+System_Ext(wearableDevices, "可穿戴设备", "Apple Watch、小米手环、华为手表等智能设备")
+System_Ext(healthPlatforms, "健康平台", "Apple Health、Google Fit、小米运动等健康数据平台")
+System_Ext(gymEquipment, "智能器械", "智能跑步机、动感单车、力量器械等联网设备")
+System_Ext(locationService, "定位服务", "GPS定位、地图服务、路线规划")
+System_Ext(weatherService, "天气服务", "实时天气、空气质量、运动建议")
+System_Ext(musicService, "音乐服务", "Spotify、网易云音乐、QQ音乐等音乐平台")
+System_Ext(socialPlatforms, "社交平台", "微信、微博、抖音等社交媒体分享")
+System_Ext(paymentGateway, "支付网关", "微信支付、支付宝、Stripe等支付服务")
+System_Ext(liveStreaming, "直播服务", "健身直播、在线课程直播平台")
+System_Ext(aiCoach, "AI教练服务", "智能动作识别、姿态纠正、个性化建议")
+System_Ext(nutritionAPI, "营养数据", "食物营养成分、热量数据库API")
+System_Ext(medicallAPI, "医疗服务", "体检数据、健康评估、医疗咨询")
+System_Ext(ecommerceAPI, "电商平台", "健身装备、营养补剂购买服务")
+System_Ext(pushService, "推送服务", "运动提醒、目标激励推送通知")
+
+' 用户与系统交互
+Rel(user, fitnessSystem, "健身锻炼", "HTTPS/移动应用/智能设备")
+Rel(trainer, fitnessSystem, "指导训练", "HTTPS/教练端")
+Rel(nutritionist, fitnessSystem, "营养指导", "HTTPS/营养师端")
+Rel(admin, fitnessSystem, "系统管理", "HTTPS/管理后台")
+Rel(contentCreator, fitnessSystem, "内容创作", "HTTPS/创作平台")
+
+' 系统与外部服务交互
+Rel(fitnessSystem, wearableDevices, "数据同步", "蓝牙/WiFi/SDK")
+Rel(fitnessSystem, healthPlatforms, "健康数据", "HTTPS/Health API")
+Rel(fitnessSystem, gymEquipment, "器械连接", "IoT/蓝牙协议")
+Rel(fitnessSystem, locationService, "运动轨迹", "GPS/地图API")
+Rel(fitnessSystem, weatherService, "天气信息", "HTTPS/天气API")
+Rel(fitnessSystem, musicService, "音乐播放", "HTTPS/音乐API")
+Rel(fitnessSystem, socialPlatforms, "成果分享", "HTTPS/分享API")
+Rel(fitnessSystem, paymentGateway, "会员付费", "HTTPS/支付API")
+Rel(fitnessSystem, liveStreaming, "直播课程", "RTMP/WebRTC")
+Rel(fitnessSystem, aiCoach, "智能指导", "HTTPS/AI API")
+Rel(fitnessSystem, nutritionAPI, "营养计算", "HTTPS/营养API")
+Rel(fitnessSystem, medicallAPI, "健康评估", "HTTPS/医疗API")
+Rel(fitnessSystem, ecommerceAPI, "商品推荐", "HTTPS/电商API")
+Rel(fitnessSystem, pushService, "运动提醒", "HTTPS/推送API")
+
+' 外部用户交互
+Rel_U(user, wearableDevices, "佩戴设备", "实时监测")
+Rel_U(user, gymEquipment, "器械训练", "数据传输")
+Rel_U(trainer, liveStreaming, "直播教学", "视频流")
+Rel_U(user, musicService, "运动音乐", "音频播放")
+
+@enduml 

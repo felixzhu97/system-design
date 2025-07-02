@@ -1,0 +1,44 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+title 即时通讯系统 - 上下文图
+
+LAYOUT_WITH_LEGEND()
+
+' 用户角色
+Person(user, "普通用户", "个人用户，发送消息、语音视频通话")
+Person(groupAdmin, "群组管理员", "管理群组成员、设置群组权限")
+Person(channelOwner, "频道主", "创建和管理频道、发布内容")
+Person(sysAdmin, "系统管理员", "系统监控、用户管理、内容审核")
+Person(botDev, "机器人开发者", "开发和管理聊天机器人")
+
+' 核心系统
+System(imSystem, "即时通讯系统", "提供实时消息、语音视频通话、群组频道管理等功能")
+
+' 外部系统
+System_Ext(pushService, "推送服务", "APNs、FCM等消息推送服务")
+System_Ext(rtcService, "音视频通话", "WebRTC、Agora、声网等实时通信服务")
+System_Ext(fileStorage, "文件存储", "AWS S3、Cloudflare R2等云存储服务")
+System_Ext(contentFilter, "内容过滤", "腾讯云内容安全、阿里云内容检测等")
+System_Ext(translate, "翻译服务", "Google Translate、百度翻译等")
+System_Ext(smsService, "短信服务", "Twilio、阿里云短信等验证服务")
+System_Ext(oauthProvider, "OAuth登录", "Google、Apple、微信等第三方登录")
+System_Ext(paymentGateway, "支付网关", "Stripe、微信支付、支付宝等")
+
+' 关系
+Rel(user, imSystem, "发送消息、语音视频通话", "HTTPS/WebSocket")
+Rel(groupAdmin, imSystem, "管理群组", "HTTPS")
+Rel(channelOwner, imSystem, "管理频道、发布内容", "HTTPS")
+Rel(sysAdmin, imSystem, "系统管理", "HTTPS")
+Rel(botDev, imSystem, "机器人开发", "Bot API")
+
+Rel(imSystem, pushService, "推送消息通知", "HTTPS")
+Rel(imSystem, rtcService, "音视频通话", "WebRTC/SDK")
+Rel(imSystem, fileStorage, "存储媒体文件", "HTTPS/S3 API")
+Rel(imSystem, contentFilter, "内容审核", "HTTPS/API")
+Rel(imSystem, translate, "消息翻译", "HTTPS/API")
+Rel(imSystem, smsService, "手机验证", "HTTPS/API")
+Rel(imSystem, oauthProvider, "第三方登录", "OAuth 2.0")
+Rel(imSystem, paymentGateway, "会员支付", "HTTPS/API")
+
+@enduml 

@@ -1,0 +1,319 @@
+@startuml
+!define POSTGRES_COLOR #336791
+!define MONGO_COLOR #47A248
+!define REDIS_COLOR #DC382D
+
+title 语言学习系统 - 数据库设计
+
+package "用户管理数据 (PostgreSQL)" <<POSTGRES_COLOR>> {
+    entity "用户信息 (users)" {
+        * user_id : BIGSERIAL
+        --
+        * username : VARCHAR(50)
+        * email : VARCHAR(100)
+        * phone : VARCHAR(20)
+        password_hash : VARCHAR(255)
+        avatar_url : VARCHAR(500)
+        nickname : VARCHAR(50)
+        native_language : VARCHAR(10)
+        target_languages : JSONB
+        level : INTEGER
+        study_goal : VARCHAR(100)
+        daily_goal_minutes : INTEGER
+        created_at : TIMESTAMP
+        updated_at : TIMESTAMP
+        is_active : BOOLEAN
+        is_premium : BOOLEAN
+        premium_expires_at : TIMESTAMP
+    }
+    
+    entity "用户偏好 (user_preferences)" {
+        * user_id : BIGINT
+        --
+        learning_style : VARCHAR(20)
+        difficulty_preference : INTEGER
+        reminder_enabled : BOOLEAN
+        reminder_time : TIME
+        voice_speed : DECIMAL(3,2)
+        theme_preference : VARCHAR(20)
+        notification_settings : JSONB
+        privacy_settings : JSONB
+        updated_at : TIMESTAMP
+    }
+    
+    entity "用户关系 (user_relationships)" {
+        * user_id : BIGINT
+        * target_user_id : BIGINT
+        --
+        relationship_type : VARCHAR(20)
+        created_at : TIMESTAMP
+        status : VARCHAR(20)
+    }
+}
+
+package "学习进度数据 (PostgreSQL)" <<POSTGRES_COLOR>> {
+    entity "学习记录 (learning_sessions)" {
+        * session_id : BIGSERIAL
+        --
+        * user_id : BIGINT
+        * course_id : BIGINT
+        start_time : TIMESTAMP
+        end_time : TIMESTAMP
+        duration_minutes : INTEGER
+        words_learned : INTEGER
+        exercises_completed : INTEGER
+        accuracy_rate : DECIMAL(5,2)
+        points_earned : INTEGER
+        session_type : VARCHAR(30)
+        created_at : TIMESTAMP
+    }
+    
+    entity "学习进度 (learning_progress)" {
+        * user_id : BIGINT
+        * course_id : BIGINT
+        --
+        current_lesson_id : BIGINT
+        completion_percentage : DECIMAL(5,2)
+        total_study_time : INTEGER
+        streak_days : INTEGER
+        last_study_date : DATE
+        mastery_level : INTEGER
+        total_points : INTEGER
+        achievements : JSONB
+        updated_at : TIMESTAMP
+    }
+    
+    entity "词汇掌握 (vocabulary_mastery)" {
+        * user_id : BIGINT
+        * word_id : BIGINT
+        --
+        mastery_level : INTEGER
+        review_count : INTEGER
+        correct_count : INTEGER
+        last_reviewed : TIMESTAMP
+        next_review : TIMESTAMP
+        difficulty_factor : DECIMAL(3,2)
+        interval_days : INTEGER
+        created_at : TIMESTAMP
+        updated_at : TIMESTAMP
+    }
+}
+
+package "课程内容数据 (MongoDB)" <<MONGO_COLOR>> {
+    entity "课程信息 (courses)" {
+        * course_id : ObjectId
+        --
+        * course_name : String
+        * language : String
+        * target_language : String
+        description : String
+        cover_image : String
+        difficulty_level : Number
+        estimated_hours : Number
+        category : String
+        tags : Array
+        is_premium : Boolean
+        price : Number
+        instructor_id : ObjectId
+        created_at : Date
+        updated_at : Date
+        is_published : Boolean
+        rating : Number
+        student_count : Number
+    }
+    
+    entity "课程章节 (lessons)" {
+        * lesson_id : ObjectId
+        --
+        * course_id : ObjectId
+        * lesson_title : String
+        lesson_order : Number
+        content_type : String
+        content_data : Object
+        audio_url : String
+        video_url : String
+        transcript : String
+        duration_seconds : Number
+        difficulty_points : Number
+        prerequisite_lessons : Array
+        learning_objectives : Array
+        created_at : Date
+        updated_at : Date
+        is_published : Boolean
+    }
+    
+    entity "词汇库 (vocabulary)" {
+        * word_id : ObjectId
+        --
+        * word : String
+        * language : String
+        pronunciation : String
+        audio_url : String
+        definitions : Array
+        examples : Array
+        translations : Object
+        word_type : String
+        difficulty_level : Number
+        frequency_rank : Number
+        images : Array
+        related_words : Array
+        created_at : Date
+        updated_at : Date
+    }
+    
+    entity "练习题库 (exercises)" {
+        * exercise_id : ObjectId
+        --
+        * lesson_id : ObjectId
+        * exercise_type : String
+        question : Object
+        options : Array
+        correct_answer : Object
+        explanation : String
+        difficulty_level : Number
+        points : Number
+        time_limit_seconds : Number
+        media_files : Array
+        created_at : Date
+        updated_at : Date
+        is_active : Boolean
+    }
+}
+
+package "学习记录数据 (MongoDB)" <<MONGO_COLOR>> {
+    entity "练习记录 (exercise_attempts)" {
+        * attempt_id : ObjectId
+        --
+        * user_id : ObjectId
+        * exercise_id : ObjectId
+        * session_id : ObjectId
+        user_answer : Object
+        is_correct : Boolean
+        time_spent_seconds : Number
+        hints_used : Number
+        attempt_timestamp : Date
+        feedback_given : String
+        difficulty_at_time : Number
+    }
+    
+    entity "语音评估 (speech_assessments)" {
+        * assessment_id : ObjectId
+        --
+        * user_id : ObjectId
+        * lesson_id : ObjectId
+        audio_file_url : String
+        target_text : String
+        pronunciation_score : Number
+        fluency_score : Number
+        accuracy_score : Number
+        detailed_feedback : Object
+        created_at : Date
+        assessment_duration : Number
+    }
+}
+
+package "缓存数据 (Redis)" <<REDIS_COLOR>> {
+    entity "学习状态缓存 (learning_state)" {
+        key: "user:{user_id}:state"
+        --
+        value: {
+            current_course: "ObjectId",
+            current_lesson: "ObjectId",
+            session_start: "timestamp",
+            daily_progress: "object",
+            streak_info: "object"
+        }
+        ttl: 24小时
+    }
+    
+    entity "词汇复习缓存 (vocab_review)" {
+        key: "user:{user_id}:review"
+        --
+        value: {
+            due_words: "array",
+            review_queue: "array",
+            algorithm_state: "object"
+        }
+        ttl: 1小时
+    }
+    
+    entity "排行榜缓存 (leaderboards)" {
+        key: "leaderboard:{type}:{period}"
+        --
+        value: [
+            {user_id, score, rank}
+        ]
+        ttl: 30分钟
+    }
+    
+    entity "会话缓存 (user_sessions)" {
+        key: "session:{session_id}"
+        --
+        value: {
+            user_id: "string",
+            login_time: "timestamp",
+            last_activity: "timestamp",
+            permissions: "array"
+        }
+        ttl: 7天
+    }
+}
+
+package "分析数据 (ClickHouse)" {
+    entity "学习行为分析 (learning_analytics)" {
+        * event_id : UInt64
+        --
+        * user_id : UInt64
+        * timestamp : DateTime
+        * event_type : String
+        * course_id : UInt64
+        * lesson_id : UInt64
+        session_id : String
+        device_type : String
+        platform : String
+        duration : UInt32
+        performance_metrics : String
+        user_agent : String
+        ip_address : String
+    }
+}
+
+' 关系定义
+用户信息 ||--|| 用户偏好 : "个人设置"
+用户信息 ||--o{ 用户关系 : "社交关系"
+用户信息 ||--o{ 学习记录 : "学习历史"
+用户信息 ||--o{ 学习进度 : "进度跟踪"
+用户信息 ||--o{ 词汇掌握 : "词汇掌握度"
+
+课程信息 ||--o{ 课程章节 : "课程结构"
+课程章节 ||--o{ 练习题库 : "章节练习"
+词汇库 ||--o{ 词汇掌握 : "词汇关联"
+
+学习记录 ||--o{ 练习记录 : "练习详情"
+课程章节 ||--o{ 语音评估 : "语音练习"
+
+note right of 词汇掌握
+  间隔重复算法:
+  - 基于艾宾浩斯遗忘曲线
+  - 动态调整复习间隔
+  - 个性化难度因子
+  - SuperMemo算法变种
+end note
+
+note right of 学习记录
+  学习数据收集:
+  - 学习时长统计
+  - 学习效果评估
+  - 行为模式分析
+  - 个性化推荐依据
+end note
+
+note right of 练习记录
+  错题分析:
+  - 错误类型分类
+  - 知识点弱项识别
+  - 个性化练习推荐
+  - 学习路径优化
+end note
+
+@enduml 

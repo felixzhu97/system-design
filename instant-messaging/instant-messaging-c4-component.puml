@@ -1,0 +1,101 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title 即时通讯系统 - 组件图 (消息服务)
+
+LAYOUT_WITH_LEGEND()
+
+' 外部系统
+System_Ext(mobileApp, "移动应用", "用户客户端应用")
+System_Ext(webApp, "Web应用", "浏览器端应用")
+Container_Ext(apiGateway, "API网关", "统一API入口")
+Container_Ext(wsGateway, "WebSocket网关", "实时消息网关")
+
+' 消息服务边界
+System_Boundary(messageService, "消息服务") {
+    ' 控制器层
+    Component(messageController, "消息控制器", "RESTful API", "处理HTTP消息请求")
+    Component(wsController, "WebSocket控制器", "WebSocket API", "处理实时消息连接")
+    Component(groupController, "群组控制器", "RESTful API", "处理群组消息相关请求")
+    
+    ' 业务处理层
+    Component(messageProcessor, "消息处理器", "Go Service", "消息业务逻辑处理")
+    Component(messageValidator, "消息验证器", "Validation Service", "消息内容验证和过滤")
+    Component(messageRouter, "消息路由器", "Routing Service", "消息路由和分发逻辑")
+    Component(encryptionService, "加密服务", "Crypto Service", "端到端消息加密")
+    Component(messageFilter, "消息过滤器", "Filter Service", "敏感内容过滤")
+    
+    ' 消息类型处理
+    Component(textHandler, "文本处理器", "Text Handler", "文本消息处理")
+    Component(mediaHandler, "媒体处理器", "Media Handler", "图片、视频、音频处理")
+    Component(voiceHandler, "语音处理器", "Voice Handler", "语音消息处理")
+    Component(fileHandler, "文件处理器", "File Handler", "文件消息处理")
+    
+    ' 数据访问层
+    Component(messageDAO, "消息数据访问", "Data Access", "消息数据库操作")
+    Component(userDAO, "用户数据访问", "Data Access", "用户信息查询")
+    Component(groupDAO, "群组数据访问", "Data Access", "群组信息查询")
+    Component(cacheManager, "缓存管理器", "Cache Manager", "Redis缓存操作")
+    
+    ' 外部集成
+    Component(pushService, "推送服务", "Push Service", "消息推送集成")
+    Component(storageService, "存储服务", "Storage Service", "文件存储集成")
+    Component(contentModerator, "内容审核", "Moderation Service", "第三方内容审核")
+}
+
+' 外部数据存储
+ContainerDb_Ext(messageDb, "消息数据库", "MongoDB", "消息存储")
+ContainerDb_Ext(userDb, "用户数据库", "PostgreSQL", "用户信息")
+ContainerDb_Ext(cacheDb, "缓存数据库", "Redis", "缓存存储")
+ContainerDb_Ext(fileStorage, "文件存储", "MinIO", "媒体文件")
+
+' 外部服务
+System_Ext(pushGateway, "推送网关", "消息推送服务")
+System_Ext(contentAPI, "内容过滤API", "第三方内容审核")
+System_Ext(notificationService, "通知服务", "消息通知服务")
+
+' 客户端到控制器
+Rel(apiGateway, messageController, "HTTP请求", "HTTPS/REST")
+Rel(wsGateway, wsController, "WebSocket连接", "WebSocket")
+Rel(apiGateway, groupController, "群组请求", "HTTPS/REST")
+
+' 控制器到业务层
+Rel(messageController, messageProcessor, "处理消息", "方法调用")
+Rel(wsController, messageProcessor, "实时消息", "方法调用")
+Rel(groupController, messageProcessor, "群组消息", "方法调用")
+
+' 业务层组件交互
+Rel(messageProcessor, messageValidator, "验证消息", "方法调用")
+Rel(messageProcessor, messageRouter, "路由消息", "方法调用")
+Rel(messageProcessor, encryptionService, "加密消息", "方法调用")
+Rel(messageValidator, messageFilter, "过滤内容", "方法调用")
+
+' 消息类型处理
+Rel(messageProcessor, textHandler, "文本消息", "方法调用")
+Rel(messageProcessor, mediaHandler, "媒体消息", "方法调用")
+Rel(messageProcessor, voiceHandler, "语音消息", "方法调用")
+Rel(messageProcessor, fileHandler, "文件消息", "方法调用")
+
+' 数据访问层
+Rel(messageProcessor, messageDAO, "消息操作", "方法调用")
+Rel(messageProcessor, userDAO, "用户查询", "方法调用")
+Rel(messageProcessor, groupDAO, "群组查询", "方法调用")
+Rel(messageProcessor, cacheManager, "缓存操作", "方法调用")
+
+' 外部服务集成
+Rel(messageRouter, pushService, "推送通知", "方法调用")
+Rel(mediaHandler, storageService, "文件存储", "方法调用")
+Rel(messageFilter, contentModerator, "内容审核", "方法调用")
+
+' 数据存储连接
+Rel(messageDAO, messageDb, "消息数据", "MongoDB Driver")
+Rel(userDAO, userDb, "用户数据", "JDBC")
+Rel(cacheManager, cacheDb, "缓存数据", "Redis Client")
+Rel(storageService, fileStorage, "文件操作", "S3 API")
+
+' 外部服务连接
+Rel(pushService, pushGateway, "推送请求", "HTTPS/API")
+Rel(contentModerator, contentAPI, "审核请求", "HTTPS/API")
+Rel(pushService, notificationService, "通知请求", "gRPC")
+
+@enduml 

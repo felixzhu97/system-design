@@ -1,0 +1,115 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title 金融分析系统 - 容器图
+
+LAYOUT_WITH_LEGEND()
+
+Person(analyst, "金融分析师", "投资分析专家")
+Person(trader, "交易员", "执行交易的人员")
+Person(riskManager, "风控经理", "风险管理人员")
+
+System_Boundary(finSystem, "金融分析系统") {
+    ' 前端应用
+    Container(tradingTerminal, "交易终端", "React, TypeScript", "专业交易界面")
+    Container(analyticsPortal, "分析门户", "Vue.js, D3.js", "数据分析和可视化")
+    Container(riskDashboard, "风控看板", "React, Ant Design", "风险监控界面")
+    Container(mobileApp, "移动客户端", "React Native", "移动端行情查看")
+    
+    ' 网关和服务层
+    Container(apiGateway, "API网关", "Spring Cloud Gateway", "统一API入口")
+    Container(dataGateway, "数据网关", "Apache Kafka Connect", "外部数据接入")
+    Container(authService, "认证服务", "Spring Security", "身份认证和授权")
+    
+    ' 核心业务服务
+    Container(marketDataService, "行情数据服务", "Java, Spring Boot", "实时行情处理")
+    Container(portfolioService, "投资组合服务", "C#, .NET Core", "组合管理和分析")
+    Container(riskService, "风险服务", "Python, FastAPI", "风险计算和监控")
+    Container(tradingService, "交易服务", "Java, Spring Boot", "交易执行和管理")
+    Container(analyticsService, "分析服务", "Python, Pandas", "量化分析和建模")
+    Container(reportService, "报告服务", "Java, Jasper", "报告生成和分发")
+    Container(alertService, "告警服务", "Go, Gin", "实时告警和通知")
+    
+    ' 数据处理层
+    Container(streamProcessor, "流处理引擎", "Apache Kafka Streams", "实时数据处理")
+    Container(batchProcessor, "批处理引擎", "Apache Spark", "历史数据分析")
+    Container(mlPlatform, "机器学习平台", "TensorFlow, Kubeflow", "AI模型训练")
+    
+    ' 数据存储层
+    ContainerDb(marketDataDb, "行情数据库", "ClickHouse", "高频行情数据")
+    ContainerDb(portfolioDb, "组合数据库", "PostgreSQL", "投资组合数据")
+    ContainerDb(riskDb, "风险数据库", "MongoDB", "风险指标和模型")
+    ContainerDb(analyticsDb, "分析数据库", "Apache Druid", "OLAP分析数据")
+    ContainerDb(cacheLayer, "缓存层", "Redis Cluster", "热点数据缓存")
+    
+    ' 时序和文档存储
+    ContainerDb(timeseriesDb, "时序数据库", "InfluxDB", "时间序列数据")
+    ContainerDb(documentDb, "文档数据库", "Elasticsearch", "研报和新闻")
+    
+    ' 消息队列
+    Container(messageQueue, "消息中间件", "Apache Kafka", "异步消息处理")
+}
+
+' 外部服务
+System_Ext(marketDataVendors, "行情数据商", "Bloomberg、Reuters等")
+System_Ext(tradingPlatforms, "交易平台", "券商系统、交易所")
+System_Ext(newsProviders, "资讯提供商", "财经新闻、研究报告")
+System_Ext(riskModelVendors, "风险模型商", "第三方风险模型")
+
+' 用户交互
+Rel(analyst, analyticsPortal, "数据分析", "HTTPS")
+Rel(trader, tradingTerminal, "交易执行", "HTTPS")
+Rel(riskManager, riskDashboard, "风险监控", "HTTPS")
+
+' 前端到网关
+Rel(tradingTerminal, apiGateway, "API调用", "HTTPS/REST")
+Rel(analyticsPortal, apiGateway, "API调用", "HTTPS/REST")
+Rel(riskDashboard, apiGateway, "API调用", "HTTPS/REST")
+Rel(mobileApp, apiGateway, "API调用", "HTTPS/REST")
+
+' 认证
+Rel(apiGateway, authService, "身份验证", "HTTP")
+
+' API网关到微服务
+Rel(apiGateway, marketDataService, "行情查询", "HTTP/gRPC")
+Rel(apiGateway, portfolioService, "组合管理", "HTTP/gRPC")
+Rel(apiGateway, riskService, "风险查询", "HTTP/gRPC")
+Rel(apiGateway, tradingService, "交易操作", "HTTP/gRPC")
+Rel(apiGateway, analyticsService, "分析计算", "HTTP/gRPC")
+Rel(apiGateway, reportService, "报告生成", "HTTP/gRPC")
+
+' 数据流处理
+Rel(dataGateway, streamProcessor, "实时数据", "Kafka")
+Rel(streamProcessor, marketDataService, "处理结果", "Kafka")
+Rel(streamProcessor, alertService, "告警触发", "Kafka")
+
+' 微服务到数据库
+Rel(marketDataService, marketDataDb, "读写", "ClickHouse")
+Rel(portfolioService, portfolioDb, "读写", "SQL")
+Rel(riskService, riskDb, "读写", "MongoDB")
+Rel(analyticsService, analyticsDb, "读写", "Druid")
+
+' 时序数据
+Rel(marketDataService, timeseriesDb, "写入", "InfluxDB")
+Rel(analyticsService, timeseriesDb, "读取", "InfluxDB")
+
+' 缓存使用
+Rel(marketDataService, cacheLayer, "缓存", "Redis")
+Rel(portfolioService, cacheLayer, "缓存", "Redis")
+
+' 机器学习
+Rel(mlPlatform, analyticsDb, "训练数据", "SQL")
+Rel(analyticsService, mlPlatform, "模型预测", "gRPC")
+
+' 消息队列
+Rel(marketDataService, messageQueue, "发布", "Kafka")
+Rel(riskService, messageQueue, "订阅", "Kafka")
+Rel(alertService, messageQueue, "订阅", "Kafka")
+
+' 外部数据源
+Rel(dataGateway, marketDataVendors, "数据订阅", "TCP/FIX")
+Rel(tradingService, tradingPlatforms, "交易指令", "FIX Protocol")
+Rel(analyticsService, newsProviders, "资讯获取", "HTTPS/RSS")
+Rel(riskService, riskModelVendors, "模型调用", "HTTPS/API")
+
+@enduml 

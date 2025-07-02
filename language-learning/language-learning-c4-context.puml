@@ -1,0 +1,50 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+title 语言学习系统 - 上下文图
+
+LAYOUT_WITH_LEGEND()
+
+' 用户角色
+Person(learner, "学习者", "使用应用学习语言的用户")
+Person(teacher, "教师", "创建课程内容、批改作业的教育工作者")
+Person(contentCreator, "内容创作者", "制作学习素材、题目的专业人员")
+Person(admin, "管理员", "系统管理、用户管理、内容审核")
+Person(parent, "家长", "监控孩子学习进度的家长用户")
+
+' 核心系统
+System(learningSystem, "语言学习系统", "提供词汇学习、语法练习、口语训练、进度跟踪等功能")
+
+' 外部系统
+System_Ext(speechRecognition, "语音识别", "Google Speech-to-Text、科大讯飞等语音识别服务")
+System_Ext(ttsService, "语音合成", "Google Text-to-Speech、阿里云TTS等语音合成服务")
+System_Ext(translateService, "翻译服务", "Google Translate、百度翻译、有道翻译等")
+System_Ext(aiTutor, "AI教学", "ChatGPT、Claude等AI辅导服务")
+System_Ext(dictService, "词典服务", "牛津词典、朗文词典等权威词典API")
+System_Ext(mediaLibrary, "素材库", "图片库、音频库、视频素材等内容资源")
+System_Ext(paymentGateway, "支付网关", "Stripe、微信支付、支付宝等支付服务")
+System_Ext(analyticsService, "数据分析", "Google Analytics、Firebase Analytics等")
+System_Ext(pushService, "推送服务", "Firebase、极光推送等消息推送服务")
+System_Ext(socialMedia, "社交媒体", "微信、QQ、微博等社交平台分享")
+System_Ext(schoolSystem, "学校系统", "学校教务系统、LMS学习管理系统")
+
+' 关系
+Rel(learner, learningSystem, "学习词汇、练习语法、口语训练", "移动应用/Web")
+Rel(teacher, learningSystem, "创建课程、布置作业、查看进度", "Web管理端")
+Rel(contentCreator, learningSystem, "制作学习内容、上传素材", "Web内容端")
+Rel(admin, learningSystem, "系统管理、用户管理", "管理后台")
+Rel(parent, learningSystem, "查看孩子学习报告", "家长端")
+
+Rel(learningSystem, speechRecognition, "口语评测", "HTTPS/API")
+Rel(learningSystem, ttsService, "单词发音", "HTTPS/API")
+Rel(learningSystem, translateService, "翻译查询", "HTTPS/API")
+Rel(learningSystem, aiTutor, "智能答疑、学习建议", "HTTPS/API")
+Rel(learningSystem, dictService, "词汇查询", "HTTPS/API")
+Rel(learningSystem, mediaLibrary, "学习素材", "HTTPS/CDN")
+Rel(learningSystem, paymentGateway, "会员订阅", "HTTPS/API")
+Rel(learningSystem, analyticsService, "学习行为分析", "HTTPS/API")
+Rel(learningSystem, pushService, "学习提醒", "HTTPS/API")
+Rel(learningSystem, socialMedia, "学习成果分享", "API/SDK")
+Rel(learningSystem, schoolSystem, "成绩同步", "HTTPS/API")
+
+@enduml 

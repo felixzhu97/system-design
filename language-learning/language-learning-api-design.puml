@@ -1,0 +1,220 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title 语言学习系统 - API设计
+
+Container(mobileApp, "移动学习应用", "React Native", "学生移动端")
+Container(webApp, "Web学习平台", "React", "学生Web端")
+Container(apiGateway, "API网关", "Kong/Nginx", "统一API入口")
+
+package "用户认证 API" {
+    [POST /auth/register] as AuthRegister
+    [POST /auth/login] as AuthLogin
+    [POST /auth/logout] as AuthLogout
+    [POST /auth/refresh] as AuthRefresh
+    [GET /auth/profile] as AuthProfile
+    [PUT /auth/profile] as UpdateProfile
+    [POST /auth/reset-password] as ResetPassword
+}
+
+package "课程管理 API" {
+    [GET /courses] as GetCourses
+    [GET /courses/:id] as GetCourse
+    [POST /courses/:id/enroll] as EnrollCourse
+    [GET /courses/:id/lessons] as GetLessons
+    [GET /lessons/:id] as GetLesson
+    [POST /lessons/:id/complete] as CompleteLesson
+    [GET /courses/:id/progress] as GetCourseProgress
+}
+
+package "词汇学习 API" {
+    [GET /vocabulary/words] as GetWords
+    [GET /vocabulary/words/:id] as GetWord
+    [POST /vocabulary/words/:id/review] as ReviewWord
+    [GET /vocabulary/review-queue] as GetReviewQueue
+    [POST /vocabulary/batch-review] as BatchReview
+    [GET /vocabulary/mastery-stats] as GetMasteryStats
+    [POST /vocabulary/add-to-favorites] as AddToFavorites
+}
+
+package "练习测试 API" {
+    [GET /exercises/lesson/:lessonId] as GetExercises
+    [POST /exercises/:id/submit] as SubmitExercise
+    [GET /exercises/:id/hint] as GetHint
+    [POST /exercises/batch-submit] as BatchSubmitExercises
+    [GET /exercises/statistics] as GetExerciseStats
+    [GET /exercises/review-mistakes] as GetMistakeReview
+}
+
+package "语音训练 API" {
+    [POST /speech/upload] as UploadSpeech
+    [GET /speech/assessment/:id] as GetSpeechAssessment
+    [POST /speech/practice] as PracticeSpeech
+    [GET /speech/history] as GetSpeechHistory
+    [GET /speech/pronunciation-tips] as GetPronunciationTips
+}
+
+package "学习进度 API" {
+    [GET /progress/overview] as GetProgressOverview
+    [GET /progress/daily] as GetDailyProgress
+    [GET /progress/streak] as GetStreak
+    [POST /progress/goal] as SetLearningGoal
+    [GET /progress/achievements] as GetAchievements
+    [GET /progress/analytics] as GetLearningAnalytics
+}
+
+package "社交功能 API" {
+    [GET /social/friends] as GetFriends
+    [POST /social/friends/add] as AddFriend
+    [GET /social/leaderboard] as GetLeaderboard
+    [POST /social/share-progress] as ShareProgress
+    [GET /social/study-groups] as GetStudyGroups
+    [POST /social/study-groups/join] as JoinStudyGroup
+}
+
+package "游戏化系统 API" {
+    [GET /gamification/points] as GetPoints
+    [GET /gamification/badges] as GetBadges
+    [POST /gamification/daily-checkin] as DailyCheckin
+    [GET /gamification/challenges] as GetChallenges
+    [POST /gamification/challenges/:id/join] as JoinChallenge
+    [GET /gamification/rewards] as GetRewards
+}
+
+package "支付订阅 API" {
+    [GET /subscription/plans] as GetSubscriptionPlans
+    [POST /subscription/subscribe] as Subscribe
+    [GET /subscription/status] as GetSubscriptionStatus
+    [POST /subscription/cancel] as CancelSubscription
+    [GET /payment/history] as GetPaymentHistory
+}
+
+' 客户端到API网关
+mobileApp --> apiGateway : "HTTPS请求"
+webApp --> apiGateway : "HTTPS请求"
+
+' API网关路由到各服务
+apiGateway --> AuthRegister : "POST /api/v1/auth/register"
+apiGateway --> AuthLogin : "POST /api/v1/auth/login"
+apiGateway --> AuthLogout : "POST /api/v1/auth/logout"
+
+apiGateway --> GetCourses : "GET /api/v1/courses"
+apiGateway --> GetCourse : "GET /api/v1/courses/:id"
+apiGateway --> EnrollCourse : "POST /api/v1/courses/:id/enroll"
+
+apiGateway --> GetWords : "GET /api/v1/vocabulary/words"
+apiGateway --> ReviewWord : "POST /api/v1/vocabulary/words/:id/review"
+apiGateway --> GetReviewQueue : "GET /api/v1/vocabulary/review-queue"
+
+apiGateway --> GetExercises : "GET /api/v1/exercises/lesson/:lessonId"
+apiGateway --> SubmitExercise : "POST /api/v1/exercises/:id/submit"
+
+apiGateway --> UploadSpeech : "POST /api/v1/speech/upload"
+apiGateway --> GetSpeechAssessment : "GET /api/v1/speech/assessment/:id"
+
+apiGateway --> GetProgressOverview : "GET /api/v1/progress/overview"
+apiGateway --> GetDailyProgress : "GET /api/v1/progress/daily"
+
+apiGateway --> GetFriends : "GET /api/v1/social/friends"
+apiGateway --> GetLeaderboard : "GET /api/v1/social/leaderboard"
+
+apiGateway --> GetPoints : "GET /api/v1/gamification/points"
+apiGateway --> DailyCheckin : "POST /api/v1/gamification/daily-checkin"
+
+apiGateway --> GetSubscriptionPlans : "GET /api/v1/subscription/plans"
+apiGateway --> Subscribe : "POST /api/v1/subscription/subscribe"
+
+note right of AuthLogin
+  请求体:
+  {
+    "email": "string",
+    "password": "string",
+    "device_info": {
+      "platform": "ios|android|web",
+      "version": "string"
+    }
+  }
+  
+  响应:
+  {
+    "access_token": "string",
+    "refresh_token": "string",
+    "user": {
+      "user_id": "string",
+      "username": "string",
+      "level": "number",
+      "avatar_url": "string"
+    }
+  }
+end note
+
+note right of ReviewWord
+  请求体:
+  {
+    "word_id": "string",
+    "review_result": "correct|incorrect|partial",
+    "time_spent": "number",
+    "difficulty_rating": "number"
+  }
+  
+  响应:
+  {
+    "next_review_time": "timestamp",
+    "mastery_level": "number",
+    "points_earned": "number",
+    "new_interval": "number"
+  }
+end note
+
+note right of SubmitExercise
+  请求体:
+  {
+    "exercise_id": "string",
+    "user_answer": "object",
+    "time_spent": "number",
+    "hints_used": "number"
+  }
+  
+  响应:
+  {
+    "is_correct": "boolean",
+    "score": "number",
+    "explanation": "string",
+    "correct_answer": "object",
+    "points_earned": "number"
+  }
+end note
+
+note right of UploadSpeech
+  请求体:
+  {
+    "lesson_id": "string",
+    "target_text": "string",
+    "audio_file": "base64|multipart"
+  }
+  
+  响应:
+  {
+    "assessment_id": "string",
+    "pronunciation_score": "number",
+    "fluency_score": "number",
+    "accuracy_score": "number",
+    "feedback": "object"
+  }
+end note
+
+note right of GetProgressOverview
+  响应:
+  {
+    "current_level": "number",
+    "total_study_time": "number",
+    "streak_days": "number",
+    "words_mastered": "number",
+    "lessons_completed": "number",
+    "points_total": "number",
+    "next_milestone": "object",
+    "weekly_progress": "array"
+  }
+end note
+
+@enduml 

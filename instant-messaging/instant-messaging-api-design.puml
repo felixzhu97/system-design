@@ -1,0 +1,194 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title 即时通讯系统 - API设计
+
+Container(clientApp, "客户端应用", "React Native/Web", "移动和Web客户端")
+Container(apiGateway, "API网关", "Kong/Nginx", "统一API入口")
+
+package "认证服务 API" {
+    [POST /auth/register] as AuthRegister
+    [POST /auth/login] as AuthLogin  
+    [POST /auth/logout] as AuthLogout
+    [POST /auth/refresh] as AuthRefresh
+    [POST /auth/verify] as AuthVerify
+    [GET /auth/profile] as AuthProfile
+}
+
+package "用户服务 API" {
+    [GET /users/profile] as UserProfile
+    [PUT /users/profile] as UpdateProfile
+    [GET /users/search] as SearchUsers
+    [POST /users/contacts] as AddContact
+    [GET /users/contacts] as GetContacts
+    [DELETE /users/contacts/:id] as RemoveContact
+    [PUT /users/settings] as UpdateSettings
+    [GET /users/settings] as GetSettings
+}
+
+package "消息服务 API" {
+    [POST /messages/send] as SendMessage
+    [GET /messages/history] as GetHistory
+    [PUT /messages/:id/read] as MarkRead
+    [DELETE /messages/:id] as DeleteMessage
+    [POST /messages/:id/forward] as ForwardMessage
+    [GET /messages/search] as SearchMessages
+    [POST /messages/recall] as RecallMessage
+}
+
+package "群组服务 API" {
+    [POST /groups] as CreateGroup
+    [GET /groups] as GetGroups
+    [GET /groups/:id] as GetGroup
+    [PUT /groups/:id] as UpdateGroup
+    [DELETE /groups/:id] as DeleteGroup
+    [POST /groups/:id/members] as AddMember
+    [DELETE /groups/:id/members/:userId] as RemoveMember
+    [PUT /groups/:id/members/:userId] as UpdateMember
+    [GET /groups/:id/messages] as GetGroupMessages
+    [POST /groups/:id/messages] as SendGroupMessage
+}
+
+package "频道服务 API" {
+    [POST /channels] as CreateChannel
+    [GET /channels] as GetChannels
+    [GET /channels/:id] as GetChannel
+    [PUT /channels/:id] as UpdateChannel
+    [DELETE /channels/:id] as DeleteChannel
+    [POST /channels/:id/subscribe] as Subscribe
+    [DELETE /channels/:id/subscribe] as Unsubscribe
+    [GET /channels/:id/messages] as GetChannelMessages
+    [POST /channels/:id/messages] as PostChannelMessage
+}
+
+package "文件服务 API" {
+    [POST /files/upload] as UploadFile
+    [GET /files/:id] as GetFile
+    [GET /files/:id/download] as DownloadFile
+    [DELETE /files/:id] as DeleteFile
+    [POST /files/upload/avatar] as UploadAvatar
+    [POST /files/upload/voice] as UploadVoice
+    [POST /files/upload/video] as UploadVideo
+}
+
+package "通话服务 API" {
+    [POST /calls/initiate] as InitiateCall
+    [POST /calls/:id/answer] as AnswerCall
+    [POST /calls/:id/reject] as RejectCall
+    [POST /calls/:id/hangup] as HangupCall
+    [GET /calls/:id/status] as GetCallStatus
+    [POST /calls/group] as InitiateGroupCall
+}
+
+package "WebSocket 事件" {
+    [message.received] as WSMessageReceived
+    [message.read] as WSMessageRead
+    [user.online] as WSUserOnline
+    [user.typing] as WSUserTyping
+    [call.incoming] as WSCallIncoming
+    [call.ended] as WSCallEnded
+    [group.updated] as WSGroupUpdated
+}
+
+' 客户端到API网关
+clientApp --> apiGateway : "HTTPS请求"
+
+' API网关路由到各服务
+apiGateway --> AuthRegister : "POST /api/v1/auth/register"
+apiGateway --> AuthLogin : "POST /api/v1/auth/login"
+apiGateway --> AuthLogout : "POST /api/v1/auth/logout"
+
+apiGateway --> UserProfile : "GET /api/v1/users/profile"
+apiGateway --> UpdateProfile : "PUT /api/v1/users/profile"
+apiGateway --> SearchUsers : "GET /api/v1/users/search"
+
+apiGateway --> SendMessage : "POST /api/v1/messages/send"
+apiGateway --> GetHistory : "GET /api/v1/messages/history"
+apiGateway --> MarkRead : "PUT /api/v1/messages/:id/read"
+
+apiGateway --> CreateGroup : "POST /api/v1/groups"
+apiGateway --> GetGroups : "GET /api/v1/groups"
+apiGateway --> SendGroupMessage : "POST /api/v1/groups/:id/messages"
+
+apiGateway --> CreateChannel : "POST /api/v1/channels"
+apiGateway --> Subscribe : "POST /api/v1/channels/:id/subscribe"
+apiGateway --> PostChannelMessage : "POST /api/v1/channels/:id/messages"
+
+apiGateway --> UploadFile : "POST /api/v1/files/upload"
+apiGateway --> GetFile : "GET /api/v1/files/:id"
+
+apiGateway --> InitiateCall : "POST /api/v1/calls/initiate"
+apiGateway --> AnswerCall : "POST /api/v1/calls/:id/answer"
+
+' WebSocket连接
+clientApp --> WSMessageReceived : "WebSocket连接"
+clientApp --> WSUserOnline : "WebSocket连接"
+clientApp --> WSCallIncoming : "WebSocket连接"
+
+note right of AuthRegister
+  请求体:
+  {
+    "username": "string",
+    "email": "string", 
+    "password": "string",
+    "phone": "string"
+  }
+  
+  响应:
+  {
+    "user_id": "string",
+    "access_token": "string",
+    "refresh_token": "string"
+  }
+end note
+
+note right of SendMessage
+  请求体:
+  {
+    "receiver_id": "string",
+    "message_type": "text|image|voice|video",
+    "content": "object",
+    "reply_to": "string",
+    "attachments": ["file_id"]
+  }
+  
+  响应:
+  {
+    "message_id": "string",
+    "created_at": "timestamp",
+    "delivery_status": "sent"
+  }
+end note
+
+note right of WSMessageReceived
+  WebSocket事件:
+  {
+    "event": "message.received",
+    "data": {
+      "message_id": "string",
+      "sender_id": "string",
+      "content": "object",
+      "timestamp": "number"
+    }
+  }
+end note
+
+note right of CreateGroup
+  请求体:
+  {
+    "group_name": "string",
+    "description": "string",
+    "is_public": "boolean",
+    "max_members": "number",
+    "initial_members": ["user_id"]
+  }
+  
+  响应:
+  {
+    "group_id": "string",
+    "invite_link": "string",
+    "created_at": "timestamp"
+  }
+end note
+
+@enduml 

@@ -1,0 +1,52 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+title 心理检测系统 - 上下文图
+
+LAYOUT_WITH_LEGEND()
+
+' 用户角色
+Person(client, "来访者", "接受心理测评、咨询服务的个人用户")
+Person(psychologist, "心理医生", "临床心理学家、精神科医生，进行诊断和治疗")
+Person(counselor, "心理咨询师", "提供心理咨询、指导的专业咨询师")
+Person(supervisor, "督导师", "监督和指导心理专业人员的资深专家")
+Person(researcher, "研究员", "心理学研究人员，进行数据分析和研究")
+Person(admin, "管理员", "系统管理、用户权限、数据安全管理")
+
+' 核心系统
+System(psychologySystem, "心理检测系统", "提供心理量表测评、结果分析、咨询管理、数据统计等功能")
+
+' 外部系统
+System_Ext(scaleLibrary, "量表库", "标准化心理量表、测试题库、评分标准")
+System_Ext(aiAnalysis, "AI分析", "心理状态AI分析、智能诊断辅助服务")
+System_Ext(medicalSystem, "医疗系统", "医院HIS、电子病历、医疗信息系统")
+System_Ext(emergencyService, "应急服务", "心理危机干预、自杀预防热线")
+System_Ext(dataEncryption, "数据加密", "医疗级数据加密、隐私保护服务")
+System_Ext(auditSystem, "审计系统", "医疗数据审计、合规性检查")
+System_Ext(backupService, "备份服务", "安全数据备份、灾难恢复")
+System_Ext(researchDB, "研究数据库", "心理学研究数据、学术论文库")
+System_Ext(trainingPlatform, "培训平台", "心理专业人员继续教育")
+System_Ext(reminderService, "提醒服务", "预约提醒、用药提醒、复诊通知")
+System_Ext(reportService, "报告服务", "心理评估报告生成、统计分析")
+
+' 关系
+Rel(client, psychologySystem, "心理测评、查看报告", "Web/移动应用")
+Rel(psychologist, psychologySystem, "诊断分析、治疗方案", "专业工作站")
+Rel(counselor, psychologySystem, "咨询管理、案例记录", "咨询师端")
+Rel(supervisor, psychologySystem, "督导审核、质量控制", "督导端")
+Rel(researcher, psychologySystem, "数据分析、研究统计", "研究端")
+Rel(admin, psychologySystem, "系统管理、权限控制", "管理后台")
+
+Rel(psychologySystem, scaleLibrary, "量表调用、题目获取", "HTTPS/API")
+Rel(psychologySystem, aiAnalysis, "智能分析、辅助诊断", "AI API/机器学习")
+Rel(psychologySystem, medicalSystem, "病历同步、医疗集成", "HL7/FHIR")
+Rel(psychologySystem, emergencyService, "危机预警、紧急转介", "应急接口")
+Rel(psychologySystem, dataEncryption, "数据加密、隐私保护", "加密API")
+Rel(psychologySystem, auditSystem, "合规审计、操作记录", "审计接口")
+Rel(psychologySystem, backupService, "数据备份、恢复", "备份协议")
+Rel(psychologySystem, researchDB, "研究数据、文献查询", "学术接口")
+Rel(psychologySystem, trainingPlatform, "专业培训、认证", "培训API")
+Rel(psychologySystem, reminderService, "预约提醒、通知", "消息API")
+Rel(psychologySystem, reportService, "报告生成、统计分析", "报表API")
+
+@enduml 

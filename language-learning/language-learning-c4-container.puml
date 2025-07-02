@@ -1,0 +1,109 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title 语言学习系统 - 容器图
+
+LAYOUT_WITH_LEGEND()
+
+' 客户端应用
+Container(mobileApp, "移动学习应用", "React Native, TypeScript", "iOS/Android学习应用，词汇记忆、语法练习")
+Container(webApp, "Web学习应用", "React 18, TypeScript, PWA", "浏览器端学习平台")
+Container(teacherApp, "教师管理端", "Vue 3, TypeScript, Element Plus", "教师课程管理、学生进度监控")
+Container(adminApp, "管理后台", "Vue 3, TypeScript, Ant Design", "系统管理、内容审核、数据统计")
+
+' BFF层
+Container(mobileBFF, "移动端BFF", "Node.js, Fastify, TypeScript", "移动端业务聚合层")
+Container(webBFF, "Web端BFF", "Next.js 14, TypeScript", "Web端业务聚合和SSR")
+Container(teacherBFF, "教师端BFF", "Node.js, Express, TypeScript", "教师端业务聚合层")
+
+' 接入层
+Container(apiGateway, "API网关", "Kong, Nginx", "统一入口、认证、限流、监控")
+Container(loadBalancer, "负载均衡", "Nginx, Keepalived", "流量分发和高可用")
+
+' 核心微服务
+Container(userService, "用户服务", "Java, Spring Boot, MyBatis", "用户注册、认证、个人资料")
+Container(courseService, "课程服务", "Python, FastAPI, SQLAlchemy", "课程管理、内容组织、学习路径")
+Container(learningService, "学习服务", "Go, Gin, GORM", "学习记录、进度跟踪、成就系统")
+Container(vocabularyService, "词汇服务", "Java, Spring Boot, JPA", "词汇管理、记忆算法、复习计划")
+Container(speechService, "语音服务", "Python, Flask, TensorFlow", "语音识别、发音评测、语音合成")
+Container(practiceService, "练习服务", "Node.js, Koa, TypeScript", "题目生成、答题记录、错题本")
+Container(aiService, "AI服务", "Python, FastAPI, PyTorch", "个性化推荐、智能答疑、学习分析")
+Container(socialService, "社交服务", "Go, Fiber, Redis", "学习社区、打卡分享、好友系统")
+
+' 数据存储
+ContainerDb(userDb, "用户数据库", "PostgreSQL 15", "用户信息、学习记录、社交关系")
+ContainerDb(courseDb, "课程数据库", "MongoDB 6.0", "课程内容、多媒体资源、知识图谱")
+ContainerDb(vocabularyDb, "词汇数据库", "PostgreSQL 15", "词汇库、例句、语音文件路径")
+ContainerDb(practiceDb, "练习数据库", "MySQL 8.0", "题目库、答题记录、统计数据")
+ContainerDb(cacheDb, "缓存数据库", "Redis 7.0", "学习状态、会话、热点数据")
+ContainerDb(vectorDb, "向量数据库", "Pinecone", "词汇向量、语义搜索、推荐算法")
+
+' 文件存储
+Container(fileService, "文件服务", "MinIO, Go", "音频、视频、图片文件存储")
+ContainerDb(fileStorage, "文件存储", "MinIO Cluster", "多媒体文件、用户生成内容")
+
+' 消息队列
+Container(messageQueue, "消息队列", "Apache Kafka", "异步任务、事件驱动、数据同步")
+
+' 外部服务
+Container_Ext(speechAPI, "语音服务", "科大讯飞、Google Speech", "语音识别和合成")
+Container_Ext(translateAPI, "翻译服务", "Google Translate、百度翻译", "多语言翻译")
+Container_Ext(aiAPI, "AI服务", "OpenAI GPT、Claude", "智能对话和答疑")
+
+' 客户端到BFF
+Rel(mobileApp, mobileBFF, "API调用", "HTTPS/REST")
+Rel(webApp, webBFF, "页面请求", "HTTPS/SSR")
+Rel(teacherApp, teacherBFF, "管理操作", "HTTPS/REST")
+Rel(adminApp, apiGateway, "直接调用", "HTTPS/REST")
+
+' BFF到网关
+Rel(mobileBFF, apiGateway, "服务调用", "HTTPS")
+Rel(webBFF, apiGateway, "服务调用", "HTTPS")
+Rel(teacherBFF, apiGateway, "服务调用", "HTTPS")
+
+' 网关到微服务
+Rel(loadBalancer, apiGateway, "负载分发", "HTTP")
+Rel(apiGateway, userService, "用户相关", "HTTP/REST")
+Rel(apiGateway, courseService, "课程相关", "HTTP/REST")
+Rel(apiGateway, learningService, "学习相关", "HTTP/REST")
+Rel(apiGateway, vocabularyService, "词汇相关", "HTTP/REST")
+Rel(apiGateway, speechService, "语音相关", "HTTP/REST")
+Rel(apiGateway, practiceService, "练习相关", "HTTP/REST")
+Rel(apiGateway, aiService, "AI相关", "HTTP/REST")
+Rel(apiGateway, socialService, "社交相关", "HTTP/REST")
+
+' 微服务间通信
+Rel(learningService, userService, "用户验证", "gRPC")
+Rel(learningService, courseService, "课程信息", "gRPC")
+Rel(vocabularyService, aiService, "智能推荐", "gRPC")
+Rel(practiceService, vocabularyService, "词汇数据", "gRPC")
+Rel(speechService, vocabularyService, "发音数据", "gRPC")
+
+' 微服务到数据库
+Rel(userService, userDb, "用户数据", "JDBC")
+Rel(courseService, courseDb, "课程数据", "MongoDB Driver")
+Rel(vocabularyService, vocabularyDb, "词汇数据", "JDBC")
+Rel(practiceService, practiceDb, "练习数据", "JDBC")
+Rel(aiService, vectorDb, "向量搜索", "API")
+
+' 缓存层
+Rel(userService, cacheDb, "用户缓存", "Redis")
+Rel(vocabularyService, cacheDb, "词汇缓存", "Redis")
+Rel(learningService, cacheDb, "学习缓存", "Redis")
+
+' 文件服务
+Rel(speechService, fileService, "音频文件", "S3 API")
+Rel(courseService, fileService, "课程资源", "S3 API")
+Rel(fileService, fileStorage, "文件存储", "MinIO API")
+
+' 消息队列
+Rel(learningService, messageQueue, "学习事件", "Kafka")
+Rel(aiService, messageQueue, "推荐更新", "Kafka")
+Rel(speechService, messageQueue, "语音处理", "Kafka")
+
+' 外部服务集成
+Rel(speechService, speechAPI, "语音处理", "HTTPS/API")
+Rel(courseService, translateAPI, "内容翻译", "HTTPS/API")
+Rel(aiService, aiAPI, "智能对话", "HTTPS/API")
+
+@enduml 

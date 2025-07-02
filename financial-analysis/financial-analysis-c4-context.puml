@@ -1,0 +1,50 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+title 金融分析系统 - 上下文图
+
+LAYOUT_WITH_LEGEND()
+
+' 用户角色
+Person(analyst, "金融分析师", "进行股票、基金、债券等金融产品分析的专业人员")
+Person(trader, "交易员", "执行交易策略、风险管理的专业交易人员")
+Person(investor, "投资者", "个人或机构投资者，查看分析报告、制定投资决策")
+Person(riskManager, "风控经理", "监控投资风险、制定风控策略的风险管理人员")
+Person(complianceOfficer, "合规官", "确保交易合规、监管报告的合规管理人员")
+Person(portfolioManager, "投资组合经理", "管理投资组合、资产配置的专业人员")
+
+' 核心系统
+System(financialSystem, "金融分析系统", "提供市场数据分析、风险评估、投资建议、交易支持等功能")
+
+' 外部系统
+System_Ext(marketDataProvider, "市场数据源", "Bloomberg、Reuters、Wind等实时市场数据提供商")
+System_Ext(tradingPlatform, "交易平台", "券商交易系统、银行交易平台、第三方交易接口")
+System_Ext(regulatorySystem, "监管接口", "证监会、银保监会等监管机构报送接口")
+System_Ext(riskModel, "风险模型", "VaR模型、压力测试、风险度量第三方服务")
+System_Ext(newsProvider, "新闻资讯", "财经新闻、公告、研报等信息源")
+System_Ext(fundamentalData, "基本面数据", "财务报表、宏观经济、行业数据等")
+System_Ext(alternativeData, "另类数据", "卫星数据、社交媒体、ESG评级等非传统数据")
+System_Ext(bankingSystem, "银行系统", "托管银行、结算银行资金管理系统")
+System_Ext(auditSystem, "审计系统", "第三方审计、内控合规系统")
+System_Ext(reportingSystem, "报告系统", "监管报告、客户报告、内部报告系统")
+
+' 关系
+Rel(analyst, financialSystem, "市场分析、研究报告", "专业分析工具")
+Rel(trader, financialSystem, "交易执行、风险监控", "交易终端")
+Rel(investor, financialSystem, "投资决策、组合查看", "投资者门户")
+Rel(riskManager, financialSystem, "风险监控、压力测试", "风控系统")
+Rel(complianceOfficer, financialSystem, "合规检查、监管报告", "合规系统")
+Rel(portfolioManager, financialSystem, "组合管理、绩效分析", "投资管理系统")
+
+Rel(financialSystem, marketDataProvider, "实时行情、历史数据", "FIX协议/API")
+Rel(financialSystem, tradingPlatform, "交易指令、成交回报", "FIX协议/API")
+Rel(financialSystem, regulatorySystem, "监管报送", "专用接口/XBRL")
+Rel(financialSystem, riskModel, "风险计算", "API/模型服务")
+Rel(financialSystem, newsProvider, "资讯获取", "RSS/API")
+Rel(financialSystem, fundamentalData, "基本面分析", "数据API")
+Rel(financialSystem, alternativeData, "另类数据分析", "数据API")
+Rel(financialSystem, bankingSystem, "资金管理", "银行接口/SWIFT")
+Rel(financialSystem, auditSystem, "审计追踪", "审计接口")
+Rel(financialSystem, reportingSystem, "报告生成", "报告API")
+
+@enduml 

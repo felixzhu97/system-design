@@ -1,0 +1,108 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title 即时通讯系统 - 容器图
+
+LAYOUT_WITH_LEGEND()
+
+' 客户端应用
+Container(webApp, "Web应用", "React 18, TypeScript, Vite", "浏览器端聊天界面")
+Container(mobileApp, "移动应用", "React Native, TypeScript", "iOS/Android聊天应用")
+Container(desktopApp, "桌面应用", "Electron, React", "Windows/Mac/Linux桌面客户端")
+Container(miniProgram, "小程序", "微信小程序, TypeScript", "微信生态内的聊天应用")
+
+' 接入层
+Container(apiGateway, "API网关", "Kong, Nginx", "路由、限流、认证、监控")
+Container(wsGateway, "WebSocket网关", "Node.js, Socket.io", "实时消息推送网关")
+Container(loadBalancer, "负载均衡", "Nginx, HAProxy", "流量分发和高可用")
+
+' 核心微服务
+Container(userService, "用户服务", "Go, Gin, gRPC", "用户注册、认证、资料管理")
+Container(messageService, "消息服务", "Go, Kafka, gRPC", "消息发送、存储、分发")
+Container(groupService, "群组服务", "Java, Spring Boot", "群组创建、管理、权限控制")
+Container(channelService, "频道服务", "Node.js, Express", "频道管理、内容发布")
+Container(fileService, "文件服务", "Go, MinIO", "文件上传、下载、转码")
+Container(notificationService, "通知服务", "Python, Celery", "推送通知、邮件通知")
+Container(botService, "机器人服务", "Python, FastAPI", "Bot开发平台、Webhook管理")
+Container(callService, "通话服务", "Node.js, WebRTC", "音视频通话、会议管理")
+
+' 数据存储
+ContainerDb(userDb, "用户数据库", "PostgreSQL 15", "用户信息、关系链")
+ContainerDb(messageDb, "消息数据库", "MongoDB 分片", "消息内容、历史记录")
+ContainerDb(cacheDb, "缓存数据库", "Redis 集群", "会话、在线状态、临时数据")
+ContainerDb(searchDb, "搜索引擎", "Elasticsearch", "消息全文搜索、用户搜索")
+ContainerDb(fileStorage, "文件存储", "MinIO 集群", "图片、视频、文档存储")
+
+' 中间件
+Container(messageQueue, "消息队列", "Apache Kafka", "异步消息处理、事件驱动")
+Container(serviceRegistry, "服务注册", "Consul, Eureka", "服务发现、健康检查")
+Container(configCenter, "配置中心", "Apollo, Nacos", "配置管理、热更新")
+
+' 监控和运维
+Container(monitoring, "监控系统", "Prometheus, Grafana", "系统监控、告警")
+Container(logging, "日志系统", "ELK Stack", "日志收集、分析、检索")
+Container(tracing, "链路追踪", "Jaeger, Zipkin", "分布式追踪、性能分析")
+
+' 外部服务
+Container_Ext(pushGateway, "推送网关", "FCM, APNs", "移动端消息推送")
+Container_Ext(rtcService, "音视频服务", "Agora, 声网", "实时音视频通信")
+Container_Ext(ossService, "对象存储", "AWS S3, 阿里云OSS", "文件存储和CDN")
+
+' 客户端到接入层
+Rel(webApp, loadBalancer, "HTTPS请求", "HTTPS")
+Rel(mobileApp, loadBalancer, "API调用", "HTTPS")
+Rel(desktopApp, loadBalancer, "API调用", "HTTPS")
+Rel(miniProgram, loadBalancer, "API调用", "HTTPS")
+
+Rel(webApp, wsGateway, "WebSocket连接", "WebSocket")
+Rel(mobileApp, wsGateway, "实时消息", "WebSocket")
+Rel(desktopApp, wsGateway, "实时消息", "WebSocket")
+
+' 接入层到微服务
+Rel(loadBalancer, apiGateway, "路由转发", "HTTP")
+Rel(apiGateway, userService, "用户相关", "gRPC")
+Rel(apiGateway, messageService, "消息相关", "gRPC")
+Rel(apiGateway, groupService, "群组相关", "REST")
+Rel(apiGateway, channelService, "频道相关", "REST")
+Rel(apiGateway, fileService, "文件相关", "gRPC")
+Rel(apiGateway, botService, "Bot相关", "REST")
+Rel(apiGateway, callService, "通话相关", "REST")
+
+Rel(wsGateway, messageService, "实时消息", "gRPC")
+Rel(wsGateway, notificationService, "通知推送", "gRPC")
+
+' 微服务间通信
+Rel(messageService, userService, "用户验证", "gRPC")
+Rel(messageService, groupService, "群组验证", "gRPC")
+Rel(messageService, notificationService, "推送通知", "Kafka")
+Rel(groupService, userService, "成员管理", "gRPC")
+Rel(botService, messageService, "Bot消息", "gRPC")
+
+' 微服务到数据存储
+Rel(userService, userDb, "用户数据", "SQL")
+Rel(messageService, messageDb, "消息存储", "MongoDB")
+Rel(messageService, searchDb, "消息索引", "REST API")
+Rel(fileService, fileStorage, "文件存储", "S3 API")
+
+Rel(userService, cacheDb, "用户缓存", "Redis")
+Rel(messageService, cacheDb, "消息缓存", "Redis")
+Rel(groupService, cacheDb, "群组缓存", "Redis")
+
+' 中间件集成
+Rel(messageService, messageQueue, "异步处理", "Kafka")
+Rel(notificationService, messageQueue, "事件消费", "Kafka")
+Rel(userService, serviceRegistry, "服务注册", "HTTP")
+Rel(messageService, serviceRegistry, "服务注册", "HTTP")
+Rel(groupService, serviceRegistry, "服务注册", "HTTP")
+
+' 外部服务集成
+Rel(notificationService, pushGateway, "推送通知", "HTTPS")
+Rel(callService, rtcService, "音视频通话", "SDK/API")
+Rel(fileService, ossService, "文件存储", "S3 API")
+
+' 监控集成
+Rel(apiGateway, monitoring, "监控数据", "HTTP")
+Rel(messageService, monitoring, "监控数据", "HTTP")
+Rel(userService, monitoring, "监控数据", "HTTP")
+
+@enduml 

@@ -95,8 +95,8 @@ package "核心业务服务" {
         [财务服务] as FinanceService <<JAVA_COLOR>>
         [BI服务] as BIService <<PYTHON_COLOR>>
     }
-}
-
+    }
+    
 package "支撑服务层" {
     [用户认证服务] as AuthService <<NODE_COLOR>>
     [权限管理服务] as PermissionService <<JAVA_COLOR>>
@@ -124,8 +124,8 @@ package "数据存储层" {
         [菜品图片存储] as ImageStorage <<Storage>>
         [小票模板存储] as TemplateStorage <<Storage>>
         [报表文件存储] as ReportStorage <<Storage>>
-    }
-    
+}
+
     package "时序数据" {
         [营业数据库] as BusinessDB <<TimeSeries>>
         [设备监控数据] as DeviceDB <<TimeSeries>>
