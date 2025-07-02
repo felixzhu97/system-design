@@ -1,67 +1,133 @@
 @startuml
 !include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
 
-title 社交媒体系统 - 内容服务组件图 (C4 Level 3)
+title 社交媒体平台 - Web应用前端组件图
 
 LAYOUT_WITH_LEGEND()
 
-Container(webApp, "Web应用", "React/Vue.js", "社交媒体Web客户端")
-Container(mobileApp, "移动应用", "React Native/Flutter", "移动客户端")
-Container(apiGateway, "API网关", "Kong/Zuul", "API统一入口")
+Person(user, "用户", "平台用户")
+System_Ext(webBFF, "Web BFF", "Next.js API Routes")
+System_Ext(cdnService, "CDN服务", "静态资源分发")
+System_Ext(aiService, "AI服务", "智能推荐和内容理解")
 
-Container_Boundary(contentService, "内容服务") {
-    Component(contentController, "内容控制器", "Spring MVC Controller", "处理内容相关HTTP请求")
-    Component(postService, "发帖服务", "Spring Service", "处理发帖业务逻辑")
-    Component(commentService, "评论服务", "Spring Service", "处理评论业务逻辑")
-    Component(likeService, "点赞服务", "Spring Service", "处理点赞业务逻辑")
-    Component(shareService, "分享服务", "Spring Service", "处理分享业务逻辑")
-    Component(contentValidator, "内容验证器", "Spring Component", "验证内容格式和规则")
-    Component(contentProcessor, "内容处理器", "Spring Component", "处理内容格式化、敏感词过滤")
-    Component(contentRepository, "内容仓储", "Spring Data JPA", "内容数据访问层")
-    Component(cacheManager, "缓存管理器", "Spring Cache", "管理内容缓存")
-    Component(eventPublisher, "事件发布器", "Spring Event", "发布内容变更事件")
+Container_Boundary(webApp, "Web应用 (React 18 + Next.js 14)") {
+    
+    ' 路由和导航层
+    Component(appRouter, "应用路由", "Next.js App Router", "页面路由管理和导航控制")
+    Component(navigation, "导航组件", "React Components", "顶部导航栏、侧边栏、底部导航")
+    Component(authGuard, "路由守卫", "React HOC", "页面访问权限控制")
+    
+    ' 页面组件层
+    Component(homePage, "首页组件", "React Server Components", "信息流展示页面")
+    Component(profilePage, "个人主页", "React Client Components", "用户资料和内容展示")
+    Component(explorePage, "发现页面", "React Components", "内容探索和搜索")
+    Component(messagePage, "消息页面", "React Components", "私信和通知管理")
+    Component(livePage, "直播页面", "React + WebRTC", "直播观看和互动")
+    Component(creatorPage, "创作页面", "React Components", "内容发布和编辑")
+    
+    ' 业务组件层
+    Component(feedComponent, "信息流组件", "React Virtual List", "无限滚动的内容流")
+    Component(postComponent, "帖子组件", "React Components", "单条内容展示和交互")
+    Component(commentComponent, "评论组件", "React Components", "评论展示和发布")
+    Component(mediaPlayer, "媒体播放器", "React + Video.js", "图片、视频播放组件")
+    Component(livePlayer, "直播播放器", "React + WebRTC", "直播流播放和互动")
+    Component(editorComponent, "富文本编辑器", "React + Draft.js", "内容编辑和发布")
+    Component(searchComponent, "搜索组件", "React + Algolia", "智能搜索和筛选")
+    Component(aiAssistant, "AI助手", "React + WebSocket", "智能推荐和内容辅助")
+    
+    ' 状态管理层
+    Component(globalStore, "全局状态", "Zustand Store", "应用全局状态管理")
+    Component(userStore, "用户状态", "User Store", "用户信息和认证状态")
+    Component(feedStore, "信息流状态", "Feed Store", "信息流数据和缓存")
+    Component(messageStore, "消息状态", "Message Store", "实时消息和通知")
+    Component(cacheManager, "缓存管理", "React Query", "API数据缓存和同步")
+    
+    ' 通信服务层
+    Component(apiClient, "API客户端", "Axios + TypeScript", "HTTP请求封装和拦截")
+    Component(websocketClient, "WebSocket客户端", "Socket.io Client", "实时通信管理")
+    Component(webrtcClient, "WebRTC客户端", "WebRTC API", "P2P音视频通信")
+    Component(uploadService, "上传服务", "File Upload API", "文件上传和进度管理")
+    
+    ' 工具服务层
+    Component(authService, "认证服务", "JWT + OAuth", "用户认证和授权")
+    Component(notificationService, "通知服务", "Notification API", "浏览器通知管理")
+    Component(analyticsService, "分析服务", "Google Analytics", "用户行为统计")
+    Component(errorService, "错误服务", "Sentry", "错误监控和上报")
+    Component(performanceService, "性能服务", "Web Vitals", "性能监控和优化")
+    Component(themeService, "主题服务", "CSS Variables", "主题切换和样式管理")
+    Component(i18nService, "国际化服务", "react-i18next", "多语言支持")
+    Component(utilsLibrary, "工具库", "TypeScript Utils", "通用工具函数")
+    
+    ' 本地存储层
+    ComponentDb(localStorage, "本地存储", "LocalStorage", "用户偏好设置")
+    ComponentDb(sessionStorage, "会话存储", "SessionStorage", "临时数据存储")
+    ComponentDb(indexedDB, "离线数据库", "IndexedDB", "离线数据和缓存")
+    ComponentDb(serviceWorker, "Service Worker", "PWA Cache", "离线支持和推送")
 }
 
-ContainerDb(contentDb, "内容数据库", "MySQL/PostgreSQL", "存储内容数据")
-ContainerDb(cacheDb, "缓存数据库", "Redis", "缓存热点内容")
-Container(messageQueue, "消息队列", "Apache Kafka", "异步消息处理")
-Container(mediaService, "媒体服务", "Go/Java", "处理图片视频")
-Container(searchService, "搜索服务", "Elasticsearch", "内容搜索")
-Container(moderationService, "内容审核服务", "Python/AI", "AI内容审核")
+' 用户交互流
+Rel(user, navigation, "页面导航", "点击/触摸")
+Rel(user, feedComponent, "内容浏览", "滚动/点击")
+Rel(user, postComponent, "内容互动", "点赞/评论/分享")
+Rel(user, editorComponent, "内容创作", "输入/上传")
+Rel(user, searchComponent, "内容搜索", "搜索/筛选")
 
-Rel(webApp, apiGateway, "HTTP请求", "HTTPS/REST")
-Rel(mobileApp, apiGateway, "HTTP请求", "HTTPS/REST")
-Rel(apiGateway, contentController, "路由请求", "HTTP/REST")
+' 路由和页面管理
+Rel(appRouter, homePage, "路由跳转", "导航")
+Rel(appRouter, profilePage, "路由跳转", "导航")
+Rel(appRouter, explorePage, "路由跳转", "导航")
+Rel(appRouter, messagePage, "路由跳转", "导航")
+Rel(appRouter, livePage, "路由跳转", "导航")
+Rel(appRouter, creatorPage, "路由跳转", "导航")
+Rel(authGuard, appRouter, "权限控制", "路由拦截")
 
-Rel(contentController, postService, "调用", "Java Method")
-Rel(contentController, commentService, "调用", "Java Method")
-Rel(contentController, likeService, "调用", "Java Method")
-Rel(contentController, shareService, "调用", "Java Method")
+' 页面与组件关系
+Rel(homePage, feedComponent, "使用", "组件引用")
+Rel(homePage, postComponent, "使用", "组件引用")
+Rel(profilePage, postComponent, "使用", "组件引用")
+Rel(explorePage, searchComponent, "使用", "组件引用")
+Rel(messagePage, messageStore, "使用", "状态订阅")
+Rel(livePage, livePlayer, "使用", "组件引用")
+Rel(creatorPage, editorComponent, "使用", "组件引用")
 
-Rel(postService, contentValidator, "验证内容", "Java Method")
-Rel(postService, contentProcessor, "处理内容", "Java Method")
-Rel(postService, contentRepository, "保存数据", "JPA")
-Rel(postService, cacheManager, "更新缓存", "Redis")
-Rel(postService, eventPublisher, "发布事件", "Spring Event")
+' 组件与状态管理
+Rel(feedComponent, feedStore, "状态同步", "数据绑定")
+Rel(postComponent, globalStore, "状态更新", "action派发")
+Rel(commentComponent, cacheManager, "数据缓存", "查询缓存")
+Rel(editorComponent, uploadService, "文件上传", "服务调用")
+Rel(searchComponent, apiClient, "搜索请求", "API调用")
+Rel(aiAssistant, websocketClient, "实时AI", "WebSocket")
 
-Rel(commentService, contentValidator, "验证评论", "Java Method")
-Rel(commentService, contentRepository, "保存评论", "JPA")
-Rel(commentService, cacheManager, "更新缓存", "Redis")
-Rel(commentService, eventPublisher, "发布事件", "Spring Event")
+' 状态管理层内部关系
+Rel(globalStore, userStore, "状态组合", "store组合")
+Rel(globalStore, feedStore, "状态组合", "store组合")
+Rel(globalStore, messageStore, "状态组合", "store组合")
+Rel(cacheManager, apiClient, "请求缓存", "拦截器")
 
-Rel(likeService, contentRepository, "更新点赞", "JPA")
-Rel(likeService, cacheManager, "更新缓存", "Redis")
-Rel(likeService, eventPublisher, "发布事件", "Spring Event")
+' 通信服务层
+Rel(apiClient, webBFF, "API请求", "HTTPS/REST")
+Rel(websocketClient, webBFF, "实时通信", "WebSocket")
+Rel(webrtcClient, webBFF, "音视频通信", "WebRTC信令")
+Rel(uploadService, cdnService, "文件上传", "直传CDN")
 
-Rel(shareService, contentRepository, "记录分享", "JPA")
-Rel(shareService, eventPublisher, "发布事件", "Spring Event")
+' 工具服务层
+Rel(authService, apiClient, "认证拦截", "请求头添加")
+Rel(notificationService, messageStore, "通知展示", "状态监听")
+Rel(analyticsService, globalStore, "行为统计", "事件上报")
+Rel(errorService, apiClient, "错误上报", "异常捕获")
+Rel(performanceService, serviceWorker, "性能监控", "指标收集")
+Rel(themeService, localStorage, "主题存储", "偏好保存")
+Rel(i18nService, localStorage, "语言存储", "设置保存")
 
-Rel(contentRepository, contentDb, "读写数据", "JDBC/SQL")
-Rel(cacheManager, cacheDb, "缓存操作", "Redis Protocol")
-Rel(eventPublisher, messageQueue, "发送消息", "Kafka Protocol")
+' 本地存储
+Rel(userStore, localStorage, "用户信息", "本地缓存")
+Rel(feedStore, indexedDB, "离线缓存", "数据持久化")
+Rel(cacheManager, sessionStorage, "临时缓存", "会话存储")
+Rel(serviceWorker, indexedDB, "离线数据", "缓存管理")
 
-Rel(contentProcessor, mediaService, "处理媒体", "HTTP/REST")
-Rel(contentProcessor, moderationService, "内容审核", "HTTP/REST")
-Rel(eventPublisher, searchService, "更新索引", "HTTP/REST")
+' AI智能服务集成
+Rel(aiAssistant, aiService, "AI推荐", "HTTPS/API")
+Rel(feedComponent, aiService, "个性化推荐", "算法调用")
+Rel(searchComponent, aiService, "智能搜索", "语义搜索")
 
 @enduml 

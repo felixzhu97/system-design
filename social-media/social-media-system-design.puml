@@ -1,237 +1,292 @@
 @startuml
-!define RECTANGLE class
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
 
-title 社交媒体系统架构设计
+title 社交媒体平台 - 系统架构设计
 
-' 定义颜色主题
-!define PRIMARY_COLOR #2E86AB
-!define SECONDARY_COLOR #A23B72
-!define ACCENT_COLOR #F18F01
-!define NEUTRAL_COLOR #C73E1D
+LAYOUT_TOP_DOWN()
 
-package "客户端层" {
-    [移动端APP] as MobileApp <<Mobile Application>>
-    [Web前端] as WebApp <<Web Application>>
-    [桌面客户端] as DesktopApp <<Desktop Application>>
-}
-
-package "负载均衡层" {
-    [负载均衡器] as LoadBalancer <<Load Balancer>>
-    [API网关] as APIGateway <<API Gateway>>
-}
-
-package "应用服务层" {
-    package "用户服务" {
-        [用户管理服务] as UserService <<User Management>>
-        [认证授权服务] as AuthService <<Authentication & Authorization>>
-        [用户关系服务] as RelationshipService <<User Relationships>>
+' 多端客户层
+package "多端客户层" {
+    package "Web端" {
+        [React主应用] as ReactApp <<React>>
+        [Next.js SSR] as NextSSR <<Next.js>>
+        [PWA应用] as PWAApp <<PWA>>
+        [Chrome扩展] as ChromeExt <<Extension>>
     }
     
-    package "内容服务" {
-        [内容发布服务] as PostService <<Content Publishing>>
-        [评论服务] as CommentService <<Comment System>>
-        [点赞服务] as LikeService <<Like System>>
-        [分享服务] as ShareService <<Share System>>
+    package "移动端" {
+        [React Native APP] as RNApp <<Mobile>>
+        [Flutter APP] as FlutterApp <<Mobile>>
+        [Ionic混合应用] as IonicApp <<Hybrid>>
     }
     
-    package "推荐系统" {
-        [内容推荐服务] as RecommendationService <<Content Recommendation>>
-        [用户推荐服务] as UserRecommendationService <<User Recommendation>>
-        [机器学习引擎] as MLEngine <<Machine Learning>>
+    package "小程序生态" {
+        [微信小程序] as WeChatMP <<MiniProgram>>
+        [支付宝小程序] as AlipayMP <<MiniProgram>>
+        [百度小程序] as BaiduMP <<MiniProgram>>
+        [字节小程序] as ByteMP <<MiniProgram>>
     }
     
-    package "实时通信" {
-        [消息服务] as MessageService <<Messaging>>
-        [通知服务] as NotificationService <<Notification>>
-        [实时推送服务] as PushService <<Real-time Push>>
+    package "桌面端" {
+        [Electron应用] as ElectronApp <<Desktop>>
+        [Tauri应用] as TauriApp <<Desktop>>
+        [创作者工具] as CreatorTool <<Professional>>
     }
     
-    package "媒体服务" {
-        [图片处理服务] as ImageService <<Image Processing>>
-        [视频处理服务] as VideoService <<Video Processing>>
-        [文件存储服务] as FileStorageService <<File Storage>>
-    }
-    
-    package "搜索服务" {
-        [内容搜索服务] as SearchService <<Content Search>>
-        [用户搜索服务] as UserSearchService <<User Search>>
-    }
-    
-    package "安全服务" {
-        [内容审核服务] as ModerationService <<Content Moderation>>
-        [反垃圾服务] as AntiSpamService <<Anti-Spam>>
-        [风控服务] as RiskControlService <<Risk Control>>
+    package "智能终端" {
+        [智能音箱APP] as VoiceApp <<IoT>>
+        [智能电视APP] as TVApp <<Smart TV>>
+        [VR/AR应用] as VRApp <<Immersive>>
     }
 }
 
-package "缓存层" {
-    [Redis集群] as RedisCluster <<Redis Cluster>>
-    [Memcached] as Memcached <<Memory Cache>>
-    [CDN] as CDN <<Content Delivery Network>>
+' BFF聚合层
+package "BFF聚合层（Backend for Frontend）" {
+    [Web BFF] as WebBFF <<Node.js>>
+    [Mobile BFF] as MobileBFF <<Node.js>>
+    [Creator BFF] as CreatorBFF <<Node.js>>
+    [Mini Program BFF] as MiniProgramBFF <<Node.js>>
+    [Live BFF] as LiveBFF <<Node.js>>
+    [AI BFF] as AIBFF <<Python>>
 }
 
+' API网关层
+package "API网关层" {
+    [API网关] as APIGateway <<Kong>>
+    [认证网关] as AuthGateway <<OAuth2>>
+    [媒体网关] as MediaGateway <<Go>>
+    [实时网关] as RealtimeGateway <<WebSocket>>
+    [AI网关] as AIGateway <<FastAPI>>
+}
+
+' 核心业务域服务
+package "核心业务域服务" {
+    package "用户域" {
+        [用户服务] as UserService <<Java>>
+        [认证服务] as AuthService <<Node.js>>
+        [个人资料服务] as ProfileService <<Go>>
+        [关系链服务] as RelationService <<Java>>
+    }
+    
+    package "内容域" {
+        [内容发布服务] as ContentService <<Node.js>>
+        [内容管理服务] as ContentMgmtService <<Java>>
+        [媒体处理服务] as MediaService <<Python>>
+        [内容审核服务] as ModerationService <<Python>>
+    }
+    
+    package "社交域" {
+        [动态服务] as FeedService <<Python>>
+        [互动服务] as InteractionService <<Java>>
+        [评论服务] as CommentService <<Node.js>>
+        [私信服务] as MessageService <<Go>>
+    }
+    
+    package "推荐域" {
+        [推荐引擎] as RecommendEngine <<Python>>
+        [算法服务] as AlgorithmService <<Python>>
+        [个性化服务] as PersonalizeService <<Scala>>
+        [热度计算服务] as TrendingService <<Go>>
+    }
+    
+    package "直播域" {
+        [直播服务] as LiveService <<Node.js>>
+        [流媒体服务] as StreamService <<C++>>
+        [互动直播服务] as InteractiveLiveService <<Go>>
+        [直播录制服务] as RecordService <<FFmpeg>>
+    }
+    
+    package "搜索域" {
+        [搜索服务] as SearchService <<Java>>
+        [索引服务] as IndexService <<Python>>
+        [智能搜索服务] as SmartSearchService <<Python>>
+        [热搜服务] as HotSearchService <<Redis>>
+    }
+    
+    package "通知域" {
+        [通知服务] as NotificationService <<Node.js>>
+        [推送服务] as PushService <<Go>>
+        [邮件服务] as EmailService <<Java>>
+        [短信服务] as SMSService <<Go>>
+    }
+    
+    package "运营域" {
+        [活动服务] as ActivityService <<Java>>
+        [广告服务] as AdService <<Java>>
+        [数据分析服务] as AnalyticsService <<Python>>
+        [运营后台服务] as AdminService <<Spring Boot>>
+    }
+}
+
+' AI智能服务层
+package "AI智能服务层" {
+    [内容理解AI] as ContentAI <<TensorFlow>>
+    [推荐算法AI] as RecommendAI <<PyTorch>>
+    [图像识别AI] as ImageAI <<OpenCV>>
+    [NLP处理AI] as NLPAI <<BERT>>
+    [语音处理AI] as VoiceAI <<Whisper>>
+    [视频分析AI] as VideoAI <<Computer Vision>>
+}
+
+' 数据存储层
 package "数据存储层" {
     package "关系型数据库" {
-        [用户数据库] as UserDB <<MySQL/PostgreSQL>>
-        [内容数据库] as ContentDB <<MySQL/PostgreSQL>>
-        [关系数据库] as RelationshipDB <<MySQL/PostgreSQL>>
+        database "用户数据库" as UserDB <<PostgreSQL>>
+        database "内容数据库" as ContentDB <<MySQL>>
+        database "订单数据库" as OrderDB <<PostgreSQL>>
     }
     
-    package "NoSQL数据库" {
-        [MongoDB集群] as MongoDB <<Document Store>>
-        [Cassandra集群] as Cassandra <<Wide Column Store>>
-        [Neo4j] as Neo4j <<Graph Database>>
+    package "文档数据库" {
+        database "社交数据库" as SocialDB <<MongoDB>>
+        database "日志数据库" as LogDB <<MongoDB>>
+        database "配置数据库" as ConfigDB <<MongoDB>>
     }
     
-    package "时序数据库" {
-        [InfluxDB] as InfluxDB <<Time Series DB>>
+    package "图数据库" {
+        database "关系图谱" as GraphDB <<Neo4j>>
+        database "推荐图谱" as RecommendDB <<ArangoDB>>
+    }
+    
+    package "缓存系统" {
+        database "Redis缓存" as RedisCache <<Redis>>
+        database "Memcached" as MemCache <<Memcached>>
+        database "本地缓存" as LocalCache <<Caffeine>>
+    }
+    
+    package "消息队列" {
+        queue "Kafka集群" as KafkaCluster <<Kafka>>
+        queue "RabbitMQ" as RabbitMQQueue <<RabbitMQ>>
+        queue "Redis队列" as RedisQueue <<Redis>>
     }
     
     package "搜索引擎" {
-        [Elasticsearch集群] as Elasticsearch <<Search Engine>>
+        database "Elasticsearch" as ESCluster <<Elasticsearch>>
+        database "Solr" as SolrCluster <<Solr>>
     }
     
-    package "对象存储" {
-        [AWS S3/阿里云OSS] as ObjectStorage <<Object Storage>>
+    package "文件存储" {
+        database "对象存储" as ObjectStorage <<MinIO/S3>>
+        database "CDN存储" as CDNStorage <<Cloudflare>>
+        database "分布式文件系统" as DFS <<HDFS>>
+    }
+    
+    package "数据仓库" {
+        database "ClickHouse" as ClickHouseDB <<ClickHouse>>
+        database "Hive数仓" as HiveDB <<Hive>>
+        database "实时数仓" as RealtimeDB <<Flink>>
     }
 }
 
-package "大数据处理" {
-    [Apache Kafka] as Kafka <<Message Queue>>
-    [Apache Spark] as Spark <<Data Processing>>
-    [Apache Flink] as Flink <<Stream Processing>>
-    [数据仓库] as DataWarehouse <<Data Warehouse>>
+' 基础设施层
+package "基础设施层" {
+    package "容器化平台" {
+        [Kubernetes集群] as K8sCluster <<Kubernetes>>
+        [Docker容器] as DockerContainer <<Docker>>
+        [服务网格] as ServiceMesh <<Istio>>
+    }
+    
+    package "监控告警" {
+        [Prometheus监控] as PrometheusMonitor <<Prometheus>>
+        [Grafana仪表板] as GrafanaDashboard <<Grafana>>
+        [ELK日志系统] as ELKSystem <<ELK>>
+        [Jaeger链路追踪] as JaegerTracing <<Jaeger>>
+    }
+    
+    package "安全防护" {
+        [WAF防火墙] as WAFFirewall <<CloudFlare>>
+        [DDoS防护] as DDoSProtection <<Security>>
+        [安全扫描] as SecurityScan <<Security>>
+    }
+    
+    package "CI/CD流水线" {
+        [Jenkins] as JenkinsCI <<Jenkins>>
+        [GitLab CI] as GitLabCI <<GitLab>>
+        [GitHub Actions] as GitHubActions <<GitHub>>
+    }
 }
 
-package "监控与运维" {
-    [监控系统] as MonitoringSystem <<Monitoring>>
-    [日志系统] as LoggingSystem <<Logging>>
-    [告警系统] as AlertingSystem <<Alerting>>
+' 外部服务集成
+package "外部服务集成" {
+    [第三方登录] as OAuthProviders <<OAuth>>
+    [支付网关] as PaymentGateway <<Payment>>
+    [短信服务商] as SMSProvider <<SMS>>
+    [邮件服务商] as EmailProvider <<Email>>
+    [CDN服务商] as CDNProvider <<CDN>>
+    [云存储服务] as CloudStorage <<Cloud>>
+    [AI服务商] as AIProvider <<AI>>
+    [地图服务] as MapService <<Map>>
+    [实名认证] as IDVerification <<Verification>>
 }
 
-package "外部服务" {
-    [短信服务] as SMSService <<SMS Gateway>>
-    [邮件服务] as EmailService <<Email Service>>
-    [第三方登录] as ThirdPartyAuth <<OAuth Providers>>
-    [支付服务] as PaymentService <<Payment Gateway>>
-}
+' 客户端连接关系
+ReactApp --> WebBFF : "HTTPS API"
+NextSSR --> WebBFF : "SSR API"
+PWAApp --> WebBFF : "PWA API"
+RNApp --> MobileBFF : "Mobile API"
+FlutterApp --> MobileBFF : "Mobile API"
+WeChatMP --> MiniProgramBFF : "小程序API"
+AlipayMP --> MiniProgramBFF : "小程序API"
+ElectronApp --> CreatorBFF : "Desktop API"
+CreatorTool --> CreatorBFF : "Creator API"
 
-' 客户端到负载均衡
-MobileApp --> LoadBalancer
-WebApp --> LoadBalancer
-DesktopApp --> LoadBalancer
+' BFF层连接关系
+WebBFF --> APIGateway : "HTTP/gRPC"
+MobileBFF --> APIGateway : "HTTP/gRPC"
+CreatorBFF --> APIGateway : "HTTP/gRPC"
+MiniProgramBFF --> APIGateway : "HTTP/gRPC"
+LiveBFF --> RealtimeGateway : "WebSocket"
+AIBFF --> AIGateway : "AI API"
 
-' 负载均衡到API网关
-LoadBalancer --> APIGateway
+' API网关到业务服务
+APIGateway --> UserService : "用户管理"
+APIGateway --> ContentService : "内容管理"
+APIGateway --> FeedService : "信息流"
+APIGateway --> InteractionService : "社交互动"
+AuthGateway --> AuthService : "身份认证"
+MediaGateway --> MediaService : "媒体处理"
+RealtimeGateway --> LiveService : "实时通信"
+AIGateway --> RecommendEngine : "AI推荐"
 
-' API网关到各个服务
-APIGateway --> UserService
-APIGateway --> AuthService
-APIGateway --> PostService
-APIGateway --> MessageService
-APIGateway --> SearchService
+' 业务服务层内部连接
+UserService --> RelationService : "关系查询"
+ContentService --> ModerationService : "内容审核"
+FeedService --> RecommendEngine : "推荐算法"
+InteractionService --> NotificationService : "消息通知"
+LiveService --> StreamService : "流媒体处理"
+SearchService --> IndexService : "索引构建"
 
-' 用户服务相关连接
-UserService --> UserDB
-UserService --> RedisCluster
-AuthService --> UserDB
-AuthService --> ThirdPartyAuth
-RelationshipService --> RelationshipDB
-RelationshipService --> Neo4j
+' AI服务连接
+RecommendEngine --> RecommendAI : "推荐模型"
+ModerationService --> ContentAI : "内容理解"
+MediaService --> ImageAI : "图像处理"
+SearchService --> NLPAI : "语义搜索"
 
-' 内容服务相关连接
-PostService --> ContentDB
-PostService --> MongoDB
-PostService --> RedisCluster
-CommentService --> ContentDB
-CommentService --> MongoDB
-LikeService --> RedisCluster
-LikeService --> Cassandra
-ShareService --> ContentDB
+' 数据存储连接
+UserService --> UserDB : "用户数据"
+ContentService --> ContentDB : "内容数据"
+InteractionService --> SocialDB : "社交数据"
+RelationService --> GraphDB : "关系图谱"
+FeedService --> RedisCache : "缓存加速"
+NotificationService --> KafkaCluster : "消息队列"
+SearchService --> ESCluster : "搜索索引"
+MediaService --> ObjectStorage : "文件存储"
+AnalyticsService --> ClickHouseDB : "数据分析"
 
-' 推荐系统连接
-RecommendationService --> MLEngine
-RecommendationService --> RedisCluster
-RecommendationService --> Cassandra
-UserRecommendationService --> Neo4j
-UserRecommendationService --> MLEngine
-MLEngine --> DataWarehouse
-MLEngine --> Spark
+' 基础设施连接
+UserService --> K8sCluster : "容器部署"
+ContentService --> DockerContainer : "容器运行"
+FeedService --> ServiceMesh : "服务治理"
+APIGateway --> PrometheusMonitor : "监控指标"
+WebBFF --> ELKSystem : "日志收集"
+MobileBFF --> JaegerTracing : "链路追踪"
 
-' 实时通信连接
-MessageService --> MongoDB
-MessageService --> Kafka
-NotificationService --> RedisCluster
-NotificationService --> Kafka
-PushService --> Kafka
-PushService --> SMSService
-PushService --> EmailService
-
-' 媒体服务连接
-ImageService --> ObjectStorage
-VideoService --> ObjectStorage
-FileStorageService --> ObjectStorage
-ImageService --> CDN
-VideoService --> CDN
-
-' 搜索服务连接
-SearchService --> Elasticsearch
-UserSearchService --> Elasticsearch
-
-' 安全服务连接
-ModerationService --> MLEngine
-ModerationService --> MongoDB
-AntiSpamService --> RedisCluster
-RiskControlService --> InfluxDB
-
-' 大数据处理连接
-Kafka --> Flink
-Kafka --> Spark
-Flink --> DataWarehouse
-Spark --> DataWarehouse
-
-' 缓存连接
-RedisCluster --> UserDB
-RedisCluster --> ContentDB
-CDN --> ObjectStorage
-
-' 监控连接
-MonitoringSystem --> InfluxDB
-LoggingSystem --> Elasticsearch
-AlertingSystem --> MonitoringSystem
-
-' 数据流连接
-UserService --> Kafka
-PostService --> Kafka
-CommentService --> Kafka
-LikeService --> Kafka
-MessageService --> Kafka
-
-note right of MLEngine
-    机器学习引擎负责：
-    - 协同过滤推荐
-    - 内容基础推荐
-    - 深度学习推荐
-    - 用户行为分析
-    - 内容质量评估
-end note
-
-note right of Kafka
-    消息队列处理：
-    - 用户行为事件
-    - 内容更新事件
-    - 通知消息
-    - 数据同步
-    - 异步任务处理
-end note
-
-note bottom of RedisCluster
-    缓存策略：
-    - 用户会话信息
-    - 热点内容缓存
-    - 计数器（点赞、评论数）
-    - 排行榜数据
-    - 实时推荐结果
-end note
+' 外部服务连接
+AuthService --> OAuthProviders : "第三方登录"
+PaymentGateway --> OrderDB : "支付处理"
+NotificationService --> SMSProvider : "短信通知"
+EmailService --> EmailProvider : "邮件发送"
+MediaService --> CDNProvider : "内容分发"
+ObjectStorage --> CloudStorage : "云存储"
+RecommendAI --> AIProvider : "AI算力"
 
 @enduml 

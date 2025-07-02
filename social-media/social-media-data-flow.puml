@@ -1,152 +1,119 @@
 @startuml
-!theme plain
-title 社交媒体系统数据流设计
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Dynamic.puml
 
-actor "用户" as User
+title 社交媒体平台 - 用户内容互动数据流程
 
-box "客户端层" #LightBlue
-    participant "移动/Web客户端" as Client
-end box
+LAYOUT_WITH_LEGEND()
 
-box "API层" #LightGreen
-    participant "API网关" as Gateway
-    participant "负载均衡器" as LB
-end box
+Person(user, "用户", "社交平台用户")
+Person(creator, "内容创作者", "专业创作者")
 
-box "应用服务层" #LightYellow
-    participant "用户服务" as UserService
-    participant "内容服务" as ContentService
-    participant "推荐服务" as RecommendationService
-    participant "通知服务" as NotificationService
-    participant "搜索服务" as SearchService
-end box
+Container(webApp, "Web应用", "React + Next.js")
+Container(mobileBFF, "Mobile BFF", "Node.js聚合服务")
+Container(webBFF, "Web BFF", "Next.js API Routes")
+Container(apiGateway, "API网关", "Kong网关")
 
-box "缓存层" #LightPink
-    participant "Redis缓存" as Redis
-    participant "CDN" as CDN
-end box
+Container(userService, "用户服务", "用户管理")
+Container(contentService, "内容服务", "内容管理")
+Container(feedService, "信息流服务", "算法推荐")
+Container(socialService, "社交服务", "互动功能")
+Container(aiService, "AI服务", "智能推荐")
+Container(notificationService, "通知服务", "消息通知")
+Container(searchService, "搜索服务", "内容搜索")
 
-box "数据存储层" #LightGray
-    participant "用户数据库" as UserDB
-    participant "内容数据库" as ContentDB
-    participant "图数据库" as GraphDB
-    participant "搜索引擎" as SearchEngine
-end box
+ContainerDb(userDB, "用户数据库", "PostgreSQL")
+ContainerDb(contentDB, "内容数据库", "MongoDB")
+ContainerDb(feedCache, "推荐缓存", "Redis")
+ContainerDb(searchIndex, "搜索索引", "Elasticsearch")
+Container(messageQueue, "消息队列", "Kafka")
 
-box "大数据处理" #LightCyan
-    participant "Kafka消息队列" as Kafka
-    participant "实时计算引擎" as StreamProcessor
-    participant "机器学习平台" as MLPlatform
-    participant "数据仓库" as DataWarehouse
-end box
+' === 用户注册登录流程 ===
+Rel_D(user, webApp, "1. 访问平台", "HTTPS")
+Rel_D(webApp, webBFF, "2. 请求登录页面", "SSR")
+Rel_D(webBFF, apiGateway, "3. 获取登录配置", "HTTP")
+Rel_D(apiGateway, userService, "4. 验证第三方登录", "gRPC")
+Rel_D(userService, userDB, "5. 查询/创建用户", "SQL")
+Rel_U(userDB, userService, "6. 返回用户信息", "Result")
+Rel_U(userService, apiGateway, "7. 生成JWT Token", "Auth")
+Rel_U(apiGateway, webBFF, "8. 返回认证信息", "JSON")
+Rel_U(webBFF, webApp, "9. 设置用户状态", "Cookie/JWT")
+Rel_U(webApp, user, "10. 跳转到首页", "Redirect")
 
-== 用户注册/登录流程 ==
-User -> Client: 注册/登录请求
-Client -> Gateway: HTTP请求
-Gateway -> LB: 路由请求
-LB -> UserService: 用户认证
-UserService -> UserDB: 验证用户信息
-UserDB -> UserService: 返回用户数据
-UserService -> Redis: 缓存会话信息
-UserService -> LB: 返回认证结果
-LB -> Gateway: 认证成功
-Gateway -> Client: 返回Token
-Client -> User: 登录成功
+' === 内容发布流程 ===
+Rel_D(creator, webApp, "11. 点击发布内容", "用户操作")
+Rel_D(webApp, webBFF, "12. 上传内容数据", "FormData")
+Rel_D(webBFF, apiGateway, "13. 内容发布请求", "HTTP POST")
+Rel_D(apiGateway, contentService, "14. 验证内容格式", "Validation")
+Rel_D(contentService, aiService, "15. AI内容审核", "REST API")
+Rel_U(aiService, contentService, "16. 返回审核结果", "审核通过")
+Rel_D(contentService, contentDB, "17. 保存内容数据", "MongoDB Insert")
+Rel_D(contentService, messageQueue, "18. 发布内容事件", "Event Message")
+Rel_U(contentDB, contentService, "19. 返回内容ID", "ObjectId")
+Rel_U(contentService, apiGateway, "20. 返回发布结果", "Success")
+Rel_U(apiGateway, webBFF, "21. 内容发布成功", "HTTP 201")
+Rel_U(webBFF, webApp, "22. 更新UI状态", "JSON Response")
+Rel_U(webApp, creator, "23. 显示发布成功", "UI反馈")
 
-== 发布内容流程 ==
-User -> Client: 发布帖子/图片/视频
-Client -> Gateway: 上传内容
-Gateway -> ContentService: 处理内容发布
-ContentService -> ContentDB: 存储内容元数据
-ContentService -> CDN: 上传媒体文件
-ContentService -> Redis: 缓存热点内容
-ContentService -> Kafka: 发送内容发布事件
-Kafka -> StreamProcessor: 实时处理内容
-StreamProcessor -> SearchEngine: 更新搜索索引
-StreamProcessor -> MLPlatform: 触发推荐算法更新
-MLPlatform -> DataWarehouse: 存储特征数据
-ContentService -> NotificationService: 触发粉丝通知
-NotificationService -> User: 推送通知给关注者
+' === 消息队列异步处理 ===
+Rel_D(messageQueue, feedService, "24. 触发推荐更新", "Content Event")
+Rel_D(feedService, aiService, "25. 计算内容特征", "ML API")
+Rel_D(feedService, feedCache, "26. 更新推荐缓存", "Cache Update")
+Rel_D(messageQueue, searchService, "27. 触发索引更新", "Index Event")
+Rel_D(searchService, searchIndex, "28. 更新搜索索引", "Elasticsearch")
+Rel_D(messageQueue, notificationService, "29. 发送关注通知", "Notification Event")
 
-== 内容推荐流程 ==
-User -> Client: 请求推荐内容
-Client -> Gateway: 获取推荐请求
-Gateway -> RecommendationService: 推荐算法处理
-RecommendationService -> Redis: 检查缓存推荐
-alt 缓存命中
-    Redis -> RecommendationService: 返回缓存结果
-else 缓存未命中
-    RecommendationService -> MLPlatform: 实时计算推荐
-    MLPlatform -> DataWarehouse: 获取用户特征
-    MLPlatform -> GraphDB: 获取社交关系
-    MLPlatform -> RecommendationService: 返回推荐结果
-    RecommendationService -> Redis: 缓存推荐结果
-end
-RecommendationService -> ContentService: 获取内容详情
-ContentService -> ContentDB: 查询内容数据
-ContentService -> CDN: 获取媒体文件
-ContentService -> RecommendationService: 返回完整内容
-RecommendationService -> Gateway: 返回推荐列表
-Gateway -> Client: 返回推荐内容
-Client -> User: 展示推荐内容
+' === 用户浏览信息流 ===
+Rel_D(user, webApp, "30. 刷新首页", "用户操作")
+Rel_D(webApp, webBFF, "31. 请求信息流", "API调用")
+Rel_D(webBFF, apiGateway, "32. 获取个性化推荐", "HTTP GET")
+Rel_D(apiGateway, feedService, "33. 查询推荐算法", "gRPC")
+Rel_D(feedService, feedCache, "34. 读取推荐缓存", "Redis GET")
+Rel_D(feedService, aiService, "35. 实时推荐计算", "ML推理")
+Rel_U(aiService, feedService, "36. 返回推荐列表", "Content IDs")
+Rel_D(feedService, contentDB, "37. 批量查询内容", "MongoDB Query")
+Rel_U(contentDB, feedService, "38. 返回内容详情", "Content Data")
+Rel_U(feedService, apiGateway, "39. 组装信息流数据", "Feed Data")
+Rel_U(apiGateway, webBFF, "40. 返回信息流", "JSON Array")
+Rel_U(webBFF, webApp, "41. 渲染信息流", "React组件")
+Rel_U(webApp, user, "42. 展示个性化内容", "UI展示")
 
-== 用户互动流程 ==
-User -> Client: 点赞/评论/分享
-Client -> Gateway: 发送互动请求
-Gateway -> ContentService: 处理互动
-ContentService -> ContentDB: 更新互动数据
-ContentService -> Redis: 更新实时计数
-ContentService -> Kafka: 发送互动事件
-Kafka -> StreamProcessor: 处理用户行为
-StreamProcessor -> MLPlatform: 更新用户画像
-StreamProcessor -> GraphDB: 更新用户关系权重
-StreamProcessor -> NotificationService: 触发通知
-NotificationService -> User: 通知内容作者
+' === 用户互动流程 ===
+Rel_D(user, webApp, "43. 点赞/评论", "用户互动")
+Rel_D(webApp, webBFF, "44. 提交互动数据", "API请求")
+Rel_D(webBFF, apiGateway, "45. 社交互动请求", "HTTP POST")
+Rel_D(apiGateway, socialService, "46. 处理互动逻辑", "业务处理")
+Rel_D(socialService, contentDB, "47. 更新互动计数", "MongoDB Update")
+Rel_D(socialService, messageQueue, "48. 发布互动事件", "Event Message")
+Rel_D(socialService, feedCache, "49. 更新热度缓存", "Cache Update")
+Rel_U(socialService, apiGateway, "50. 返回互动结果", "Success")
+Rel_U(apiGateway, webBFF, "51. 互动成功响应", "HTTP 200")
+Rel_U(webBFF, webApp, "52. 更新互动状态", "UI更新")
 
-== 搜索流程 ==
-User -> Client: 搜索内容/用户
-Client -> Gateway: 搜索请求
-Gateway -> SearchService: 处理搜索
-SearchService -> Redis: 检查热门搜索缓存
-SearchService -> SearchEngine: 执行搜索查询
-SearchEngine -> SearchService: 返回搜索结果
-SearchService -> ContentService: 获取内容详情
-SearchService -> Kafka: 记录搜索行为
-SearchService -> Gateway: 返回搜索结果
-Gateway -> Client: 展示搜索结果
-Client -> User: 显示搜索内容
-
-== 实时数据处理流程 ==
-note over Kafka: 所有用户行为事件汇聚
-Kafka -> StreamProcessor: 实时流处理
-StreamProcessor -> MLPlatform: 实时特征计算
-StreamProcessor -> Redis: 更新实时排行榜
-StreamProcessor -> DataWarehouse: 批量数据入库
-MLPlatform -> Redis: 更新推荐模型缓存
-
-note over DataWarehouse
-    离线批处理：
-    - 用户画像建模
-    - 内容标签生成
-    - 推荐模型训练
-    - 数据分析报告
+note right of messageQueue
+异步处理事件：
+- 内容发布事件
+- 用户互动事件  
+- 推荐更新事件
+- 通知发送事件
+- 搜索索引更新
 end note
 
-note over Redis
-    实时缓存：
-    - 用户会话信息
-    - 热点内容缓存
-    - 实时计数器
-    - 推荐结果缓存
-    - 排行榜数据
+note right of aiService
+AI智能服务：
+- 内容智能审核
+- 个性化推荐算法
+- 内容质量评分
+- 用户兴趣分析
+- 实时推荐计算
 end note
 
-note over Kafka
-    事件流处理：
-    - 用户行为事件
-    - 内容发布事件
-    - 系统状态事件
-    - 通知事件
+note bottom of feedCache
+缓存策略：
+- 用户个性化推荐
+- 热门内容排行
+- 实时热度计算
+- 用户行为特征
+- 内容标签分类
 end note
 
 @enduml 

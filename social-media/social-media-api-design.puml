@@ -1,183 +1,375 @@
 @startuml
-!theme plain
-title 社交媒体系统API设计
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
 
-package "认证授权API" {
-    class AuthAPI {
-        + POST /api/v1/auth/register
-        + POST /api/v1/auth/login
-        + POST /api/v1/auth/logout
-        + POST /api/v1/auth/refresh
-        + POST /api/v1/auth/forgot-password
-        + POST /api/v1/auth/reset-password
-    }
+title 社交媒体平台 - API接口设计
+
+LAYOUT_WITH_LEGEND()
+
+' 前端客户端
+Container(webApp, "Web应用", "React + Next.js", "主要前端应用")
+Container(mobileApp, "移动应用", "React Native", "iOS/Android应用")
+Container(miniProgram, "小程序", "微信小程序", "轻量级客户端")
+
+' BFF层
+Container(webBFF, "Web BFF", "Next.js API Routes", "Web端业务聚合")
+Container(mobileBFF, "Mobile BFF", "Node.js + Fastify", "移动端业务聚合")
+
+' API网关
+Container(apiGateway, "API网关", "Kong + Nginx", "统一API入口")
+
+' 核心API服务
+package "用户域API" {
+    Container(userAPI, "用户API服务", "Java Spring Boot", "用户管理接口")
+    note right of userAPI
+    **用户管理API (v1)**
+    
+    **RESTful接口:**
+    POST /api/v1/users/register
+    POST /api/v1/users/login
+    POST /api/v1/users/logout
+    GET /api/v1/users/profile/{userId}
+    PUT /api/v1/users/profile
+    DELETE /api/v1/users/account
+    
+    **关系管理:**
+    POST /api/v1/users/{userId}/follow
+    DELETE /api/v1/users/{userId}/unfollow
+    GET /api/v1/users/{userId}/followers
+    GET /api/v1/users/{userId}/following
+    GET /api/v1/users/recommendations
+    
+    **设置管理:**
+    GET /api/v1/users/settings
+    PUT /api/v1/users/settings/privacy
+    PUT /api/v1/users/settings/notifications
+    
+    **技术栈:**
+    - Java 17 + Spring Boot 3
+    - Spring Security + JWT
+    - PostgreSQL + JPA
+    - Redis缓存
+    - OpenAPI 3.0文档
+    end note
 }
 
-package "用户管理API" {
-    class UserAPI {
-        + GET /api/v1/users/profile
-        + PUT /api/v1/users/profile
-        + GET /api/v1/users/{user_id}
-        + POST /api/v1/users/{user_id}/follow
-        + DELETE /api/v1/users/{user_id}/follow
-        + GET /api/v1/users/{user_id}/followers
-        + GET /api/v1/users/{user_id}/following
-        + POST /api/v1/users/{user_id}/block
-        + DELETE /api/v1/users/{user_id}/block
-    }
+package "内容域API" {
+    Container(contentAPI, "内容API服务", "Node.js + TypeScript", "内容管理接口")
+    note right of contentAPI
+    **内容管理API (v1)**
+    
+    **内容发布:**
+    POST /api/v1/posts
+    PUT /api/v1/posts/{postId}
+    DELETE /api/v1/posts/{postId}
+    GET /api/v1/posts/{postId}
+    GET /api/v1/posts/drafts
+    
+    **媒体处理:**
+    POST /api/v1/media/upload
+    GET /api/v1/media/{mediaId}
+    POST /api/v1/media/process
+    
+    **评论系统:**
+    POST /api/v1/posts/{postId}/comments
+    GET /api/v1/posts/{postId}/comments
+    PUT /api/v1/comments/{commentId}
+    DELETE /api/v1/comments/{commentId}
+    
+    **标签管理:**
+    GET /api/v1/hashtags/trending
+    GET /api/v1/hashtags/{tag}/posts
+    POST /api/v1/hashtags/follow
+    
+    **技术栈:**
+    - Node.js 20 + TypeScript
+    - Fastify框架
+    - MongoDB + Mongoose
+    - FFmpeg媒体处理
+    - AWS S3存储
+    end note
 }
 
-package "内容管理API" {
-    class PostAPI {
-        + POST /api/v1/posts
-        + GET /api/v1/posts/{post_id}
-        + PUT /api/v1/posts/{post_id}
-        + DELETE /api/v1/posts/{post_id}
-        + GET /api/v1/posts/feed
-        + GET /api/v1/users/{user_id}/posts
-        + GET /api/v1/posts/trending
-    }
+package "社交域API" {
+    Container(socialAPI, "社交API服务", "Java Spring Boot", "社交互动接口")
+    note right of socialAPI
+    **社交互动API (v1)**
+    
+    **点赞系统:**
+    POST /api/v1/posts/{postId}/like
+    DELETE /api/v1/posts/{postId}/unlike
+    GET /api/v1/posts/{postId}/likes
+    
+    **分享功能:**
+    POST /api/v1/posts/{postId}/share
+    GET /api/v1/posts/{postId}/shares
+    
+    **收藏功能:**
+    POST /api/v1/posts/{postId}/bookmark
+    DELETE /api/v1/posts/{postId}/unbookmark
+    GET /api/v1/users/bookmarks
+    
+    **举报功能:**
+    POST /api/v1/posts/{postId}/report
+    POST /api/v1/users/{userId}/report
+    
+    **技术栈:**
+    - Java 17 + Spring Boot
+    - Neo4j图数据库
+    - Redis计数器
+    - Apache Kafka事件
+    end note
 }
 
-package "互动功能API" {
-    class InteractionAPI {
-        + POST /api/v1/posts/{post_id}/like
-        + DELETE /api/v1/posts/{post_id}/like
-        + GET /api/v1/posts/{post_id}/likes
-        + POST /api/v1/posts/{post_id}/comments
-        + GET /api/v1/posts/{post_id}/comments
-        + PUT /api/v1/comments/{comment_id}
-        + DELETE /api/v1/comments/{comment_id}
-        + POST /api/v1/posts/{post_id}/share
-        + GET /api/v1/posts/{post_id}/shares
-    }
-}
-
-package "消息通信API" {
-    class MessageAPI {
-        + GET /api/v1/conversations
-        + POST /api/v1/conversations
-        + GET /api/v1/conversations/{id}
-        + PUT /api/v1/conversations/{id}
-        + DELETE /api/v1/conversations/{id}
-        + GET /api/v1/conversations/{id}/messages
-        + POST /api/v1/conversations/{id}/messages
-        + PUT /api/v1/messages/{id}/read
-        + DELETE /api/v1/messages/{id}
-    }
+package "信息流API" {
+    Container(feedAPI, "信息流API服务", "Python + FastAPI", "个性化推荐接口")
+    note right of feedAPI
+    **信息流推荐API (v1)**
+    
+    **个性化信息流:**
+    GET /api/v1/feeds/home
+    GET /api/v1/feeds/following
+    GET /api/v1/feeds/trending
+    GET /api/v1/feeds/discover
+    
+    **推荐算法:**
+    GET /api/v1/recommendations/users
+    GET /api/v1/recommendations/topics
+    GET /api/v1/recommendations/similar/{postId}
+    
+    **热点内容:**
+    GET /api/v1/trending/posts
+    GET /api/v1/trending/hashtags
+    GET /api/v1/trending/topics
+    
+    **兴趣管理:**
+    GET /api/v1/interests
+    PUT /api/v1/interests
+    POST /api/v1/interests/{topic}/follow
+    
+    **技术栈:**
+    - Python 3.11 + FastAPI
+    - TensorFlow推荐模型
+    - Redis缓存层
+    - ClickHouse数据仓库
+    end note
 }
 
 package "搜索API" {
-    class SearchAPI {
-        + GET /api/v1/search/users
-        + GET /api/v1/search/posts
-        + GET /api/v1/search/hashtags
-        + GET /api/v1/search/suggestions
-        + GET /api/v1/trending/hashtags
-        + GET /api/v1/trending/topics
-    }
+    Container(searchAPI, "搜索API服务", "Python + FastAPI", "全文搜索接口")
+    note right of searchAPI
+    **搜索服务API (v1)**
+    
+    **全文搜索:**
+    GET /api/v1/search/posts
+    GET /api/v1/search/users
+    GET /api/v1/search/hashtags
+    GET /api/v1/search/global
+    
+    **智能搜索:**
+    GET /api/v1/search/semantic
+    GET /api/v1/search/suggestions
+    GET /api/v1/search/autocomplete
+    
+    **搜索历史:**
+    GET /api/v1/search/history
+    DELETE /api/v1/search/history
+    
+    **高级筛选:**
+    GET /api/v1/search/advanced
+    参数: date_range, location, content_type
+    
+    **技术栈:**
+    - Python + FastAPI
+    - Elasticsearch 8.x
+    - NLP语义搜索
+    - Redis缓存
+    end note
+}
+
+package "实时通信API" {
+    Container(realtimeAPI, "实时通信服务", "Node.js + Socket.io", "WebSocket接口")
+    note right of realtimeAPI
+    **实时通信API (v1)**
+    
+    **WebSocket连接:**
+    WS /api/v1/realtime/connect
+    
+    **私信系统:**
+    Event: message.send
+    Event: message.receive
+    Event: message.read
+    Event: typing.start
+    Event: typing.stop
+    
+    **实时通知:**
+    Event: notification.like
+    Event: notification.comment
+    Event: notification.follow
+    Event: notification.mention
+    
+    **在线状态:**
+    Event: user.online
+    Event: user.offline
+    Event: user.presence
+    
+    **直播互动:**
+    Event: live.join
+    Event: live.leave
+    Event: live.chat
+    Event: live.gift
+    
+    **技术栈:**
+    - Node.js + Socket.io
+    - Redis Pub/Sub
+    - MongoDB消息存储
+    - JWT认证
+    end note
 }
 
 package "通知API" {
-    class NotificationAPI {
-        + GET /api/v1/notifications
-        + PUT /api/v1/notifications/{id}/read
-        + PUT /api/v1/notifications/read-all
-        + DELETE /api/v1/notifications/{id}
-        + GET /api/v1/notifications/unread-count
-        + PUT /api/v1/notifications/settings
-    }
-}
-
-package "媒体文件API" {
-    class MediaAPI {
-        + POST /api/v1/media/upload
-        + GET /api/v1/media/{file_id}
-        + DELETE /api/v1/media/{file_id}
-        + POST /api/v1/media/upload/avatar
-        + POST /api/v1/media/upload/batch
-        + GET /api/v1/media/user/{user_id}
-    }
-}
-
-package "推荐系统API" {
-    class RecommendationAPI {
-        + GET /api/v1/recommendations/posts
-        + GET /api/v1/recommendations/users
-        + POST /api/v1/recommendations/feedback
-        + GET /api/v1/recommendations/explore
-        + PUT /api/v1/recommendations/preferences
-    }
+    Container(notificationAPI, "通知API服务", "Go + Gin", "消息通知接口")
+    note right of notificationAPI
+    **通知服务API (v1)**
+    
+    **通知管理:**
+    GET /api/v1/notifications
+    PUT /api/v1/notifications/{id}/read
+    PUT /api/v1/notifications/mark-all-read
+    DELETE /api/v1/notifications/{id}
+    
+    **推送设置:**
+    GET /api/v1/notifications/settings
+    PUT /api/v1/notifications/settings
+    POST /api/v1/notifications/devices
+    DELETE /api/v1/notifications/devices/{deviceId}
+    
+    **邮件通知:**
+    POST /api/v1/notifications/email/send
+    GET /api/v1/notifications/email/preferences
+    
+    **短信通知:**
+    POST /api/v1/notifications/sms/send
+    GET /api/v1/notifications/sms/verify
+    
+    **技术栈:**
+    - Go + Gin框架
+    - Redis队列
+    - MongoDB存储
+    - 第三方推送服务
+    end note
 }
 
 package "管理后台API" {
-    class AdminAPI {
-        + GET /api/v1/admin/users
-        + PUT /api/v1/admin/users/{id}/status
-        + GET /api/v1/admin/posts
-        + PUT /api/v1/admin/posts/{id}/status
-        + GET /api/v1/admin/reports
-        + PUT /api/v1/admin/reports/{id}/handle
-        + GET /api/v1/admin/statistics
-        + GET /api/v1/admin/system/health
-    }
+    Container(adminAPI, "管理后台服务", "Java Spring Boot", "平台管理接口")
+    note right of adminAPI
+    **管理后台API (v1)**
+    
+    **用户管理:**
+    GET /api/v1/admin/users
+    PUT /api/v1/admin/users/{id}/status
+    GET /api/v1/admin/users/{id}/reports
+    
+    **内容审核:**
+    GET /api/v1/admin/moderation/queue
+    PUT /api/v1/admin/posts/{id}/approve
+    PUT /api/v1/admin/posts/{id}/reject
+    
+    **数据统计:**
+    GET /api/v1/admin/analytics/overview
+    GET /api/v1/admin/analytics/users
+    GET /api/v1/admin/analytics/content
+    
+    **系统配置:**
+    GET /api/v1/admin/config
+    PUT /api/v1/admin/config
+    
+    **技术栈:**
+    - Java + Spring Boot
+    - Spring Security
+    - PostgreSQL
+    - Redis缓存
+    end note
 }
 
-note as CommonResponse
-    通用响应格式:
-    {
-        "code": 200,
-        "message": "success", 
-        "data": {...},
-        "timestamp": "2024-01-01T00:00:00Z"
-    }
-    
-    分页响应:
-    {
-        "code": 200,
-        "message": "success",
-        "data": {
-            "items": [...],
-            "total": 100,
-            "page": 1,
-            "limit": 20,
-            "has_more": true
-        }
-    }
+' GraphQL统一查询接口
+Container(graphqlAPI, "GraphQL API", "Node.js + Apollo", "统一查询接口")
+note right of graphqlAPI
+**GraphQL统一API**
+
+**Schema定义:**
+```graphql
+type User {
+  id: ID!
+  username: String!
+  displayName: String
+  avatar: String
+  posts(first: Int, after: String): PostConnection
+  followers: UserConnection
+  following: UserConnection
+}
+
+type Post {
+  id: ID!
+  content: String!
+  author: User!
+  media: [Media]
+  likes: LikeConnection
+  comments: CommentConnection
+  createdAt: DateTime!
+}
+
+type Query {
+  user(id: ID!): User
+  post(id: ID!): Post
+  feed(first: Int, after: String): PostConnection
+  search(query: String!): SearchResult
+}
+
+type Mutation {
+  createPost(input: CreatePostInput!): Post
+  likePost(postId: ID!): LikeResult
+  followUser(userId: ID!): FollowResult
+}
+
+type Subscription {
+  messageReceived(userId: ID!): Message
+  notificationReceived(userId: ID!): Notification
+}
+```
+
+**技术栈:**
+- Node.js + Apollo Server
+- GraphQL Code Generator
+- 数据源聚合
+- 实时订阅支持
 end note
 
-note as Authentication
-    认证方式:
-    - JWT Token认证
-    - Header: Authorization: Bearer <token>
-    - Token有效期: 24小时
-    - Refresh Token有效期: 30天
-    
-    权限级别:
-    - Public: 无需认证
-    - User: 需要用户认证
-    - Admin: 需要管理员权限
-end note
+' API连接关系
+webApp --> webBFF : "HTTPS/REST"
+mobileApp --> mobileBFF : "HTTPS/REST"
+miniProgram --> mobileBFF : "HTTPS/REST"
 
-note as RateLimiting
-    API限流策略:
-    - 登录/注册: 5次/分钟
-    - 发帖: 10次/分钟
-    - 点赞/评论: 60次/分钟
-    - 搜索: 30次/分钟
-    - 上传文件: 20次/分钟
-    - 其他接口: 100次/分钟
-end note
+webBFF --> apiGateway : "HTTP/gRPC"
+mobileBFF --> apiGateway : "HTTP/gRPC"
 
-note as ErrorCodes
-    常见错误码:
-    - 400: 请求参数错误
-    - 401: 未认证
-    - 403: 权限不足
-    - 404: 资源不存在
-    - 409: 资源冲突
-    - 429: 请求过于频繁
-    - 500: 服务器内部错误
-end note
+apiGateway --> userAPI : "用户服务"
+apiGateway --> contentAPI : "内容服务"
+apiGateway --> socialAPI : "社交服务"
+apiGateway --> feedAPI : "信息流服务"
+apiGateway --> searchAPI : "搜索服务"
+apiGateway --> notificationAPI : "通知服务"
+apiGateway --> adminAPI : "管理服务"
+
+webApp ..> realtimeAPI : "WebSocket"
+mobileApp ..> realtimeAPI : "WebSocket"
+webApp ..> graphqlAPI : "GraphQL"
+mobileApp ..> graphqlAPI : "GraphQL"
+
+' 服务间通信
+contentAPI ..> socialAPI : "内容互动事件"
+socialAPI ..> notificationAPI : "通知触发"
+feedAPI ..> contentAPI : "内容查询"
+feedAPI ..> socialAPI : "互动数据"
+searchAPI ..> contentAPI : "索引同步"
 
 @enduml 

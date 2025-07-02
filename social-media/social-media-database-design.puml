@@ -1,289 +1,393 @@
 @startuml
-!theme plain
-title 社交媒体系统数据库设计
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
 
-' 用户相关表
-entity "users" {
-    * user_id : BIGINT <<PK>>
-    --
-    * username : VARCHAR(50) <<UK>>
-    * email : VARCHAR(100) <<UK>>
-    * phone : VARCHAR(20) <<UK>>
-    * password_hash : VARCHAR(255)
-    * nickname : VARCHAR(100)
-    * avatar_url : VARCHAR(500)
-    * bio : TEXT
-    * gender : ENUM('M','F','O')
-    * birthday : DATE
-    * location : VARCHAR(100)
-    * is_verified : BOOLEAN
-    * is_active : BOOLEAN
-    * followers_count : INT
-    * following_count : INT
-    * posts_count : INT
-    * created_at : TIMESTAMP
-    * updated_at : TIMESTAMP
+title 社交媒体平台 - 数据库设计架构
+
+LAYOUT_WITH_LEGEND()
+
+' 用户域数据模型
+package "用户域 (PostgreSQL)" {
+    entity "users" as users {
+        + user_id : UUID [PK]
+        --
+        username : VARCHAR(50) [UK]
+        email : VARCHAR(100) [UK]
+        phone : VARCHAR(20) [UK]
+        password_hash : VARCHAR(255)
+        avatar_url : VARCHAR(500)
+        display_name : VARCHAR(100)
+        bio : TEXT
+        birth_date : DATE
+        gender : ENUM
+        location : VARCHAR(100)
+        verified : BOOLEAN
+        follower_count : INTEGER
+        following_count : INTEGER
+        post_count : INTEGER
+        status : ENUM
+        created_at : TIMESTAMP
+        updated_at : TIMESTAMP
+        last_login_at : TIMESTAMP
+    }
+    
+    entity "user_profiles" as profiles {
+        + profile_id : UUID [PK]
+        + user_id : UUID [FK]
+        --
+        cover_image_url : VARCHAR(500)
+        website : VARCHAR(200)
+        occupation : VARCHAR(100)
+        education : VARCHAR(200)
+        interests : JSONB
+        privacy_settings : JSONB
+        notification_settings : JSONB
+        theme_preferences : JSONB
+        language : VARCHAR(10)
+        timezone : VARCHAR(50)
+        created_at : TIMESTAMP
+        updated_at : TIMESTAMP
+    }
+    
+    entity "user_relationships" as relationships {
+        + relationship_id : UUID [PK]
+        + follower_id : UUID [FK]
+        + following_id : UUID [FK]
+        --
+        relationship_type : ENUM
+        status : ENUM
+        created_at : TIMESTAMP
+        updated_at : TIMESTAMP
+    }
+    
+    entity "user_sessions" as sessions {
+        + session_id : UUID [PK]
+        + user_id : UUID [FK]
+        --
+        device_id : VARCHAR(100)
+        device_type : ENUM
+        device_info : JSONB
+        ip_address : INET
+        user_agent : TEXT
+        refresh_token : VARCHAR(500)
+        expires_at : TIMESTAMP
+        created_at : TIMESTAMP
+        last_activity_at : TIMESTAMP
+    }
 }
 
-entity "user_profiles" {
-    * profile_id : BIGINT <<PK>>
-    * user_id : BIGINT <<FK>>
-    --
-    education : VARCHAR(200)
-    occupation : VARCHAR(100)
-    company : VARCHAR(100)
-    website : VARCHAR(200)
-    interests : JSON
-    privacy_settings : JSON
-    created_at : TIMESTAMP
-    updated_at : TIMESTAMP
+' 内容域数据模型
+package "内容域 (MongoDB)" {
+    entity "posts" as posts {
+        + _id : ObjectId [PK]
+        --
+        user_id : UUID
+        content_type : String
+        title : String
+        content : String
+        media_urls : Array<String>
+        tags : Array<String>
+        mentions : Array<UUID>
+        location : GeoJSON
+        privacy_level : String
+        allow_comments : Boolean
+        allow_shares : Boolean
+        like_count : Number
+        comment_count : Number
+        share_count : Number
+        view_count : Number
+        engagement_score : Number
+        quality_score : Number
+        moderation_status : String
+        created_at : Date
+        updated_at : Date
+        published_at : Date
+    }
+    
+    entity "comments" as comments {
+        + _id : ObjectId [PK]
+        --
+        post_id : ObjectId
+        user_id : UUID
+        parent_comment_id : ObjectId
+        content : String
+        media_urls : Array<String>
+        mentions : Array<UUID>
+        like_count : Number
+        reply_count : Number
+        moderation_status : String
+        created_at : Date
+        updated_at : Date
+    }
+    
+    entity "media_files" as media {
+        + _id : ObjectId [PK]
+        --
+        user_id : UUID
+        file_type : String
+        original_url : String
+        thumbnail_url : String
+        compressed_urls : Object
+        file_size : Number
+        dimensions : Object
+        duration : Number
+        alt_text : String
+        metadata : Object
+        processing_status : String
+        upload_session : String
+        created_at : Date
+        processed_at : Date
+    }
+    
+    entity "hashtags" as hashtags {
+        + _id : ObjectId [PK]
+        --
+        tag_name : String
+        normalized_name : String
+        usage_count : Number
+        trending_score : Number
+        category : String
+        description : String
+        created_at : Date
+        last_used_at : Date
+    }
 }
 
-entity "user_sessions" {
-    * session_id : VARCHAR(128) <<PK>>
-    * user_id : BIGINT <<FK>>
-    --
-    * device_type : VARCHAR(50)
-    * ip_address : VARCHAR(45)
-    * user_agent : TEXT
-    * expires_at : TIMESTAMP
-    * created_at : TIMESTAMP
+' 社交域数据模型
+package "社交域 (Neo4j图数据库)" {
+    entity "User" as graphUser {
+        + userId : String [PK]
+        --
+        username : String
+        displayName : String
+        followerCount : Integer
+        followingCount : Integer
+        verifiedStatus : Boolean
+        accountCreated : DateTime
+        lastActive : DateTime
+    }
+    
+    entity "Post" as graphPost {
+        + postId : String [PK]
+        --
+        content : String
+        contentType : String
+        engagementScore : Float
+        qualityScore : Float
+        publishedAt : DateTime
+    }
+    
+    entity "Topic" as graphTopic {
+        + topicId : String [PK]
+        --
+        topicName : String
+        category : String
+        popularity : Float
+    }
 }
 
-' 关注关系表
-entity "user_follows" {
-    * follow_id : BIGINT <<PK>>
-    * follower_id : BIGINT <<FK>>
-    * following_id : BIGINT <<FK>>
-    --
-    * status : ENUM('active','blocked')
-    * created_at : TIMESTAMP
+' 实时数据缓存
+package "缓存层 (Redis Cluster)" {
+    entity "user_sessions_cache" as userCache {
+        Key Pattern: "user:session:{user_id}"
+        --
+        session_data : JSON
+        device_info : JSON
+        permissions : Set
+        ttl : 7200 seconds
+    }
+    
+    entity "feed_cache" as feedCache {
+        Key Pattern: "feed:{user_id}:{page}"
+        --
+        post_ids : List<String>
+        last_updated : Timestamp
+        ttl : 300 seconds
+    }
+    
+    entity "trending_cache" as trendingCache {
+        Key Pattern: "trending:{category}:{time_range}"
+        --
+        hashtags : Sorted Set
+        posts : Sorted Set
+        users : Sorted Set
+        ttl : 900 seconds
+    }
+    
+    entity "counters_cache" as countersCache {
+        Key Pattern: "counters:{entity_type}:{entity_id}"
+        --
+        likes : Integer
+        comments : Integer
+        shares : Integer
+        views : Integer
+        ttl : No expiration
+    }
 }
 
-' 内容相关表
-entity "posts" {
-    * post_id : BIGINT <<PK>>
-    * user_id : BIGINT <<FK>>
-    --
-    * content : TEXT
-    * content_type : ENUM('text','image','video','link')
-    * media_urls : JSON
-    * tags : JSON
-    * location : VARCHAR(100)
-    * privacy : ENUM('public','friends','private')
-    * is_deleted : BOOLEAN
-    * likes_count : INT
-    * comments_count : INT
-    * shares_count : INT
-    * views_count : INT
-    * created_at : TIMESTAMP
-    * updated_at : TIMESTAMP
+' 搜索引擎索引
+package "搜索引擎 (Elasticsearch)" {
+    entity "posts_index" as postsIndex {
+        Index: "social-posts"
+        --
+        post_id : keyword
+        user_id : keyword
+        content : text (analyzed)
+        tags : keyword
+        location : geo_point
+        engagement_score : float
+        quality_score : float
+        created_at : date
+        privacy_level : keyword
+    }
+    
+    entity "users_index" as usersIndex {
+        Index: "social-users"
+        --
+        user_id : keyword
+        username : text (analyzed)
+        display_name : text (analyzed)
+        bio : text (analyzed)
+        location : text
+        verified : boolean
+        follower_count : integer
+        created_at : date
+    }
+    
+    entity "hashtags_index" as hashtagsIndex {
+        Index: "social-hashtags"
+        --
+        tag_id : keyword
+        tag_name : text (analyzed)
+        usage_count : integer
+        trending_score : float
+        category : keyword
+        last_used : date
+    }
 }
 
-entity "comments" {
-    * comment_id : BIGINT <<PK>>
-    * post_id : BIGINT <<FK>>
-    * user_id : BIGINT <<FK>>
-    * parent_comment_id : BIGINT <<FK>>
-    --
-    * content : TEXT
-    * media_url : VARCHAR(500)
-    * is_deleted : BOOLEAN
-    * likes_count : INT
-    * replies_count : INT
-    * created_at : TIMESTAMP
-    * updated_at : TIMESTAMP
+' 消息队列主题
+package "消息队列 (Apache Kafka)" {
+    entity "user_events" as userEvents {
+        Topic: "social.user.events"
+        --
+        Partitions: 12
+        Replication: 3
+        Retention: 7 days
+        Message Types:
+        - user.registered
+        - user.updated
+        - user.followed
+        - user.unfollowed
+    }
+    
+    entity "content_events" as contentEvents {
+        Topic: "social.content.events"
+        --
+        Partitions: 24
+        Replication: 3
+        Retention: 30 days
+        Message Types:
+        - post.created
+        - post.updated
+        - post.deleted
+        - comment.created
+    }
+    
+    entity "interaction_events" as interactionEvents {
+        Topic: "social.interaction.events"
+        --
+        Partitions: 48
+        Replication: 3
+        Retention: 14 days
+        Message Types:
+        - post.liked
+        - post.shared
+        - comment.liked
+        - user.mentioned
+    }
 }
 
-entity "likes" {
-    * like_id : BIGINT <<PK>>
-    * user_id : BIGINT <<FK>>
-    * target_id : BIGINT
-    * target_type : ENUM('post','comment')
-    --
-    * created_at : TIMESTAMP
+' 数据仓库
+package "数据仓库 (ClickHouse)" {
+    entity "user_behavior_events" as behaviorEvents {
+        Table: user_behavior_events
+        Engine: MergeTree
+        --
+        event_id : UUID
+        user_id : UUID
+        event_type : String
+        event_data : String (JSON)
+        session_id : String
+        device_type : String
+        ip_address : IPv4
+        user_agent : String
+        timestamp : DateTime
+        date : Date
+        hour : UInt8
+    }
+    
+    entity "content_metrics" as contentMetrics {
+        Table: content_metrics_daily
+        Engine: SummingMergeTree
+        --
+        date : Date
+        post_id : String
+        user_id : UUID
+        views : UInt64
+        likes : UInt64
+        comments : UInt64
+        shares : UInt64
+        engagement_time : UInt64
+        bounce_rate : Float32
+    }
 }
 
-entity "shares" {
-    * share_id : BIGINT <<PK>>
-    * user_id : BIGINT <<FK>>
-    * post_id : BIGINT <<FK>>
-    --
-    * share_type : ENUM('repost','quote')
-    * comment : TEXT
-    * created_at : TIMESTAMP
-}
+' 关系连接
+users ||--o{ profiles : "user_id"
+users ||--o{ sessions : "user_id"
+users ||--o{ relationships : "follower_id/following_id"
+posts ||--o{ comments : "post_id"
+posts }o--|| hashtags : "tags"
+posts }o--|| media : "media_urls"
 
-' 消息相关表
-entity "conversations" {
-    * conversation_id : BIGINT <<PK>>
-    --
-    * conversation_type : ENUM('private','group')
-    * title : VARCHAR(200)
-    * created_by : BIGINT <<FK>>
-    * created_at : TIMESTAMP
-    * updated_at : TIMESTAMP
-}
+' 图数据库关系
+graphUser -[hidden]-> graphPost : "POSTED"
+graphUser -[hidden]-> graphUser : "FOLLOWS"
+graphPost -[hidden]-> graphTopic : "TAGGED_WITH"
+graphUser -[hidden]-> graphPost : "LIKED"
+graphUser -[hidden]-> graphPost : "COMMENTED_ON"
 
-entity "conversation_participants" {
-    * participant_id : BIGINT <<PK>>
-    * conversation_id : BIGINT <<FK>>
-    * user_id : BIGINT <<FK>>
-    --
-    * role : ENUM('admin','member')
-    * joined_at : TIMESTAMP
-    * left_at : TIMESTAMP
-}
-
-entity "messages" {
-    * message_id : BIGINT <<PK>>
-    * conversation_id : BIGINT <<FK>>
-    * sender_id : BIGINT <<FK>>
-    --
-    * content : TEXT
-    * message_type : ENUM('text','image','video','file')
-    * media_url : VARCHAR(500)
-    * is_deleted : BOOLEAN
-    * created_at : TIMESTAMP
-}
-
-entity "message_reads" {
-    * read_id : BIGINT <<PK>>
-    * message_id : BIGINT <<FK>>
-    * user_id : BIGINT <<FK>>
-    --
-    * read_at : TIMESTAMP
-}
-
-' 通知相关表
-entity "notifications" {
-    * notification_id : BIGINT <<PK>>
-    * user_id : BIGINT <<FK>>
-    * actor_id : BIGINT <<FK>>
-    --
-    * type : ENUM('like','comment','follow','mention','message')
-    * target_id : BIGINT
-    * target_type : ENUM('post','comment','user')
-    * content : TEXT
-    * is_read : BOOLEAN
-    * created_at : TIMESTAMP
-}
-
-' 媒体文件表
-entity "media_files" {
-    * file_id : BIGINT <<PK>>
-    * user_id : BIGINT <<FK>>
-    --
-    * original_name : VARCHAR(255)
-    * file_path : VARCHAR(500)
-    * file_size : BIGINT
-    * mime_type : VARCHAR(100)
-    * width : INT
-    * height : INT
-    * duration : INT
-    * status : ENUM('uploading','processing','ready','failed')
-    * created_at : TIMESTAMP
-}
-
-' 标签相关表
-entity "hashtags" {
-    * tag_id : BIGINT <<PK>>
-    --
-    * tag_name : VARCHAR(100) <<UK>>
-    * usage_count : INT
-    * created_at : TIMESTAMP
-}
-
-entity "post_hashtags" {
-    * post_id : BIGINT <<FK,PK>>
-    * tag_id : BIGINT <<FK,PK>>
-    --
-    * created_at : TIMESTAMP
-}
-
-' 举报和审核表
-entity "reports" {
-    * report_id : BIGINT <<PK>>
-    * reporter_id : BIGINT <<FK>>
-    * target_id : BIGINT
-    * target_type : ENUM('post','comment','user')
-    --
-    * reason : ENUM('spam','abuse','inappropriate','copyright')
-    * description : TEXT
-    * status : ENUM('pending','resolved','dismissed')
-    * created_at : TIMESTAMP
-    * resolved_at : TIMESTAMP
-}
-
-' 用户黑名单表
-entity "user_blocks" {
-    * block_id : BIGINT <<PK>>
-    * blocker_id : BIGINT <<FK>>
-    * blocked_id : BIGINT <<FK>>
-    --
-    * created_at : TIMESTAMP
-}
-
-' 关系定义
-users ||--o{ user_profiles : "has"
-users ||--o{ user_sessions : "has"
-users ||--o{ posts : "creates"
-users ||--o{ comments : "writes"
-users ||--o{ likes : "gives"
-users ||--o{ shares : "makes"
-users ||--o{ notifications : "receives"
-users ||--o{ media_files : "uploads"
-users ||--o{ reports : "reports"
-
-users ||--o{ user_follows : "follower"
-users ||--o{ user_follows : "following"
-users ||--o{ user_blocks : "blocker"
-users ||--o{ user_blocks : "blocked"
-
-posts ||--o{ comments : "has"
-posts ||--o{ likes : "receives"
-posts ||--o{ shares : "shared"
-posts ||--o{ post_hashtags : "tagged"
-
-comments ||--o{ comments : "parent"
-comments ||--o{ likes : "receives"
-
-hashtags ||--o{ post_hashtags : "used_in"
-
-conversations ||--o{ conversation_participants : "has"
-conversations ||--o{ messages : "contains"
-users ||--o{ conversation_participants : "participates"
-users ||--o{ messages : "sends"
-messages ||--o{ message_reads : "read_by"
-users ||--o{ message_reads : "reads"
-
-note as N1
-    索引策略：
-    1. users: username, email, phone (唯一索引)
-    2. posts: user_id, created_at (复合索引)
-    3. user_follows: follower_id, following_id (复合索引)
-    4. likes: user_id + target_id + target_type (复合唯一索引)
-    5. comments: post_id, created_at (复合索引)
-    6. notifications: user_id, is_read, created_at (复合索引)
-    7. messages: conversation_id, created_at (复合索引)
+note right of users
+用户核心数据表
+- 支持多种登录方式
+- 实名认证状态
+- 社交关系统计
+- 隐私设置管理
 end note
 
-note as N2
-    分表策略：
-    1. posts 按时间分表 (按月)
-    2. likes 按用户ID哈希分表
-    3. comments 按post_id哈希分表
-    4. messages 按conversation_id哈希分表
-    5. notifications 按user_id哈希分表
+note right of posts
+内容数据模型
+- 支持多媒体内容
+- 地理位置信息
+- 标签和提及功能
+- 隐私级别控制
+- 智能推荐评分
 end note
 
-note as N3
-    缓存策略：
-    1. 用户基本信息 (Redis Hash)
-    2. 热门帖子列表 (Redis List)
-    3. 用户关注关系 (Redis Set)
-    4. 实时计数器 (Redis String)
-    5. 用户会话信息 (Redis String)
+note right of feedCache
+推荐缓存策略
+- 个性化信息流
+- 实时热度计算
+- 分页数据缓存
+- 智能预加载
+end note
+
+note bottom of behaviorEvents
+用户行为分析
+- 实时行为追踪
+- 多维度数据分析
+- 个性化推荐训练
+- 用户画像构建
 end note
 
 @enduml 

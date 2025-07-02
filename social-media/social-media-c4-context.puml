@@ -1,36 +1,58 @@
 @startuml
 !include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
 
-title 社交媒体系统 - 系统上下文图 (C4 Level 1)
+title 社交媒体平台 - 系统上下文图
 
 LAYOUT_WITH_LEGEND()
 
-Person(user, "用户", "社交媒体平台的普通用户，发布内容、互动交流")
-Person(admin, "管理员", "平台管理员，负责内容审核和系统管理")
-Person(advertiser, "广告商", "在平台投放广告的商家")
+' 内部用户角色
+Person(user, "普通用户", "发布内容、社交互动、消费内容的用户")
+Person(creator, "内容创作者", "专业内容创作者、KOL、网红等")
+Person(admin, "平台管理员", "负责内容审核、用户管理、平台运营")
+Person(moderator, "社区版主", "负责特定板块的内容管理和用户互动")
+Person(advertiser, "广告主", "在平台投放广告、推广产品的商家")
 
-System_Boundary(c1, "社交媒体平台") {
-    System(socialMedia, "社交媒体系统", "提供内容发布、社交互动、推荐算法等功能的综合平台")
-}
+' 核心社交媒体系统
+System(socialSystem, "社交媒体平台", "提供内容发布、社交互动、算法推荐、直播等功能的综合社交平台")
 
-System_Ext(paymentSystem, "支付系统", "处理广告费用、会员费用等支付业务")
-System_Ext(smsService, "短信服务", "发送验证码、通知短信等")
-System_Ext(emailService, "邮件服务", "发送邮件通知、营销邮件等")
-System_Ext(pushService, "推送服务", "向移动设备推送消息通知")
-System_Ext(oauthProviders, "第三方登录", "微信、QQ、微博等第三方登录服务")
-System_Ext(cdnService, "CDN服务", "内容分发网络，加速图片视频访问")
-System_Ext(mlService, "机器学习平台", "提供内容推荐、图像识别等AI服务")
+' 外部系统集成
+System_Ext(cdnService, "CDN服务", "Cloudflare、AWS CloudFront等内容分发网络")
+System_Ext(aiService, "AI服务", "OpenAI GPT、百度文心、腾讯云AI等智能服务")
+System_Ext(oauthProviders, "第三方登录", "微信、QQ、微博、Google、Apple登录")
+System_Ext(paymentGateway, "支付网关", "微信支付、支付宝、Stripe等支付服务")
+System_Ext(pushService, "推送服务", "极光推送、个推、Firebase等消息推送")
+System_Ext(liveStreaming, "直播服务", "腾讯云直播、阿里云直播、七牛云等")
+System_Ext(videoProcessing, "视频处理", "FFmpeg云服务、腾讯云视频、阿里云视频")
+System_Ext(contentModeration, "内容审核", "阿里云内容安全、腾讯云内容审核")
+System_Ext(analyticsService, "数据分析", "Google Analytics、百度统计、神策数据")
+System_Ext(adPlatform, "广告平台", "Google Ads、Facebook Ads、字节广告平台")
+System_Ext(socialPlatforms, "第三方社交平台", "微信、微博、抖音、小红书等平台")
+System_Ext(emailService, "邮件服务", "SendGrid、阿里云邮件、腾讯企业邮等")
 
-Rel(user, socialMedia, "使用", "HTTPS/WebSocket")
-Rel(admin, socialMedia, "管理", "HTTPS")
-Rel(advertiser, socialMedia, "投放广告", "HTTPS")
+' 用户与系统交互
+Rel(user, socialSystem, "使用", "HTTPS/移动应用/小程序")
+Rel(creator, socialSystem, "内容创作", "HTTPS/专业工具")
+Rel(admin, socialSystem, "平台管理", "HTTPS/管理后台")
+Rel(moderator, socialSystem, "内容审核", "HTTPS/审核工具")
+Rel(advertiser, socialSystem, "广告投放", "HTTPS/广告后台")
 
-Rel(socialMedia, paymentSystem, "处理支付", "HTTPS/API")
-Rel(socialMedia, smsService, "发送短信", "HTTPS/API")
-Rel(socialMedia, emailService, "发送邮件", "SMTP/API")
-Rel(socialMedia, pushService, "推送通知", "HTTPS/API")
-Rel(socialMedia, oauthProviders, "第三方登录", "OAuth 2.0")
-Rel(socialMedia, cdnService, "内容分发", "HTTPS")
-Rel(socialMedia, mlService, "AI服务", "HTTPS/API")
+' 系统与外部服务交互
+Rel(socialSystem, cdnService, "内容分发", "HTTPS/CDN加速")
+Rel(socialSystem, aiService, "AI功能", "HTTPS/API调用")
+Rel(socialSystem, oauthProviders, "第三方登录", "OAuth 2.0")
+Rel(socialSystem, paymentGateway, "支付处理", "HTTPS/支付API")
+Rel(socialSystem, pushService, "消息推送", "HTTPS/推送API")
+Rel(socialSystem, liveStreaming, "直播服务", "RTMP/WebRTC")
+Rel(socialSystem, videoProcessing, "视频处理", "HTTPS/处理API")
+Rel(socialSystem, contentModeration, "内容审核", "HTTPS/审核API")
+Rel(socialSystem, analyticsService, "数据统计", "HTTPS/埋点数据")
+Rel(socialSystem, adPlatform, "广告投放", "HTTPS/广告API")
+Rel(socialSystem, socialPlatforms, "内容同步", "HTTPS/开放API")
+Rel(socialSystem, emailService, "邮件通知", "SMTP/邮件API")
+
+' 外部用户交互
+Rel_U(user, oauthProviders, "第三方登录", "OAuth认证")
+Rel_U(creator, videoProcessing, "视频上传", "直接上传")
+Rel_U(advertiser, paymentGateway, "广告付费", "在线支付")
 
 @enduml 

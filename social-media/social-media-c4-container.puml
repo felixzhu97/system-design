@@ -1,86 +1,117 @@
 @startuml
 !include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
 
-title 社交媒体系统 - 容器图 (C4 Level 2)
+title 社交媒体平台 - 容器图
 
 LAYOUT_WITH_LEGEND()
 
-Person(user, "用户", "社交媒体平台的普通用户")
-Person(admin, "管理员", "平台管理员")
+' 外部用户和系统
+Person(user, "普通用户", "社交平台用户")
+Person(creator, "内容创作者", "专业内容创作者")
+Person(admin, "平台管理员", "平台运营管理人员")
 
-System_Boundary(c1, "社交媒体系统") {
-    Container(webApp, "Web应用", "React/Vue.js", "提供社交媒体功能的单页面应用")
-    Container(mobileApp, "移动应用", "React Native/Flutter", "iOS和Android移动客户端")
-    Container(adminWeb, "管理后台", "React/Angular", "管理员使用的Web管理界面")
-    
-    Container(apiGateway, "API网关", "Kong/Zuul", "统一API入口，负责路由、认证、限流")
-    Container(loadBalancer, "负载均衡器", "Nginx/HAProxy", "分发请求到后端服务")
-    
-    Container(userService, "用户服务", "Spring Boot/Node.js", "处理用户注册、登录、个人信息管理")
-    Container(contentService, "内容服务", "Spring Boot/Node.js", "处理内容发布、编辑、删除")
-    Container(socialService, "社交服务", "Spring Boot/Node.js", "处理关注、点赞、评论、分享")
-    Container(recommendationService, "推荐服务", "Python/TensorFlow", "个性化内容推荐和用户推荐")
-    Container(messageService, "消息服务", "Node.js/Go", "实时消息和通知处理")
-    Container(searchService, "搜索服务", "Elasticsearch", "全文搜索和内容检索")
-    Container(mediaService, "媒体服务", "Go/Java", "图片视频上传处理和存储")
-    
-    ContainerDb(userDb, "用户数据库", "MySQL/PostgreSQL", "存储用户信息、关系数据")
-    ContainerDb(contentDb, "内容数据库", "MySQL/PostgreSQL", "存储内容、评论、点赞数据")
-    ContainerDb(socialGraphDb, "社交图数据库", "Neo4j", "存储用户关系图谱")
-    ContainerDb(cacheDb, "缓存数据库", "Redis", "热点数据缓存")
-    ContainerDb(messageDb, "消息数据库", "MongoDB", "存储聊天消息和通知")
-    ContainerDb(mediaStorage, "媒体存储", "AWS S3/阿里云OSS", "存储图片、视频文件")
-    
-    Container(messageQueue, "消息队列", "Apache Kafka", "异步消息处理")
-    Container(streamProcessor, "流处理器", "Apache Flink", "实时数据流处理")
+' 多端客户层
+System_Boundary(clientLayer, "多端客户层") {
+    Container(webApp, "Web应用", "React 18, TypeScript, Next.js", "主要社交平台界面，支持桌面端浏览")
+    Container(mobileApp, "移动应用", "React Native, TypeScript", "iOS/Android原生体验的社交应用")
+    Container(miniProgram, "微信小程序", "TypeScript, 小程序框架", "微信生态内的轻量版社交应用")
+    Container(creatorStudio, "创作者工具", "Electron, React", "专业内容创作和管理工具")
+    Container(adminPortal, "管理后台", "Vue 3, TypeScript, Vite", "平台管理和运营工具")
+    Container(liveApp, "直播应用", "Flutter, WebRTC", "专业直播推流和观看应用")
 }
 
-System_Ext(smsService, "短信服务", "第三方短信服务")
-System_Ext(emailService, "邮件服务", "第三方邮件服务")
-System_Ext(pushService, "推送服务", "第三方推送服务")
-System_Ext(cdnService, "CDN服务", "内容分发网络")
+' BFF聚合层
+System_Boundary(bffLayer, "BFF聚合层") {
+    Container(webBFF, "Web BFF", "Next.js API Routes, TypeScript", "Web端业务聚合服务")
+    Container(mobileBFF, "Mobile BFF", "Node.js, Fastify, TypeScript", "移动端业务聚合服务")
+    Container(creatorBFF, "Creator BFF", "Node.js, Express, TypeScript", "创作者专用业务聚合")
+    Container(liveBFF, "Live BFF", "Node.js, Socket.io, TypeScript", "直播业务聚合服务")
+}
 
-Rel(user, webApp, "访问", "HTTPS")
-Rel(user, mobileApp, "使用", "HTTPS")
-Rel(admin, adminWeb, "管理", "HTTPS")
+' API网关层
+System_Boundary(gatewayLayer, "API网关层") {
+    Container(apiGateway, "API网关", "Kong, Nginx, Lua", "统一API路由、认证、限流、监控")
+    Container(authGateway, "认证网关", "Node.js, Passport.js", "统一身份认证和授权")
+    Container(mediaGateway, "媒体网关", "Go, FFmpeg", "多媒体文件处理和分发")
+}
 
-Rel(webApp, loadBalancer, "API调用", "HTTPS")
-Rel(mobileApp, loadBalancer, "API调用", "HTTPS")
-Rel(adminWeb, loadBalancer, "API调用", "HTTPS")
+' 核心业务服务层
+System_Boundary(serviceLayer, "核心业务服务层") {
+    Container(userService, "用户服务", "Java, Spring Boot", "用户注册、资料、关系链管理")
+    Container(contentService, "内容服务", "Node.js, TypeScript", "内容发布、编辑、管理")
+    Container(socialService, "社交服务", "Java, Spring Boot", "关注、点赞、评论、分享")
+    Container(feedService, "信息流服务", "Python, FastAPI", "算法推荐、个性化feed")
+    Container(messageService, "消息服务", "Go, Gin", "私信、通知、实时消息")
+    Container(liveService, "直播服务", "Node.js, WebRTC", "直播推流、观看、互动")
+    Container(searchService, "搜索服务", "Python, FastAPI", "内容搜索、用户搜索、热搜")
+    Container(moderationService, "审核服务", "Python, AI模型", "内容审核、违规检测")
+}
 
-Rel(loadBalancer, apiGateway, "转发请求", "HTTP")
+' 数据存储层
+System_Boundary(dataLayer, "数据存储层") {
+    ContainerDb(userDB, "用户数据库", "PostgreSQL", "用户基础信息、关系链")
+    ContainerDb(contentDB, "内容数据库", "MongoDB", "帖子、评论、媒体文件元数据")
+    ContainerDb(socialDB, "社交数据库", "Neo4j", "复杂社交关系图谱")
+    ContainerDb(feedCache, "信息流缓存", "Redis Cluster", "个性化推荐结果缓存")
+    ContainerDb(messageQueue, "消息队列", "Apache Kafka", "异步消息处理")
+    ContainerDb(searchIndex, "搜索引擎", "Elasticsearch", "全文搜索索引")
+    ContainerDb(mediaStorage, "媒体存储", "MinIO, AWS S3", "图片、视频文件存储")
+    ContainerDb(analyticsDB, "数据仓库", "ClickHouse", "用户行为分析数据")
+}
 
-Rel(apiGateway, userService, "用户操作", "HTTP/REST")
-Rel(apiGateway, contentService, "内容操作", "HTTP/REST")
-Rel(apiGateway, socialService, "社交操作", "HTTP/REST")
-Rel(apiGateway, messageService, "消息操作", "HTTP/WebSocket")
-Rel(apiGateway, searchService, "搜索操作", "HTTP/REST")
-Rel(apiGateway, mediaService, "媒体操作", "HTTP/REST")
+' 基础设施层
+System_Boundary(infraLayer, "基础设施层") {
+    Container_Ext(cdnService, "CDN服务", "Cloudflare", "全球内容分发网络")
+    Container_Ext(monitorService, "监控服务", "Prometheus, Grafana", "系统监控和告警")
+    Container_Ext(logService, "日志服务", "ELK Stack", "日志收集、分析、查询")
+    Container_Ext(aiService, "AI服务", "OpenAI, 自研模型", "内容理解、推荐算法")
+}
 
-Rel(userService, userDb, "读写", "JDBC/SQL")
-Rel(userService, cacheDb, "缓存", "Redis Protocol")
-Rel(contentService, contentDb, "读写", "JDBC/SQL")
-Rel(contentService, cacheDb, "缓存", "Redis Protocol")
-Rel(socialService, socialGraphDb, "读写", "Bolt Protocol")
-Rel(socialService, cacheDb, "缓存", "Redis Protocol")
-Rel(messageService, messageDb, "读写", "MongoDB Protocol")
-Rel(searchService, contentDb, "同步数据", "JDBC/SQL")
-Rel(mediaService, mediaStorage, "存储", "AWS S3 API")
+' 客户端与BFF层连接
+Rel(webApp, webBFF, "API调用", "HTTPS/REST")
+Rel(mobileApp, mobileBFF, "API调用", "HTTPS/REST")
+Rel(miniProgram, mobileBFF, "API调用", "HTTPS/REST")
+Rel(creatorStudio, creatorBFF, "API调用", "HTTPS/REST")
+Rel(adminPortal, webBFF, "管理API", "HTTPS/REST")
+Rel(liveApp, liveBFF, "实时通信", "WebSocket/WebRTC")
 
-Rel(recommendationService, userDb, "读取", "JDBC/SQL")
-Rel(recommendationService, contentDb, "读取", "JDBC/SQL")
-Rel(recommendationService, socialGraphDb, "读取", "Bolt Protocol")
-Rel(recommendationService, cacheDb, "缓存结果", "Redis Protocol")
+' BFF层与API网关连接
+Rel(webBFF, apiGateway, "服务调用", "HTTP/gRPC")
+Rel(mobileBFF, apiGateway, "服务调用", "HTTP/gRPC")
+Rel(creatorBFF, apiGateway, "服务调用", "HTTP/gRPC")
+Rel(liveBFF, apiGateway, "服务调用", "HTTP/gRPC")
 
-Rel(userService, messageQueue, "发布事件", "Kafka Protocol")
-Rel(contentService, messageQueue, "发布事件", "Kafka Protocol")
-Rel(socialService, messageQueue, "发布事件", "Kafka Protocol")
-Rel(messageQueue, streamProcessor, "流处理", "Kafka Protocol")
-Rel(streamProcessor, recommendationService, "触发推荐", "HTTP/REST")
+' API网关与业务服务连接
+Rel(apiGateway, userService, "用户管理", "HTTP/gRPC")
+Rel(apiGateway, contentService, "内容管理", "HTTP/gRPC")
+Rel(apiGateway, socialService, "社交功能", "HTTP/gRPC")
+Rel(apiGateway, feedService, "信息流", "HTTP/gRPC")
+Rel(apiGateway, messageService, "消息通信", "HTTP/gRPC")
+Rel(apiGateway, liveService, "直播服务", "HTTP/WebRTC")
+Rel(apiGateway, searchService, "搜索功能", "HTTP/gRPC")
+Rel(apiGateway, moderationService, "内容审核", "HTTP/gRPC")
 
-Rel(messageService, smsService, "发送短信", "HTTPS/API")
-Rel(messageService, emailService, "发送邮件", "SMTP/API")
-Rel(messageService, pushService, "推送通知", "HTTPS/API")
-Rel(mediaService, cdnService, "内容分发", "HTTPS")
+' 业务服务与数据存储连接
+Rel(userService, userDB, "读写操作", "JDBC/连接池")
+Rel(contentService, contentDB, "读写操作", "MongoDB Driver")
+Rel(socialService, socialDB, "关系查询", "Cypher/Bolt")
+Rel(feedService, feedCache, "缓存操作", "Redis Protocol")
+Rel(messageService, messageQueue, "消息发布", "Kafka Protocol")
+Rel(searchService, searchIndex, "搜索查询", "Elasticsearch API")
+Rel(contentService, mediaStorage, "文件存储", "S3 API")
+Rel(feedService, analyticsDB, "行为数据", "ClickHouse HTTP")
+
+' 外部服务集成
+Rel(webApp, cdnService, "静态资源", "HTTPS")
+Rel(mobileApp, cdnService, "静态资源", "HTTPS")
+Rel(moderationService, aiService, "AI审核", "HTTPS/API")
+Rel(feedService, aiService, "推荐算法", "HTTPS/API")
+
+' 用户访问
+Rel(user, webApp, "Web访问", "HTTPS")
+Rel(user, mobileApp, "移动访问", "原生应用")
+Rel(user, miniProgram, "小程序", "微信生态")
+Rel(creator, creatorStudio, "内容创作", "桌面应用")
+Rel(admin, adminPortal, "平台管理", "HTTPS")
 
 @enduml 
