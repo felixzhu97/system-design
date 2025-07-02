@@ -1,0 +1,188 @@
+@startuml
+
+title 电商平台 - 数据库设计图
+
+!define PRIMARY_COLOR #61DAFB
+!define SECONDARY_COLOR #4FC08D  
+!define ACCENT_COLOR #F18F01
+
+package "用户管理" <<PRIMARY_COLOR>> {
+    entity "用户表" as user {
+        * user_id : bigint <<PK>>
+        --
+        * mobile : varchar(20) <<UK>>
+        * password : varchar(100)
+        * nickname : varchar(50)
+        * avatar : varchar(200)
+        * gender : tinyint
+        * birthday : date
+        * status : tinyint
+        * register_time : datetime
+        * last_login_time : datetime
+    }
+    
+    entity "用户地址表" as user_address {
+        * address_id : bigint <<PK>>
+        --
+        * user_id : bigint <<FK>>
+        * receiver_name : varchar(50)
+        * receiver_mobile : varchar(20)
+        * province : varchar(20)
+        * city : varchar(20)
+        * district : varchar(20)
+        * detail_address : varchar(200)
+        * is_default : boolean
+        * created_time : datetime
+    }
+}
+
+package "商品管理" <<SECONDARY_COLOR>> {
+    entity "商品表" as product {
+        * product_id : bigint <<PK>>
+        --
+        * category_id : bigint <<FK>>
+        * product_name : varchar(200)
+        * product_code : varchar(50) <<UK>>
+        * main_image : varchar(500)
+        * detail_images : text
+        * price : decimal(10,2)
+        * original_price : decimal(10,2)
+        * stock : int
+        * sales_count : int
+        * status : tinyint
+        * created_time : datetime
+    }
+    
+    entity "商品分类表" as category {
+        * category_id : bigint <<PK>>
+        --
+        * parent_id : bigint
+        * category_name : varchar(100)
+        * category_icon : varchar(200)
+        * sort_order : int
+        * status : tinyint
+        * created_time : datetime
+    }
+    
+    entity "商品规格表" as product_sku {
+        * sku_id : bigint <<PK>>
+        --
+        * product_id : bigint <<FK>>
+        * sku_name : varchar(200)
+        * sku_code : varchar(50) <<UK>>
+        * price : decimal(10,2)
+        * stock : int
+        * sales_count : int
+        * spec_values : json
+        * status : tinyint
+    }
+}
+
+package "订单管理" <<ACCENT_COLOR>> {
+    entity "订单表" as order_info {
+        * order_id : bigint <<PK>>
+        --
+        * user_id : bigint <<FK>>
+        * order_no : varchar(32) <<UK>>
+        * total_amount : decimal(10,2)
+        * pay_amount : decimal(10,2)
+        * freight_amount : decimal(10,2)
+        * order_status : tinyint
+        * pay_status : tinyint
+        * receiver_name : varchar(50)
+        * receiver_mobile : varchar(20)
+        * receiver_address : varchar(500)
+        * order_time : datetime
+        * pay_time : datetime
+    }
+    
+    entity "订单商品表" as order_item {
+        * item_id : bigint <<PK>>
+        --
+        * order_id : bigint <<FK>>
+        * product_id : bigint <<FK>>
+        * sku_id : bigint <<FK>>
+        * product_name : varchar(200)
+        * product_image : varchar(500)
+        * sku_name : varchar(200)
+        * price : decimal(10,2)
+        * quantity : int
+        * total_amount : decimal(10,2)
+    }
+    
+    entity "支付信息表" as payment_info {
+        * payment_id : bigint <<PK>>
+        --
+        * order_id : bigint <<FK>>
+        * payment_no : varchar(32) <<UK>>
+        * payment_method : varchar(20)
+        * payment_amount : decimal(10,2)
+        * payment_status : tinyint
+        * transaction_id : varchar(100)
+        * payment_time : datetime
+        * callback_content : text
+    }
+}
+
+package "购物车" {
+    entity "购物车表" as cart {
+        * cart_id : bigint <<PK>>
+        --
+        * user_id : bigint <<FK>>
+        * product_id : bigint <<FK>>
+        * sku_id : bigint <<FK>>
+        * quantity : int
+        * selected : boolean
+        * created_time : datetime
+        * updated_time : datetime
+    }
+}
+
+package "营销活动" {
+    entity "优惠券表" as coupon {
+        * coupon_id : bigint <<PK>>
+        --
+        * coupon_name : varchar(100)
+        * coupon_type : tinyint
+        * discount_amount : decimal(10,2)
+        * min_amount : decimal(10,2)
+        * total_count : int
+        * used_count : int
+        * start_time : datetime
+        * end_time : datetime
+        * status : tinyint
+    }
+    
+    entity "用户优惠券表" as user_coupon {
+        * user_coupon_id : bigint <<PK>>
+        --
+        * user_id : bigint <<FK>>
+        * coupon_id : bigint <<FK>>
+        * order_id : bigint <<FK>>
+        * coupon_status : tinyint
+        * get_time : datetime
+        * used_time : datetime
+        * expire_time : datetime
+    }
+}
+
+' 关系定义
+user ||--o{ user_address : "拥有"
+user ||--o{ order_info : "下单"
+user ||--o{ cart : "购物车"
+user ||--o{ user_coupon : "领取"
+
+category ||--o{ product : "分类"
+product ||--o{ product_sku : "规格"
+product ||--o{ cart : "商品"
+product ||--o{ order_item : "商品"
+product_sku ||--o{ cart : "SKU"
+product_sku ||--o{ order_item : "SKU"
+
+order_info ||--o{ order_item : "包含"
+order_info ||--o{ payment_info : "支付"
+order_info ||--o{ user_coupon : "使用"
+
+coupon ||--o{ user_coupon : "优惠券"
+
+@enduml 

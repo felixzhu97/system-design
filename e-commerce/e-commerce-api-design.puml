@@ -1,0 +1,186 @@
+@startuml
+
+title 电商平台 - API设计图
+
+!define PRIMARY_COLOR #61DAFB
+!define SECONDARY_COLOR #4FC08D  
+!define ACCENT_COLOR #F18F01
+
+package "用户认证API" <<PRIMARY_COLOR>> {
+    interface "/auth/register" as RegisterAPI {
+        POST: 用户注册
+        --
+        Request: mobile, password, code
+        Response: token, userInfo
+    }
+    
+    interface "/auth/login" as LoginAPI {
+        POST: 用户登录
+        --
+        Request: mobile, password
+        Response: token, userInfo
+    }
+    
+    interface "/auth/logout" as LogoutAPI {
+        POST: 用户登出
+        --
+        Request: token
+        Response: success
+    }
+    
+    interface "/auth/refresh" as RefreshAPI {
+        POST: 刷新令牌
+        --
+        Request: refreshToken
+        Response: newToken
+    }
+}
+
+package "商品管理API" <<SECONDARY_COLOR>> {
+    interface "/products" as ProductAPI {
+        GET: 商品列表查询
+        POST: 创建商品(商家)
+        PUT: 更新商品(商家)
+        DELETE: 删除商品(商家)
+        --
+        支持分页、筛选、排序
+    }
+    
+    interface "/products/{id}" as ProductDetailAPI {
+        GET: 商品详情
+        --
+        包含规格、库存、评价
+    }
+    
+    interface "/categories" as CategoryAPI {
+        GET: 商品分类树
+        --
+        层级分类结构
+    }
+    
+    interface "/search" as SearchAPI {
+        GET: 商品搜索
+        --
+        关键词、价格区间、分类筛选
+    }
+}
+
+package "购物车API" <<ACCENT_COLOR>> {
+    interface "/cart" as CartAPI {
+        GET: 获取购物车
+        POST: 添加商品到购物车
+        PUT: 更新购物车商品
+        DELETE: 删除购物车商品
+        --
+        购物车商品管理
+    }
+    
+    interface "/cart/select" as CartSelectAPI {
+        PUT: 选择/取消选择商品
+        --
+        批量选择操作
+    }
+    
+    interface "/cart/clear" as CartClearAPI {
+        DELETE: 清空购物车
+        --
+        清除所有商品
+    }
+}
+
+package "订单管理API" {
+    interface "/orders" as OrderAPI {
+        GET: 订单列表
+        POST: 创建订单
+        --
+        订单管理和创建
+    }
+    
+    interface "/orders/{id}" as OrderDetailAPI {
+        GET: 订单详情
+        PUT: 更新订单状态
+        --
+        订单详细信息
+    }
+    
+    interface "/orders/{id}/pay" as OrderPayAPI {
+        POST: 订单支付
+        --
+        调用支付接口
+    }
+    
+    interface "/orders/{id}/cancel" as OrderCancelAPI {
+        PUT: 取消订单
+        --
+        订单取消处理
+    }
+}
+
+package "支付相关API" {
+    interface "/payments/notify" as PaymentNotifyAPI {
+        POST: 支付回调
+        --
+        第三方支付通知
+    }
+    
+    interface "/payments/query" as PaymentQueryAPI {
+        GET: 支付状态查询
+        --
+        查询支付结果
+    }
+}
+
+package "用户中心API" {
+    interface "/user/profile" as UserProfileAPI {
+        GET: 用户信息
+        PUT: 更新用户信息
+        --
+        个人信息管理
+    }
+    
+    interface "/user/addresses" as AddressAPI {
+        GET: 收货地址列表
+        POST: 添加收货地址
+        PUT: 更新收货地址
+        DELETE: 删除收货地址
+        --
+        地址管理
+    }
+    
+    interface "/user/coupons" as UserCouponAPI {
+        GET: 我的优惠券
+        POST: 领取优惠券
+        --
+        优惠券管理
+    }
+}
+
+' API Gateway路由
+[API Gateway] --> RegisterAPI
+[API Gateway] --> ProductAPI
+[API Gateway] --> CartAPI
+[API Gateway] --> OrderAPI
+[API Gateway] --> UserProfileAPI
+
+' BFF层聚合
+[Web BFF] --> ProductAPI : "商品数据聚合"
+[Web BFF] --> CartAPI : "购物车状态"
+[Mobile BFF] --> OrderAPI : "订单信息"
+
+' 服务间调用
+ProductAPI --> SearchAPI : "搜索功能"
+OrderAPI --> CartAPI : "购物车商品"
+OrderAPI --> OrderPayAPI : "支付流程"
+OrderPayAPI --> PaymentNotifyAPI : "支付回调"
+
+' 权限控制
+LoginAPI ..> CartAPI : "用户认证"
+RefreshAPI ..> OrderAPI : "令牌刷新"
+UserProfileAPI ..> AddressAPI : "用户授权"
+
+note top of LoginAPI : "JWT Token认证\n支持第三方登录\n手机号验证码登录"
+note top of ProductAPI : "商品信息管理\n支持多规格SKU\n库存实时更新"
+note top of OrderAPI : "订单状态机\n库存预扣机制\n支付超时处理"
+note top of PaymentNotifyAPI : "异步支付回调\n幂等性处理\n订单状态同步"
+
+@enduml 

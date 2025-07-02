@@ -1,0 +1,52 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+title 电商平台 - 系统上下文图 (C4 Level 1)
+
+LAYOUT_WITH_LEGEND()
+
+Person(customer, "消费者", "购买商品的普通用户，通过多端访问")
+Person(merchant, "商家", "在平台销售商品的卖家用户")
+Person(admin, "平台管理员", "负责平台运营和商家管理")
+Person(customerService, "客服人员", "处理用户咨询和售后问题")
+Person(analyst, "数据分析师", "分析用户行为和商业数据")
+
+System_Boundary(c1, "电商平台") {
+    System(ecommercePlatform, "电商系统", "提供商品展示、购买、支付、订单管理等完整电商功能的多端平台")
+}
+
+System_Ext(paymentGateway, "支付网关", "支付宝、微信支付、银联等第三方支付服务")
+System_Ext(logisticsSystem, "物流系统", "顺丰、圆通、中通等物流配送服务")
+System_Ext(smsService, "短信服务", "订单通知、验证码、营销短信等")
+System_Ext(pushService, "推送服务", "APP推送、小程序通知、邮件推送")
+System_Ext(oauthProviders, "第三方登录", "微信、QQ、支付宝等社交账号登录")
+System_Ext(cdnService, "CDN服务", "商品图片、视频等静态资源分发")
+System_Ext(aiRecommendation, "推荐算法", "个性化商品推荐、用户画像分析")
+System_Ext(inventorySystem, "库存系统", "ERP、WMS等仓储管理系统")
+System_Ext(crmSystem, "CRM系统", "客户关系管理和营销自动化")
+System_Ext(analyticsService, "数据分析", "Google Analytics、神策数据等分析平台")
+System_Ext(socialMedia, "社交媒体", "微博、抖音、小红书等营销推广平台")
+System_Ext(bankingSystem, "银行系统", "资金结算、对账、风控等金融服务")
+System_Ext(taxSystem, "税务系统", "电子发票、税务申报等")
+
+Rel(customer, ecommercePlatform, "浏览购买", "Web/移动端/小程序")
+Rel(merchant, ecommercePlatform, "商品管理", "商家后台")
+Rel(admin, ecommercePlatform, "平台管理", "管理后台")
+Rel(customerService, ecommercePlatform, "客服处理", "客服系统")
+Rel(analyst, ecommercePlatform, "数据分析", "BI平台")
+
+Rel(ecommercePlatform, paymentGateway, "处理支付", "HTTPS/API")
+Rel(ecommercePlatform, logisticsSystem, "物流配送", "HTTPS/API")
+Rel(ecommercePlatform, smsService, "发送通知", "HTTPS/API")
+Rel(ecommercePlatform, pushService, "消息推送", "HTTPS/API")
+Rel(ecommercePlatform, oauthProviders, "第三方登录", "OAuth 2.0")
+Rel(ecommercePlatform, cdnService, "资源分发", "HTTPS")
+Rel(ecommercePlatform, aiRecommendation, "个性化推荐", "HTTPS/API")
+Rel(ecommercePlatform, inventorySystem, "库存同步", "HTTPS/API")
+Rel(ecommercePlatform, crmSystem, "客户数据", "HTTPS/API")
+Rel(ecommercePlatform, analyticsService, "行为追踪", "JavaScript SDK")
+Rel(ecommercePlatform, socialMedia, "营销推广", "HTTPS/API")
+Rel(ecommercePlatform, bankingSystem, "资金结算", "HTTPS/API")
+Rel(ecommercePlatform, taxSystem, "开具发票", "HTTPS/API")
+
+@enduml 

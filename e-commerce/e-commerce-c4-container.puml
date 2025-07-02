@@ -1,0 +1,83 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title 电商平台 - 容器图 (C4 Level 2)
+
+LAYOUT_WITH_LEGEND()
+
+Person(customer, "消费者", "多端购物用户")
+Person(merchant, "商家", "商品和订单管理")
+Person(admin, "管理员", "平台运营管理")
+
+System_Boundary(c1, "电商平台") {
+    Container(webApp, "PC商城", "Next.js 14, TypeScript", "桌面端购物网站，SSR优化SEO")
+    Container(mobileApp, "移动APP", "React Native, TypeScript", "iOS/Android购物应用")
+    Container(miniProgram, "微信小程序", "小程序, TypeScript", "微信生态购物入口")
+    Container(merchantPortal, "商家后台", "Vue 3, TypeScript", "商家管理商品和订单")
+    Container(adminPortal, "管理后台", "React 18, Ant Design", "平台运营管理界面")
+    
+    Container(bffWeb, "Web BFF", "Next.js API Routes", "PC端业务聚合层")
+    Container(bffMobile, "Mobile BFF", "Node.js, Express", "移动端业务聚合层")
+    Container(bffMiniProgram, "小程序 BFF", "Node.js, Fastify", "小程序业务聚合层")
+    
+    Container(apiGateway, "API网关", "Kong, Nginx", "统一API管理和路由")
+    Container(userService, "用户服务", "Node.js, Prisma", "用户注册、登录、个人信息")
+    Container(productService, "商品服务", "Spring Boot, Java", "商品信息、分类、搜索")
+    Container(orderService, "订单服务", "Node.js, TypeScript", "订单创建、支付、状态管理")
+    Container(inventoryService, "库存服务", "Go, Redis", "库存查询、扣减、补货")
+    Container(paymentService, "支付服务", "Spring Boot, Java", "支付处理、退款、对账")
+    Container(cartService, "购物车服务", "Node.js, Redis", "购物车管理、商品收藏")
+    
+    ContainerDb(userDb, "用户数据库", "PostgreSQL", "用户信息、地址、偏好")
+    ContainerDb(productDb, "商品数据库", "MongoDB", "商品详情、分类、属性")
+    ContainerDb(orderDb, "订单数据库", "PostgreSQL", "订单、支付、物流信息")
+    Container(redisCache, "缓存集群", "Redis Cluster", "热点数据、会话、购物车")
+    Container(elasticsearch, "搜索引擎", "Elasticsearch", "商品搜索、推荐算法")
+    Container(rabbitMQ, "消息队列", "RabbitMQ", "异步处理、事件驱动")
+    Container(fileStorage, "文件存储", "AWS S3/阿里云OSS", "商品图片、视频资源")
+}
+
+Container_Ext(paymentGateway, "支付网关", "支付宝/微信支付", "第三方支付服务")
+Container_Ext(logisticsApi, "物流API", "快递公司API", "物流跟踪服务")
+Container_Ext(cdnNetwork, "CDN网络", "Cloudflare/阿里云CDN", "全球内容分发")
+
+Rel(customer, webApp, "PC购物", "HTTPS")
+Rel(customer, mobileApp, "移动购物", "HTTPS")
+Rel(customer, miniProgram, "小程序购物", "HTTPS")
+Rel(merchant, merchantPortal, "商家管理", "HTTPS")
+Rel(admin, adminPortal, "平台管理", "HTTPS")
+
+Rel(webApp, bffWeb, "业务请求", "HTTPS/REST")
+Rel(mobileApp, bffMobile, "业务请求", "HTTPS/REST")
+Rel(miniProgram, bffMiniProgram, "业务请求", "HTTPS/REST")
+Rel(merchantPortal, apiGateway, "管理请求", "HTTPS/REST")
+Rel(adminPortal, apiGateway, "管理请求", "HTTPS/REST")
+
+Rel(bffWeb, apiGateway, "API调用", "HTTP/gRPC")
+Rel(bffMobile, apiGateway, "API调用", "HTTP/gRPC")
+Rel(bffMiniProgram, apiGateway, "API调用", "HTTP/gRPC")
+
+Rel(apiGateway, userService, "用户管理", "HTTP/gRPC")
+Rel(apiGateway, productService, "商品管理", "HTTP/gRPC")
+Rel(apiGateway, orderService, "订单管理", "HTTP/gRPC")
+Rel(apiGateway, inventoryService, "库存管理", "HTTP/gRPC")
+Rel(apiGateway, paymentService, "支付处理", "HTTP/gRPC")
+Rel(apiGateway, cartService, "购物车", "HTTP/gRPC")
+
+Rel(userService, userDb, "用户数据", "PostgreSQL")
+Rel(productService, productDb, "商品数据", "MongoDB")
+Rel(orderService, orderDb, "订单数据", "PostgreSQL")
+Rel(inventoryService, redisCache, "库存缓存", "Redis")
+Rel(cartService, redisCache, "购物车缓存", "Redis")
+Rel(productService, elasticsearch, "商品搜索", "HTTP/API")
+
+Rel(orderService, rabbitMQ, "订单事件", "AMQP")
+Rel(paymentService, rabbitMQ, "支付事件", "AMQP")
+Rel(inventoryService, rabbitMQ, "库存事件", "AMQP")
+
+Rel(paymentService, paymentGateway, "支付请求", "HTTPS/API")
+Rel(orderService, logisticsApi, "物流下单", "HTTPS/API")
+Rel(webApp, cdnNetwork, "静态资源", "HTTPS")
+Rel(fileStorage, cdnNetwork, "图片分发", "HTTPS")
+
+@enduml 

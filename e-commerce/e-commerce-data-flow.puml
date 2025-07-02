@@ -1,0 +1,91 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Dynamic.puml
+
+title 电商平台 - 用户购物数据流程图
+
+LAYOUT_WITH_LEGEND()
+
+Person(customer, "消费者", "购物用户")
+Container(webApp, "PC商城", "Next.js", "前端购物应用")
+Container(bffWeb, "Web BFF", "Node.js", "Web业务聚合层")
+Container(apiGateway, "API网关", "Kong", "统一API入口")
+Container(productService, "商品服务", "Java", "商品信息管理")
+Container(cartService, "购物车服务", "Node.js", "购物车管理")
+Container(orderService, "订单服务", "Node.js", "订单处理")
+Container(paymentService, "支付服务", "Java", "支付处理")
+Container(inventoryService, "库存服务", "Go", "库存管理")
+Container(notificationService, "通知服务", "Node.js", "消息通知")
+
+ContainerDb(productDb, "商品数据库", "MongoDB", "商品信息存储")
+ContainerDb(cartCache, "购物车缓存", "Redis", "购物车临时存储")
+ContainerDb(orderDb, "订单数据库", "PostgreSQL", "订单信息存储")
+Container(messageQueue, "消息队列", "RabbitMQ", "异步事件处理")
+Container_Ext(paymentGateway, "支付网关", "微信/支付宝", "第三方支付")
+Container_Ext(logisticsApi, "物流API", "快递公司", "物流服务")
+
+' 商品浏览阶段
+Rel_D(customer, webApp, "1. 访问商城", "浏览商品页面")
+Rel_D(webApp, bffWeb, "2. 请求商品列表", "GET /api/products")
+Rel_D(bffWeb, apiGateway, "3. 转发请求", "HTTP/REST")
+Rel_D(apiGateway, productService, "4. 查询商品", "gRPC调用")
+Rel_D(productService, productDb, "5. 读取商品数据", "MongoDB查询")
+Rel_U(productDb, productService, "6. 返回商品列表", "商品详细信息")
+Rel_U(productService, apiGateway, "7. 响应商品数据", "JSON格式")
+Rel_U(apiGateway, bffWeb, "8. 返回业务数据", "聚合后的数据")
+Rel_U(bffWeb, webApp, "9. 响应前端", "优化后的数据结构")
+Rel_U(webApp, customer, "10. 展示商品", "渲染商品列表")
+
+' 加入购物车阶段
+Rel_D(customer, webApp, "11. 加入购物车", "点击购买按钮")
+Rel_D(webApp, bffWeb, "12. 添加到购物车", "POST /api/cart/add")
+Rel_D(bffWeb, apiGateway, "13. 购物车请求", "HTTP/REST")
+Rel_D(apiGateway, cartService, "14. 处理购物车", "gRPC调用")
+Rel_D(cartService, cartCache, "15. 存储购物车", "Redis缓存")
+Rel_U(cartCache, cartService, "16. 确认存储", "操作成功")
+Rel_U(cartService, apiGateway, "17. 返回结果", "购物车状态")
+Rel_U(apiGateway, bffWeb, "18. 响应状态", "成功信息")
+Rel_U(bffWeb, webApp, "19. 更新UI", "购物车数量")
+Rel_U(webApp, customer, "20. 显示提示", "添加成功")
+
+' 下单支付阶段
+Rel_D(customer, webApp, "21. 确认下单", "点击结算按钮")
+Rel_D(webApp, bffWeb, "22. 创建订单", "POST /api/orders")
+Rel_D(bffWeb, apiGateway, "23. 订单请求", "HTTP/REST")
+Rel_D(apiGateway, orderService, "24. 处理订单", "gRPC调用")
+
+' 库存检查
+Rel_D(orderService, inventoryService, "25. 检查库存", "gRPC调用")
+Rel_U(inventoryService, orderService, "26. 库存充足", "确认可下单")
+
+' 订单创建
+Rel_D(orderService, orderDb, "27. 创建订单", "PostgreSQL写入")
+Rel_D(orderService, messageQueue, "28. 发布订单事件", "订单创建消息")
+
+' 支付处理
+Rel_D(orderService, paymentService, "29. 发起支付", "gRPC调用")
+Rel_D(paymentService, paymentGateway, "30. 调用支付", "第三方支付API")
+Rel_U(paymentGateway, paymentService, "31. 支付成功", "支付确认")
+Rel_D(paymentService, messageQueue, "32. 支付事件", "支付成功消息")
+
+' 库存扣减
+Rel_D(messageQueue, inventoryService, "33. 扣减库存", "消费支付事件")
+Rel_D(inventoryService, productDb, "34. 更新库存", "减少商品库存")
+
+' 通知发送
+Rel_D(messageQueue, notificationService, "35. 发送通知", "消费订单事件")
+Rel_D(notificationService, logisticsApi, "36. 通知发货", "物流接口调用")
+
+' 响应用户
+Rel_U(orderService, apiGateway, "37. 订单成功", "订单确认信息")
+Rel_U(apiGateway, bffWeb, "38. 返回结果", "下单成功")
+Rel_U(bffWeb, webApp, "39. 更新页面", "跳转支付成功页")
+Rel_U(webApp, customer, "40. 显示成功", "订单完成提示")
+
+' 数据流程说明
+note over customer, productDb : "商品浏览阶段：\n1. 用户访问商城首页或商品列表\n2. 前端通过BFF层聚合商品数据\n3. 商品服务从MongoDB读取商品信息\n4. 支持商品搜索、筛选、排序"
+
+note over customer, cartCache : "购物车阶段：\n1. 用户选择商品规格和数量\n2. 购物车数据存储在Redis缓存\n3. 支持购物车合并和同步\n4. 实时计算商品金额和优惠"
+
+note over orderService, logisticsApi : "订单处理阶段：\n1. 创建订单前检查库存\n2. 调用第三方支付完成付款\n3. 通过消息队列异步处理\n4. 自动通知物流系统发货"
+
+@enduml 

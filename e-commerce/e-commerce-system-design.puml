@@ -1,0 +1,193 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title 电商平台 - 系统架构设计图
+
+LAYOUT_WITH_LEGEND()
+
+!define REACT_COLOR #61DAFB
+!define VUE_COLOR #4FC08D
+!define NODE_COLOR #339933
+!define JAVA_COLOR #ED8B00
+!define GO_COLOR #00ADD8
+!define CACHE_COLOR #DC382D
+!define DB_COLOR #336791
+
+package "多端客户层" {
+    package "Web端" {
+        [PC商城] as WebStore <<REACT_COLOR>>
+        [商家后台] as MerchantPortal <<VUE_COLOR>>
+        [管理后台] as AdminPortal <<REACT_COLOR>>
+    }
+    
+    package "移动端" {
+        [购物APP] as MobileApp <<REACT_COLOR>>
+        [微信小程序] as MiniProgram <<Frontend>>
+        [支付宝小程序] as AlipayMP <<Frontend>>
+    }
+    
+    package "智能终端" {
+        [智能电视] as SmartTV <<Frontend>>
+        [车载应用] as CarApp <<Frontend>>
+    }
+}
+
+package "BFF层 (Backend for Frontend)" {
+    [Web BFF] as WebBFF <<NODE_COLOR>>
+    [Mobile BFF] as MobileBFF <<NODE_COLOR>>
+    [小程序 BFF] as MiniProgramBFF <<NODE_COLOR>>
+    [商家 BFF] as MerchantBFF <<NODE_COLOR>>
+}
+
+package "网关与负载均衡" {
+    [API网关] as APIGateway <<Middleware>>
+    [负载均衡器] as LoadBalancer <<Middleware>>
+    [反向代理] as ReverseProxy <<Middleware>>
+}
+
+package "微服务业务层" {
+    package "用户域服务" {
+        [用户服务] as UserService <<NODE_COLOR>>
+        [认证服务] as AuthService <<JAVA_COLOR>>
+        [权限服务] as PermissionService <<JAVA_COLOR>>
+    }
+    
+    package "商品域服务" {
+        [商品服务] as ProductService <<JAVA_COLOR>>
+        [分类服务] as CategoryService <<NODE_COLOR>>
+        [搜索服务] as SearchService <<JAVA_COLOR>>
+        [推荐服务] as RecommendService <<GO_COLOR>>
+    }
+    
+    package "交易域服务" {
+        [购物车服务] as CartService <<NODE_COLOR>>
+        [订单服务] as OrderService <<NODE_COLOR>>
+        [支付服务] as PaymentService <<JAVA_COLOR>>
+        [库存服务] as InventoryService <<GO_COLOR>>
+    }
+    
+    package "营销域服务" {
+        [优惠券服务] as CouponService <<NODE_COLOR>>
+        [促销服务] as PromotionService <<JAVA_COLOR>>
+        [积分服务] as PointService <<NODE_COLOR>>
+    }
+    
+    package "物流域服务" {
+        [物流服务] as LogisticsService <<NODE_COLOR>>
+        [地址服务] as AddressService <<NODE_COLOR>>
+    }
+    
+    package "消息通知服务" {
+        [通知服务] as NotificationService <<NODE_COLOR>>
+        [邮件服务] as EmailService <<JAVA_COLOR>>
+        [短信服务] as SMSService <<NODE_COLOR>>
+    }
+}
+
+package "数据存储层" {
+    package "关系型数据库" {
+        [用户数据库] as UserDB <<DB_COLOR>>
+        [订单数据库] as OrderDB <<DB_COLOR>>
+        [支付数据库] as PaymentDB <<DB_COLOR>>
+    }
+    
+    package "NoSQL数据库" {
+        [商品数据库] as ProductMongoDB <<Database>>
+        [日志数据库] as LogMongoDB <<Database>>
+    }
+    
+    package "缓存层" {
+        [Redis集群] as RedisCluster <<CACHE_COLOR>>
+        [Memcached] as Memcached <<CACHE_COLOR>>
+    }
+    
+    package "搜索和分析" {
+        [Elasticsearch] as Elasticsearch <<Search>>
+        [数据仓库] as DataWarehouse <<Analytics>>
+    }
+}
+
+package "中间件服务" {
+    [消息队列] as MessageQueue <<Middleware>>
+    [任务调度] as TaskScheduler <<Middleware>>
+    [配置中心] as ConfigCenter <<Middleware>>
+    [服务注册中心] as ServiceRegistry <<Middleware>>
+}
+
+package "基础设施层" {
+    [文件存储] as FileStorage <<Storage>>
+    [CDN网络] as CDNNetwork <<CDN>>
+    [监控系统] as MonitoringSystem <<Monitor>>
+    [日志系统] as LoggingSystem <<Logging>>
+}
+
+package "外部服务集成" {
+    [支付网关] as PaymentGateway <<External>>
+    [物流公司API] as LogisticsAPI <<External>>
+    [短信推送] as SMSGateway <<External>>
+    [第三方登录] as OAuthProviders <<External>>
+    [数据分析] as AnalyticsService <<External>>
+}
+
+' 客户端到BFF层连接
+WebStore --> WebBFF : "HTTPS/REST"
+MobileApp --> MobileBFF : "HTTPS/REST"
+MiniProgram --> MiniProgramBFF : "HTTPS/REST"
+MerchantPortal --> MerchantBFF : "HTTPS/REST"
+AdminPortal --> WebBFF : "HTTPS/REST"
+
+' BFF到网关层连接
+WebBFF --> APIGateway : "HTTP/gRPC"
+MobileBFF --> APIGateway : "HTTP/gRPC"
+MiniProgramBFF --> APIGateway : "HTTP/gRPC"
+MerchantBFF --> APIGateway : "HTTP/gRPC"
+
+' 网关层连接
+LoadBalancer --> ReverseProxy : "HTTP"
+ReverseProxy --> APIGateway : "HTTP"
+
+' 网关到微服务连接
+APIGateway --> UserService : "HTTP/gRPC"
+APIGateway --> ProductService : "HTTP/gRPC"
+APIGateway --> OrderService : "HTTP/gRPC"
+APIGateway --> CartService : "HTTP/gRPC"
+
+' 微服务内部调用
+UserService --> AuthService : "gRPC"
+OrderService --> PaymentService : "gRPC"
+OrderService --> InventoryService : "gRPC"
+OrderService --> LogisticsService : "gRPC"
+ProductService --> SearchService : "HTTP"
+ProductService --> RecommendService : "gRPC"
+
+' 服务到数据库连接
+UserService --> UserDB : "PostgreSQL"
+OrderService --> OrderDB : "PostgreSQL"
+PaymentService --> PaymentDB : "PostgreSQL"
+ProductService --> ProductMongoDB : "MongoDB"
+CartService --> RedisCluster : "Redis"
+SearchService --> Elasticsearch : "HTTP/API"
+
+' 消息队列连接
+OrderService --> MessageQueue : "订单事件"
+PaymentService --> MessageQueue : "支付事件"
+InventoryService --> MessageQueue : "库存事件"
+NotificationService --> MessageQueue : "通知事件"
+
+' 外部服务集成
+PaymentService --> PaymentGateway : "HTTPS/API"
+LogisticsService --> LogisticsAPI : "HTTPS/API"
+SMSService --> SMSGateway : "HTTPS/API"
+AuthService --> OAuthProviders : "OAuth 2.0"
+
+' 基础设施连接
+WebStore --> CDNNetwork : "静态资源"
+FileStorage --> CDNNetwork : "图片分发"
+MonitoringSystem --> UserService : "性能监控"
+LoggingSystem --> OrderService : "日志收集"
+
+' 服务注册和配置
+UserService --> ServiceRegistry : "服务注册"
+ProductService --> ConfigCenter : "配置获取"
+
+@enduml 

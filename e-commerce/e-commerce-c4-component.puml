@@ -1,0 +1,74 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title 电商平台 - PC商城组件图 (C4 Level 3)
+
+LAYOUT_WITH_LEGEND()
+
+Person(customer, "消费者", "PC端购物用户")
+Container_Ext(bffWeb, "Web BFF", "Next.js API Routes", "Web端业务聚合层")
+Container_Ext(cdnNetwork, "CDN网络", "Cloudflare", "静态资源分发")
+
+Container_Boundary(c1, "PC商城 (Next.js)") {
+    Component(homePageComponent, "首页组件", "React Server Components", "首页轮播、推荐商品展示")
+    Component(productListComponent, "商品列表组件", "React Components", "商品展示、筛选、排序")
+    Component(productDetailComponent, "商品详情组件", "React Components", "商品详情、规格选择、评价")
+    Component(cartComponent, "购物车组件", "React Components", "购物车管理、结算")
+    Component(checkoutComponent, "结算组件", "React Components", "订单确认、支付流程")
+    Component(userCenterComponent, "用户中心组件", "React Components", "个人信息、订单查询")
+    
+    Component(routerManager, "路由管理", "Next.js Router", "页面路由、动态路由")
+    Component(stateManager, "状态管理", "Zustand", "全局状态、购物车状态")
+    Component(authManager, "认证管理", "NextAuth.js", "用户登录、会话管理")
+    Component(apiClient, "API客户端", "Axios, SWR", "HTTP请求、数据缓存")
+    Component(imageOptimizer, "图片优化", "Next.js Image", "图片懒加载、格式优化")
+    Component(seoManager, "SEO优化", "Next.js Head", "页面元数据、结构化数据")
+    
+    Component(uiLibrary, "UI组件库", "Tailwind CSS, Headless UI", "基础UI组件、样式系统")
+    Component(formValidator, "表单验证", "React Hook Form, Zod", "表单处理、数据验证")
+    Component(errorBoundary, "错误边界", "React Error Boundary", "错误捕获、降级处理")
+    Component(performanceMonitor, "性能监控", "Web Vitals", "性能指标收集")
+    Component(analyticsTracker, "数据埋点", "Google Analytics", "用户行为追踪")
+    Component(chatWidget, "客服组件", "Third-party Widget", "在线客服、智能机器人")
+}
+
+ComponentDb(localStorage, "本地存储", "localStorage/IndexedDB", "用户偏好、购物车缓存")
+Component_Ext(paymentSDK, "支付SDK", "支付宝/微信支付", "前端支付组件")
+Component_Ext(mapSDK, "地图SDK", "高德地图", "地址选择、门店定位")
+
+Rel(customer, homePageComponent, "浏览首页", "HTTPS")
+Rel(customer, productListComponent, "浏览商品", "HTTPS")
+Rel(customer, productDetailComponent, "查看详情", "HTTPS")
+Rel(customer, cartComponent, "管理购物车", "HTTPS")
+Rel(customer, checkoutComponent, "下单支付", "HTTPS")
+
+Rel(homePageComponent, stateManager, "状态同步", "React Context")
+Rel(productListComponent, apiClient, "获取商品", "HTTP/API")
+Rel(productDetailComponent, imageOptimizer, "图片展示", "Next.js Image")
+Rel(cartComponent, localStorage, "缓存购物车", "Web Storage")
+Rel(checkoutComponent, paymentSDK, "支付处理", "JavaScript SDK")
+
+Rel(routerManager, homePageComponent, "路由渲染", "React Router")
+Rel(routerManager, productListComponent, "路由渲染", "React Router")
+Rel(routerManager, productDetailComponent, "路由渲染", "React Router")
+Rel(routerManager, cartComponent, "路由渲染", "React Router")
+
+Rel(stateManager, cartComponent, "购物车状态", "Zustand Store")
+Rel(stateManager, userCenterComponent, "用户状态", "Zustand Store")
+Rel(authManager, userCenterComponent, "用户认证", "NextAuth Session")
+Rel(authManager, apiClient, "请求认证", "JWT Token")
+
+Rel(apiClient, bffWeb, "业务请求", "HTTP/REST")
+Rel(imageOptimizer, cdnNetwork, "图片加载", "HTTPS")
+Rel(seoManager, homePageComponent, "SEO优化", "Next.js Head")
+
+Rel(formValidator, checkoutComponent, "表单验证", "React Hook Form")
+Rel(errorBoundary, productListComponent, "错误处理", "Error Boundary")
+Rel(performanceMonitor, homePageComponent, "性能监控", "Web Vitals API")
+Rel(analyticsTracker, customer, "行为追踪", "Google Analytics")
+
+Rel(uiLibrary, productListComponent, "UI渲染", "Tailwind CSS")
+Rel(uiLibrary, productDetailComponent, "UI渲染", "Tailwind CSS")
+Rel(chatWidget, customer, "客服咨询", "WebSocket")
+
+@enduml 
