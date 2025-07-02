@@ -1,0 +1,714 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# 前后端统一集成规范
+
+## 概述
+
+本规范定义了前后端开发的统一标准，确保前后端协作的高效性和一致性。涵盖API设计、数据格式、认证授权、错误处理等关键环节。
+
+## API设计规范
+
+### RESTful API标准
+
+#### 资源命名约定
+```http
+# 资源使用复数名词
+GET    /api/v1/users          # 获取用户列表
+GET    /api/v1/users/{id}     # 获取单个用户
+POST   /api/v1/users          # 创建用户
+PUT    /api/v1/users/{id}     # 更新用户
+DELETE /api/v1/users/{id}     # 删除用户
+
+# 嵌套资源
+GET    /api/v1/users/{id}/orders        # 获取用户订单
+POST   /api/v1/users/{id}/orders        # 为用户创建订单
+GET    /api/v1/orders/{id}/items        # 获取订单项目
+```
+
+#### HTTP状态码规范
+```http
+# 成功响应
+200 OK              # 请求成功
+201 Created         # 资源创建成功
+204 No Content      # 删除成功，无返回内容
+
+# 客户端错误
+400 Bad Request     # 请求参数错误
+401 Unauthorized    # 未认证
+403 Forbidden       # 无权限
+404 Not Found       # 资源不存在
+409 Conflict        # 资源冲突
+422 Unprocessable Entity # 参数验证失败
+
+# 服务器错误
+500 Internal Server Error   # 服务器内部错误
+502 Bad Gateway            # 网关错误
+503 Service Unavailable    # 服务不可用
+```
+
+#### API版本控制
+```http
+# URL版本控制（推荐）
+/api/v1/users
+/api/v2/users
+
+# Header版本控制（备选）
+Accept: application/vnd.api.v1+json
+API-Version: v1
+```
+
+### 统一数据格式
+
+#### 标准响应格式
+```typescript
+// 成功响应格式
+interface ApiResponse<T> {
+  code: number;           // 业务状态码
+  message: string;        // 响应消息
+  data: T;               // 响应数据
+  timestamp: number;      // 时间戳
+  traceId?: string;      // 请求追踪ID
+}
+
+// 分页响应格式
+interface PageResponse<T> {
+  code: number;
+  message: string;
+  data: {
+    records: T[];         // 数据列表
+    total: number;        // 总记录数
+    size: number;         // 页大小
+    current: number;      // 当前页
+    pages: number;        // 总页数
+  };
+  timestamp: number;
+}
+
+// 错误响应格式
+interface ErrorResponse {
+  code: number;           // 错误码
+  message: string;        // 错误消息
+  details?: string;       // 详细错误信息
+  timestamp: number;
+  traceId?: string;
+  path?: string;          // 请求路径
+}
+```
+
+#### 请求参数格式
+```typescript
+// 查询参数
+interface QueryParams {
+  page?: number;          // 页码，从1开始
+  size?: number;          // 页大小，默认10
+  sort?: string;          // 排序字段
+  order?: 'asc' | 'desc'; // 排序方向
+  keyword?: string;       // 搜索关键词
+  status?: string;        // 状态筛选
+  startTime?: string;     // 开始时间 (ISO 8601)
+  endTime?: string;       // 结束时间 (ISO 8601)
+}
+
+// 请求体格式
+interface CreateUserRequest {
+  username: string;       // 必填字段
+  email: string;
+  phone?: string;         // 可选字段
+  roles: string[];        // 数组字段
+  profile: {              // 嵌套对象
+    realName: string;
+    avatar?: string;
+  };
+}
+```
+
+### OpenAPI 3.0规范
+
+#### API文档标准
+```yaml
+# swagger配置示例
+openapi: 3.0.3
+info:
+  title: 系统API文档
+  version: 1.0.0
+  description: 统一后台管理系统API接口文档
+  contact:
+    name: 开发团队
+    email: dev@example.com
+
+servers:
+  - url: https://api.example.com/v1
+    description: 生产环境
+  - url: https://api-dev.example.com/v1
+    description: 开发环境
+
+paths:
+  /users:
+    get:
+      tags: [用户管理]
+      summary: 获取用户列表
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserPageResponse'
+```
+
+#### 数据模型定义
+```yaml
+components:
+  schemas:
+    User:
+      type: object
+      required: [id, username, email]
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: 用户ID
+        username:
+          type: string
+          minLength: 3
+          maxLength: 50
+          description: 用户名
+        email:
+          type: string
+          format: email
+          description: 邮箱地址
+        phone:
+          type: string
+          pattern: '^1[3-9]\d{9}$'
+          description: 手机号码
+        status:
+          type: string
+          enum: [ACTIVE, INACTIVE, PENDING]
+          description: 用户状态
+        createdTime:
+          type: string
+          format: date-time
+          description: 创建时间
+```
+
+## 认证授权规范
+
+### JWT Token标准
+```typescript
+// Token载荷格式
+interface JwtPayload {
+  sub: string;            // 用户ID
+  username: string;       // 用户名
+  roles: string[];        // 角色列表
+  permissions: string[];  // 权限列表
+  tenantId?: string;      // 租户ID（多租户）
+  iat: number;           // 签发时间
+  exp: number;           // 过期时间
+  jti: string;           // Token ID
+}
+
+// Token响应格式
+interface TokenResponse {
+  accessToken: string;    // 访问令牌
+  refreshToken: string;   // 刷新令牌
+  tokenType: string;      // 令牌类型 "Bearer"
+  expiresIn: number;      // 过期时间（秒）
+  scope?: string;         // 权限范围
+}
+```
+
+### 认证流程
+```typescript
+// 登录请求
+interface LoginRequest {
+  username: string;
+  password: string;
+  captcha?: string;       // 验证码
+  rememberMe?: boolean;   // 记住我
+}
+
+// 刷新Token请求
+interface RefreshTokenRequest {
+  refreshToken: string;
+}
+
+// 权限检查
+interface PermissionCheck {
+  resource: string;       // 资源标识
+  action: string;         // 操作类型
+  tenantId?: string;      // 租户ID
+}
+```
+
+### 权限控制注解
+```java
+// 后端权限注解示例
+@PreAuthorize("hasRole('ADMIN')")
+@GetMapping("/admin/users")
+public ResponseEntity<PageResponse<User>> getUsers() {}
+
+@PreAuthorize("hasPermission('USER', 'CREATE')")
+@PostMapping("/users")
+public ResponseEntity<User> createUser(@RequestBody CreateUserRequest request) {}
+
+@PreAuthorize("hasRole('USER') and #id == authentication.principal.id")
+@GetMapping("/users/{id}")
+public ResponseEntity<User> getUser(@PathVariable Long id) {}
+```
+
+## 前端开发规范
+
+### React项目结构
+```
+src/
+├── components/          # 通用组件
+│   ├── Layout/         # 布局组件
+│   ├── Form/           # 表单组件
+│   └── Table/          # 表格组件
+├── pages/              # 页面组件
+│   ├── User/           # 用户管理
+│   ├── Dashboard/      # 仪表板
+│   └── Login/          # 登录页面
+├── hooks/              # 自定义Hook
+│   ├── useAuth.ts      # 认证Hook
+│   ├── useApi.ts       # API调用Hook
+│   └── useTable.ts     # 表格Hook
+├── services/           # API服务
+│   ├── api.ts          # API基础配置
+│   ├── userService.ts  # 用户服务
+│   └── authService.ts  # 认证服务
+├── store/              # 状态管理
+│   ├── index.ts        # Store配置
+│   ├── authSlice.ts    # 认证状态
+│   └── userSlice.ts    # 用户状态
+├── types/              # TypeScript类型
+│   ├── api.ts          # API类型
+│   ├── user.ts         # 用户类型
+│   └── common.ts       # 通用类型
+├── utils/              # 工具函数
+│   ├── request.ts      # HTTP请求封装
+│   ├── auth.ts         # 认证工具
+│   └── validator.ts    # 验证工具
+└── constants/          # 常量定义
+    ├── api.ts          # API常量
+    └── enums.ts        # 枚举定义
+```
+
+### Vue项目结构
+```
+src/
+├── components/         # 通用组件
+├── views/             # 页面视图
+├── router/            # 路由配置
+├── stores/            # Pinia状态管理
+├── composables/       # 组合式函数
+├── services/          # API服务
+├── types/             # TypeScript类型
+├── utils/             # 工具函数
+└── constants/         # 常量定义
+```
+
+### API调用封装
+```typescript
+// HTTP客户端配置
+import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
+
+const apiClient = axios.create({
+  baseURL: process.env.REACT_APP_API_BASE_URL,
+  timeout: 10000,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// 请求拦截器
+apiClient.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('accessToken');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+// 响应拦截器
+apiClient.interceptors.response.use(
+  (response: AxiosResponse<ApiResponse<any>>) => {
+    return response.data;
+  },
+  (error) => {
+    if (error.response?.status === 401) {
+      // 处理认证失效
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
+
+// API服务基类
+class BaseService {
+  protected async get<T>(url: string, params?: any): Promise<ApiResponse<T>> {
+    return apiClient.get(url, { params });
+  }
+
+  protected async post<T>(url: string, data?: any): Promise<ApiResponse<T>> {
+    return apiClient.post(url, data);
+  }
+
+  protected async put<T>(url: string, data?: any): Promise<ApiResponse<T>> {
+    return apiClient.put(url, data);
+  }
+
+  protected async delete<T>(url: string): Promise<ApiResponse<T>> {
+    return apiClient.delete(url);
+  }
+}
+
+// 用户服务示例
+class UserService extends BaseService {
+  async getUsers(params: QueryParams): Promise<PageResponse<User>> {
+    return this.get('/users', params);
+  }
+
+  async createUser(data: CreateUserRequest): Promise<ApiResponse<User>> {
+    return this.post('/users', data);
+  }
+
+  async updateUser(id: number, data: UpdateUserRequest): Promise<ApiResponse<User>> {
+    return this.put(`/users/${id}`, data);
+  }
+
+  async deleteUser(id: number): Promise<ApiResponse<void>> {
+    return this.delete(`/users/${id}`);
+  }
+}
+
+export const userService = new UserService();
+```
+
+### 状态管理规范
+```typescript
+// Redux Toolkit示例 (React)
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+
+export const fetchUsers = createAsyncThunk(
+  'users/fetchUsers',
+  async (params: QueryParams) => {
+    const response = await userService.getUsers(params);
+    return response.data;
+  }
+);
+
+const userSlice = createSlice({
+  name: 'users',
+  initialState: {
+    users: [],
+    total: 0,
+    loading: false,
+    error: null,
+  },
+  reducers: {
+    clearUsers: (state) => {
+      state.users = [];
+    },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchUsers.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(fetchUsers.fulfilled, (state, action) => {
+        state.loading = false;
+        state.users = action.payload.records;
+        state.total = action.payload.total;
+      })
+      .addCase(fetchUsers.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message;
+      });
+  },
+});
+
+// Pinia示例 (Vue)
+import { defineStore } from 'pinia';
+
+export const useUserStore = defineStore('user', {
+  state: () => ({
+    users: [] as User[],
+    total: 0,
+    loading: false,
+    error: null as string | null,
+  }),
+  
+  actions: {
+    async fetchUsers(params: QueryParams) {
+      this.loading = true;
+      try {
+        const response = await userService.getUsers(params);
+        this.users = response.data.records;
+        this.total = response.data.total;
+      } catch (error) {
+        this.error = error.message;
+      } finally {
+        this.loading = false;
+      }
+    },
+    
+    clearUsers() {
+      this.users = [];
+      this.total = 0;
+    },
+  },
+});
+```
+
+## 错误处理规范
+
+### 统一错误处理
+```typescript
+// 错误码定义
+enum ErrorCode {
+  SUCCESS = 0,
+  SYSTEM_ERROR = 1000,
+  PARAM_ERROR = 1001,
+  AUTH_ERROR = 2000,
+  PERMISSION_ERROR = 2001,
+  BUSINESS_ERROR = 3000,
+}
+
+// 错误消息映射
+const ERROR_MESSAGES = {
+  [ErrorCode.SYSTEM_ERROR]: '系统异常，请稍后重试',
+  [ErrorCode.PARAM_ERROR]: '参数错误',
+  [ErrorCode.AUTH_ERROR]: '认证失败',
+  [ErrorCode.PERMISSION_ERROR]: '权限不足',
+  [ErrorCode.BUSINESS_ERROR]: '业务处理失败',
+};
+
+// 全局错误处理
+class ErrorHandler {
+  static handle(error: any) {
+    const code = error.response?.data?.code || ErrorCode.SYSTEM_ERROR;
+    const message = error.response?.data?.message || ERROR_MESSAGES[code];
+    
+    // 显示错误提示
+    notification.error({
+      message: '操作失败',
+      description: message,
+    });
+    
+    // 记录错误日志
+    console.error('API Error:', error);
+    
+    return Promise.reject(error);
+  }
+}
+```
+
+### 表单验证规范
+```typescript
+// 通用验证规则
+const validationRules = {
+  required: (message: string) => ({
+    required: true,
+    message,
+  }),
+  
+  email: {
+    type: 'email' as const,
+    message: '请输入正确的邮箱地址',
+  },
+  
+  phone: {
+    pattern: /^1[3-9]\d{9}$/,
+    message: '请输入正确的手机号码',
+  },
+  
+  password: {
+    min: 8,
+    message: '密码长度不能少于8位',
+  },
+  
+  username: {
+    pattern: /^[a-zA-Z0-9_]{3,20}$/,
+    message: '用户名只能包含字母、数字和下划线，长度3-20位',
+  },
+};
+
+// React表单验证示例
+const UserForm: React.FC = () => {
+  const [form] = Form.useForm();
+  
+  return (
+    <Form form={form} onFinish={handleSubmit}>
+      <Form.Item
+        name="username"
+        rules={[
+          validationRules.required('请输入用户名'),
+          validationRules.username,
+        ]}
+      >
+        <Input placeholder="用户名" />
+      </Form.Item>
+      
+      <Form.Item
+        name="email"
+        rules={[
+          validationRules.required('请输入邮箱'),
+          validationRules.email,
+        ]}
+      >
+        <Input placeholder="邮箱地址" />
+      </Form.Item>
+    </Form>
+  );
+};
+```
+
+## 部署集成规范
+
+### 环境配置管理
+```typescript
+// 环境配置接口
+interface AppConfig {
+  apiBaseUrl: string;
+  publicPath: string;
+  enableMock: boolean;
+  logLevel: 'debug' | 'info' | 'warn' | 'error';
+  features: {
+    enableSSO: boolean;
+    enableMonitoring: boolean;
+  };
+}
+
+// 不同环境配置
+const configs: Record<string, AppConfig> = {
+  development: {
+    apiBaseUrl: 'http://localhost:8080/api/v1',
+    publicPath: '/',
+    enableMock: true,
+    logLevel: 'debug',
+    features: {
+      enableSSO: false,
+      enableMonitoring: false,
+    },
+  },
+  
+  production: {
+    apiBaseUrl: 'https://api.example.com/v1',
+    publicPath: '/admin/',
+    enableMock: false,
+    logLevel: 'warn',
+    features: {
+      enableSSO: true,
+      enableMonitoring: true,
+    },
+  },
+};
+```
+
+### Docker化部署
+```dockerfile
+# 前端Dockerfile
+FROM node:18-alpine AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --only=production
+COPY . .
+RUN npm run build
+
+FROM nginx:alpine
+COPY --from=builder /app/dist /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/nginx.conf
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
+```
+
+```yaml
+# Kubernetes部署配置
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: admin-frontend
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: admin-frontend
+  template:
+    metadata:
+      labels:
+        app: admin-frontend
+    spec:
+      containers:
+      - name: admin-frontend
+        image: admin-frontend:latest
+        ports:
+        - containerPort: 80
+        env:
+        - name: API_BASE_URL
+          value: "https://api.example.com/v1"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: admin-frontend-service
+spec:
+  selector:
+    app: admin-frontend
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+  type: ClusterIP
+```
+
+## 开发协作流程
+
+### Git工作流规范
+```bash
+# 分支命名规范
+feature/user-management     # 功能分支
+bugfix/login-error         # 问题修复
+hotfix/security-patch      # 热修复
+release/v1.2.0            # 发布分支
+
+# 提交消息规范
+feat: 添加用户管理功能
+fix: 修复登录认证问题
+docs: 更新API文档
+style: 调整代码格式
+refactor: 重构用户服务
+test: 添加单元测试
+chore: 更新依赖版本
+```
+
+### 代码评审清单
+- [ ] API接口是否符合RESTful规范
+- [ ] 错误处理是否完善
+- [ ] 权限控制是否正确实现
+- [ ] 数据验证是否充分
+- [ ] 性能影响是否评估
+- [ ] 安全漏洞是否检查
+- [ ] 单元测试是否覆盖
+- [ ] 文档是否更新
+
+---
+
+> 本规范适用于所有前后端集成项目，确保开发团队协作的高效性和代码质量的一致性。

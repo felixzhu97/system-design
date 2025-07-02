@@ -37,40 +37,65 @@ alwaysApply: true
 
 ## 系统设计图约定
 
-### 架构层次组织
+### 大前端架构层次组织
 使用package结构组织不同架构层：
 
 ```puml
 package "客户端层" {
-    [移动端APP] as MobileApp
-    [Web前端] as WebApp
-}
-
-package "服务层" {
-    package "业务服务" {
-        [用户服务] as UserService
-        [订单服务] as OrderService
+    package "Web应用" {
+        [React主应用] as ReactApp
+        [Vue管理后台] as VueAdmin
+        [Next.js官网] as NextSite
+    }
+    package "移动端" {
+        [React Native APP] as RNApp
+        [Flutter APP] as FlutterApp
+        [微信小程序] as WeChatMP
+    }
+    package "桌面端" {
+        [Electron应用] as ElectronApp
+        [Tauri应用] as TauriApp
     }
 }
 
-package "数据层" {
-    [MySQL数据库] as MySQL
-    [Redis缓存] as Redis
+package "BFF层（Backend for Frontend）" {
+    [Next.js API Routes] as NextAPI
+    [Nuxt.js API] as NuxtAPI
+    [Node.js BFF] as NodeBFF
+}
+
+package "状态管理层" {
+    [Redux Store] as ReduxStore
+    [Zustand Store] as ZustandStore
+    [Pinia Store] as PiniaStore
+}
+
+package "基础设施层" {
+    [CDN分发] as CDN
+    [Edge计算] as Edge
+    [监控服务] as Monitor
 }
 ```
 
 参考示例：[social-media-system-design.puml](mdc:social-media/social-media-system-design.puml)
 
-### 组件命名约定
-- 使用中文描述，英文别名：`[用户管理服务] as UserService`
-- 添加组件类型标注：`<<Service>>`、`<<Database>>`、`<<Cache>>`
-- 外部系统使用 `_Ext` 后缀
+### 大前端组件命名约定
+- 使用中文描述，英文别名：`[用户管理前端] as UserFrontend`
+- 添加前端组件类型标注：`<<React>>`、`<<Vue>>`、`<<Mobile>>`、`<<MiniProgram>>`
+- 外部服务使用 `_Ext` 后缀：`[第三方登录] as OAuthExt`
+- 微前端模块使用 `_Module` 后缀：`[用户模块] as UserModule`
+- 组件库使用 `_Lib` 后缀：`[UI组件库] as UILib`
 
-### 连接关系表示
-- 使用 `-->` 表示同步调用
-- 使用 `..>` 表示异步调用  
+### 大前端连接关系表示
+- 使用 `-->` 表示API调用：`WebApp --> API : "REST调用"`
+- 使用 `..>` 表示异步通信：`WebApp ..> WebSocket : "实时通信"`
+- 使用 `==>` 表示状态流转：`Action ==> Store : "状态更新"`
 - 使用 `-up->`, `-down->`, `-left->`, `-right->` 控制方向
-- 添加关系描述：`UserService --> UserDB : "查询用户信息"`
+- 添加前端关系描述：
+  - `ReactApp --> API : "HTTP请求 (Axios)"`
+  - `Component ==> Store : "派发Action"`
+  - `Router --> Component : "路由跳转"`
+  - `WebApp ..> CDN : "静态资源加载"`
 
 ## 文件头部标准
 
@@ -87,18 +112,31 @@ LAYOUT_WITH_LEGEND()
 
 ## 颜色和主题
 
-### 颜色定义
+### 大前端颜色定义
 ```puml
-!define PRIMARY_COLOR #2E86AB
-!define SECONDARY_COLOR #A23B72  
-!define ACCENT_COLOR #F18F01
-!define NEUTRAL_COLOR #C73E1D
+' 前端技术栈颜色
+!define REACT_COLOR #61DAFB
+!define VUE_COLOR #4FC08D
+!define ANGULAR_COLOR #DD0031
+!define TYPESCRIPT_COLOR #3178C6
+!define NEXT_COLOR #000000
+!define NUXT_COLOR #00DC82
+
+' 功能层颜色
+!define UI_COLOR #FF6B6B
+!define STATE_COLOR #4ECDC4
+!define API_COLOR #45B7D1
+!define CDN_COLOR #FFA726
+!define MOBILE_COLOR #9C27B0
 ```
 
-### 主题应用
-- 关键业务组件使用主色调
-- 外部系统使用中性色调
-- 缓存和存储使用次要色调
+### 大前端主题应用
+- React应用使用React蓝色：`<<REACT_COLOR>>`
+- Vue应用使用Vue绿色：`<<VUE_COLOR>>`
+- 移动应用使用紫色：`<<MOBILE_COLOR>>`
+- API服务使用蓝色：`<<API_COLOR>>`
+- CDN服务使用橙色：`<<CDN_COLOR>>`
+- 状态管理使用青色：`<<STATE_COLOR>>`
 
 ## 注释和文档
 
@@ -113,10 +151,21 @@ LAYOUT_WITH_LEGEND()
 
 ## 外部系统集成
 
-### 常见外部系统模式
-- 支付系统：`System_Ext(paymentGateway, "支付网关", "支付宝、微信支付等")`
-- 短信服务：`System_Ext(smsService, "短信服务", "发送验证码和通知")`  
-- 第三方登录：`System_Ext(oauthProviders, "第三方登录", "微信、QQ等OAuth服务")`
+### 大前端常见外部系统模式
+#### 基础设施服务
+- CDN服务：`System_Ext(cdnService, "CDN服务", "Cloudflare、AWS CloudFront等")`
+- 部署平台：`System_Ext(deployPlatform, "部署平台", "Vercel、Netlify、GitHub Pages等")`
+- 监控服务：`System_Ext(monitorService, "监控服务", "Sentry、LogRocket、Datadog等")`
+
+#### 认证与分析
+- 第三方登录：`System_Ext(oauthProviders, "OAuth登录", "Google、GitHub、微信等")`
+- 数据分析：`System_Ext(analytics, "数据分析", "Google Analytics、Mixpanel等")`
+- A/B测试：`System_Ext(abTesting, "A/B测试", "Optimizely、LaunchDarkly等")`
+
+#### 开发工具
+- 包管理：`System_Ext(npmRegistry, "NPM仓库", "npm、yarn、pnpm等包管理器")`
+- CI/CD：`System_Ext(cicdPipeline, "CI/CD", "GitHub Actions、GitLab CI等")`
+- 代码质量：`System_Ext(codeQuality, "代码质量", "ESLint、Prettier、SonarQube等")`
 
 ## 数据流图规范
 
@@ -135,17 +184,99 @@ Rel_U(service, api, "5. 响应数据")
 Rel_U(api, user, "6. 返回给用户")
 ```
 
-## 最佳实践
+## 大前端架构设计最佳实践
 
-1. **模块化设计**：将复杂系统拆分为多个相互关联的图表
-2. **一致性**：在项目内保持命名、颜色、布局的一致性  
-3. **可读性**：避免过度复杂的图表，必要时拆分为多个视图
-4. **更新维护**：系统变更时及时更新相关图表
-5. **版本控制**：重要变更时保留历史版本注释
+1. **多端统一设计**：在架构图中体现Web、移动、小程序等多端的统一性和差异性
+2. **微前端架构**：清晰展示微前端的拆分边界和通信机制
+3. **性能优化考虑**：在架构图中体现CDN、懒加载、代码分割等性能优化策略
+4. **状态管理可视化**：明确展示状态在不同层级间的流转关系
+5. **组件化设计**：体现组件的层次结构和复用关系
+6. **API设计**：区分BFF层、微服务层、第三方API的不同职责
+7. **开发体验**：在架构图中考虑开发工具链、调试、热更新等开发体验
+8. **部署策略**：展示不同环境的部署策略和版本管理
 
-## 工具集成
+## 大前端工具集成
 
+### 开发工具
 - 使用PlantUML官方插件进行实时预览
-- 集成CI/CD生成图片文档  
-- 建议使用SVG格式输出以保证清晰度
-- 配置自动化图表生成和更新流程
+- 集成VS Code PlantUML扩展提升开发体验
+- 使用draw.io、Excalidraw等可视化工具进行快速原型设计
+
+### CI/CD集成
+- 在前端项目的GitHub Actions中自动生成架构图
+- 集成到Storybook中展示组件架构关系
+- 使用Markdown文档自动引用生成的架构图
+
+### 输出格式
+- 建议使用SVG格式输出以保证在Retina显示器上的清晰度
+- 为移动端文档生成PNG格式图片
+- 生成可交互的HTML格式用于在线文档
+
+### 自动化流程
+- 配置git hooks在代码变更时自动更新架构图
+- 集成到前端构建流程中检查架构图的一致性
+- 使用AI工具辅助生成架构图的初始版本
+
+## 大前端性能优化架构考虑
+
+### 代码分割和懒加载
+```puml
+@startuml
+title 前端性能优化架构
+
+package "代码分割策略" {
+    [主包] --> [路由分割]: "动态导入"
+    [主包] --> [组件分割]: "懒加载"
+    [主包] --> [第三方库分割]: "vendor分包"
+}
+
+package "缓存策略" {
+    [浏览器缓存] --> [Service Worker]: "离线缓存"
+    [CDN缓存] --> [静态资源]: "版本控制"
+    [内存缓存] --> [状态管理]: "数据缓存"
+}
+
+@enduml
+```
+
+### 微前端通信架构
+```puml
+@startuml
+title 微前端通信架构
+
+container MainApp as "主应用"
+container ModuleA as "模块A"
+container ModuleB as "模块B"
+container EventBus as "事件总线"
+container SharedStore as "共享状态"
+
+MainApp --> EventBus: "发布事件"
+ModuleA --> EventBus: "订阅事件"
+ModuleB --> EventBus: "订阅事件"
+ModuleA --> SharedStore: "共享数据"
+ModuleB --> SharedStore: "读取数据"
+
+@enduml
+```
+
+## 前端监控和可观测性
+
+### 监控架构设计
+```puml
+@startuml
+title 前端监控架构
+
+package "客户端监控" {
+    [错误监控] --> [Sentry]: "异常上报"
+    [性能监控] --> [Web Vitals]: "性能指标"
+    [用户行为] --> [埋点系统]: "行为分析"
+}
+
+package "监控数据流" {
+    [前端应用] --> [监控SDK]: "数据收集"
+    [监控SDK] --> [数据上报]: "批量发送"
+    [数据上报] --> [监控平台]: "数据处理"
+}
+
+@enduml
+```

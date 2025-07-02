@@ -50,18 +50,41 @@ Rel(user, system, "交互描述", "技术/协议")
 
 ### 关键元素
 ```puml
-Container(app, "应用名称", "技术栈", "应用功能描述")
-ContainerDb(db, "数据库名称", "数据库类型", "存储内容描述")
-Container_Ext(external, "外部容器", "技术", "外部服务描述")
-Rel(app, db, "读写数据", "SQL/JDBC")
+Container(webapp, "Web应用", "React, TypeScript", "用户界面和交互")
+Container(mobileapp, "移动应用", "React Native", "移动端用户界面")
+Container(api, "API网关", "Node.js, Express", "API路由和认证")
+Container(bff, "BFF服务", "Next.js API Routes", "前端专用后端服务")
+ContainerDb(db, "数据库", "PostgreSQL", "业务数据存储")
+Container_Ext(cdn, "CDN", "Cloudflare", "静态资源分发")
+Rel(webapp, api, "API调用", "HTTPS/REST")
+Rel(webapp, cdn, "资源加载", "HTTPS")
 ```
 
 ### 技术栈标注示例
+#### 前端容器
+- `"React 18, TypeScript, Vite"`
+- `"Vue 3, TypeScript, Nuxt.js"`
+- `"Next.js 14, TypeScript, Tailwind CSS"`
+- `"React Native, TypeScript"`
+- `"Flutter, Dart"`
+- `"Electron, React"`
+- `"微信小程序, TypeScript"`
+
+#### 后端容器
+- `"Node.js, Express, TypeScript"`
+- `"Node.js, Fastify, Prisma"`
+- `"Bun, Hono, TypeScript"`
 - `"Spring Boot, Java 17"`
-- `"React, TypeScript"`  
-- `"MySQL 8.0"`
-- `"Redis 6.0"`
-- `"Nginx"`
+
+#### 数据存储
+- `"PostgreSQL 15"`
+- `"Redis 7.0"`
+- `"MongoDB Atlas"`
+
+#### 基础设施
+- `"Nginx, Docker"`
+- `"Vercel, Edge Functions"`
+- `"Cloudflare, CDN"`
 
 ### 最佳实践
 - 显示主要的技术选择
@@ -79,10 +102,13 @@ Rel(app, db, "读写数据", "SQL/JDBC")
 
 ### 关键元素  
 ```puml
-Component(controller, "控制器组件", "REST API", "处理HTTP请求")
-Component(service, "业务服务", "Service Layer", "业务逻辑处理") 
-Component(repository, "数据访问", "Repository Pattern", "数据持久化")
-ComponentDb(db, "数据库", "MySQL", "数据存储")
+Component(router, "路由组件", "React Router", "页面路由管理")
+Component(store, "状态管理", "Zustand/Redux", "全局状态管理")
+Component(hooks, "自定义Hooks", "React Hooks", "业务逻辑封装")
+Component(components, "UI组件", "React Components", "用户界面组件")
+Component(services, "API服务", "Axios/Fetch", "HTTP请求封装")
+Component(utils, "工具函数", "TypeScript Utils", "通用工具方法")
+ComponentDb(localStorage, "本地存储", "LocalStorage", "客户端数据缓存")
 ```
 
 ### 最佳实践
@@ -116,25 +142,33 @@ System(support, "支撑系统", "提供基础服务的系统")
 
 ### 外部系统
 ```puml
-System_Ext(payment, "支付系统", "第三方支付服务")
-System_Ext(notification, "通知系统", "短信、邮件通知服务")
-System_Ext(auth, "认证系统", "第三方身份认证服务")
+System_Ext(cdn, "CDN服务", "Cloudflare、AWS CloudFront等内容分发网络")
+System_Ext(auth, "认证服务", "Auth0、Supabase Auth等身份认证服务")
+System_Ext(analytics, "数据分析", "Google Analytics、Mixpanel等分析服务")
+System_Ext(monitoring, "监控服务", "Sentry、LogRocket等错误监控")
+System_Ext(deployment, "部署平台", "Vercel、Netlify等部署服务")
+System_Ext(payment, "支付系统", "Stripe、PayPal等支付服务")
+System_Ext(notification, "通知推送", "Firebase Cloud Messaging等推送服务")
+System_Ext(storage, "云存储", "AWS S3、Cloudinary等文件存储")
 ```
 
 ## 关系类型和协议
 
 ### 同步通信
 ```puml
-Rel(a, b, "同步调用", "HTTPS/REST API")
-Rel(a, b, "数据查询", "SQL/JDBC")  
-Rel(a, b, "RPC调用", "gRPC")
+Rel(a, b, "API调用", "HTTPS/REST API")
+Rel(a, b, "GraphQL查询", "HTTPS/GraphQL")  
+Rel(a, b, "RPC调用", "tRPC/gRPC")
+Rel(a, b, "资源请求", "HTTPS/静态资源")
 ```
 
 ### 异步通信
 ```puml
-Rel(a, b, "消息发送", "Message Queue/Kafka")
-Rel(a, b, "事件通知", "WebSocket")
-Rel(a, b, "批量处理", "Scheduled Job")
+Rel(a, b, "实时通信", "WebSocket/Socket.io")
+Rel(a, b, "服务器推送", "Server-Sent Events")
+Rel(a, b, "消息队列", "Redis Pub/Sub")
+Rel(a, b, "事件触发", "Webhook")
+Rel(a, b, "后台任务", "Web Workers/Service Workers")
 ```
 
 ### 数据流向
@@ -178,16 +212,18 @@ Enterprise_Boundary(enterprise, "企业边界") {
 - [ ] 是否避免了技术实现细节？
 
 ### 容器图检查  
-- [ ] 是否显示了主要的技术选择？
-- [ ] 容器职责是否清晰分离？
-- [ ] 是否标注了关键的通信协议？
-- [ ] 部署边界是否明确？
+- [ ] 是否显示了主要的前端技术选择？
+- [ ] 是否区分了Web端、移动端、小程序等不同容器？
+- [ ] 是否标注了关键的通信协议（REST、GraphQL、WebSocket）？
+- [ ] 部署边界是否明确（CDN、Edge、服务器端）？
+- [ ] 是否考虑了微前端架构的拆分？
 
 ### 组件图检查
-- [ ] 组件职责是否单一明确？
-- [ ] 是否体现了重要的设计模式？
-- [ ] 组件间依赖是否合理？
-- [ ] 是否避免了过度设计？
+- [ ] 前端组件职责是否单一明确（UI、状态、业务逻辑）？
+- [ ] 是否体现了重要的前端设计模式（Hooks、HOC、Context）？
+- [ ] 组件间依赖是否合理（避免循环依赖）？
+- [ ] 是否避免了过度抽象和过度拆分？
+- [ ] 是否考虑了组件的可复用性和可维护性？
 
 ## 版本演进管理
 
@@ -204,16 +240,60 @@ note right : 主要变更：添加缓存层
 - 保留关键历史版本以供参考
 - 使用Git标签标记重要的架构里程碑
 
+## 大前端特殊架构模式
+
+### 微前端架构 (Micro-Frontend)
+```puml
+System_Boundary(mfe, "微前端架构") {
+    Container(shell, "主应用壳", "single-spa", "路由和应用加载")
+    Container(mfe1, "用户模块", "React", "用户管理功能")
+    Container(mfe2, "订单模块", "Vue", "订单管理功能")
+    Container(mfe3, "商品模块", "Angular", "商品管理功能")
+    Container(shared, "共享库", "Webpack Federation", "公共组件和工具")
+}
+
+Rel(shell, mfe1, "动态加载", "Module Federation")
+Rel(shell, mfe2, "动态加载", "Module Federation")
+Rel(shell, mfe3, "动态加载", "Module Federation")
+Rel(mfe1, shared, "使用", "共享依赖")
+Rel(mfe2, shared, "使用", "共享依赖")
+```
+
+### SSR/SSG架构模式
+```puml
+Container(nextjs, "Next.js应用", "React, SSR", "服务端渲染")
+Container(nuxtjs, "Nuxt.js应用", "Vue, SSR", "服务端渲染")
+Container(astro, "Astro应用", "Multi-Framework, SSG", "静态站点生成")
+Container_Ext(edge, "Edge运行时", "Vercel Edge", "边缘计算")
+
+Rel(nextjs, edge, "部署", "边缘函数")
+Rel(nuxtjs, edge, "部署", "边缘函数")
+```
+
+### 跨端开发架构
+```puml
+System_Boundary(crossplatform, "跨端开发架构") {
+    Container(rn, "React Native", "JavaScript", "iOS/Android应用")
+    Container(flutter, "Flutter应用", "Dart", "跨平台移动应用")
+    Container(electron, "Electron应用", "Web技术", "桌面应用")
+    Container(tauri, "Tauri应用", "Rust + Web", "轻量桌面应用")
+    Container(uniapp, "Uni-app", "Vue", "多端统一开发")
+}
+```
+
 ## 团队协作规范
 
 ### 评审流程
-1. 架构设计初稿完成后进行团队评审
-2. 重点关注系统边界和职责划分
-3. 验证外部依赖的必要性和可行性
-4. 确保技术选择的合理性
+1. 前端架构设计初稿完成后进行团队评审
+2. 重点关注多端一致性和技术栈选型
+3. 验证性能优化策略和用户体验
+4. 确保开发效率和维护成本的平衡
+5. 评估微前端拆分的合理性
 
 ### 维护责任
-- 架构师：负责整体架构设计和演进
-- 开发团队：负责具体实现和细节完善  
-- 产品团队：验证业务需求的完整性
-- 运维团队：确保部署和运维的可行性
+- 前端架构师：负责前端技术栈选型和架构设计
+- 前端开发团队：负责具体实现和组件开发
+- UI/UX设计师：确保用户体验的一致性
+- 产品团队：验证业务需求和用户体验
+- DevOps团队：确保CI/CD和部署的可行性
+- 性能优化团队：负责前端性能监控和优化

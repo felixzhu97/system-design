@@ -34,24 +34,37 @@ title 图表标题
 !include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
 !include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Dynamic.puml
 
-' AWS图标库
+' 云服务图标库
 !include https://raw.githubusercontent.com/plantuml-stdlib/AWS-PlantUML/master/dist/AWSCommon.puml
-
-' Azure图标库  
 !include https://raw.githubusercontent.com/plantuml-stdlib/Azure-PlantUML/master/dist/AzureCommon.puml
+
+' 前端技术图标库（如果可用）
+!include https://raw.githubusercontent.com/plantuml-stdlib/logos/master/dist/logosCommon.puml
+
+' 自定义前端颜色常量
+!define FRONTEND_PRIMARY #61DAFB   ' React蓝
+!define FRONTEND_SECONDARY #42B883 ' Vue绿  
+!define FRONTEND_ACCENT #FF6B6B    ' 活力橙
+!define FRONTEND_NEUTRAL #6B73FF   ' 紫色
 ```
 
 ## 元素定义语法
 
 ### 基础组件元素
 ```puml
-' 简单组件
-[组件名称] as alias
-component "组件名称" as alias  
-rectangle "矩形组件" as alias
-database "数据库" as alias
-cloud "云服务" as alias
-node "节点" as alias
+' 前端应用组件
+[Web应用] as webapp
+[移动应用] as mobileapp
+[小程序] as miniprogram
+[桌面应用] as desktopapp
+
+' 技术组件
+component "React组件" as reactcomp
+component "Vue组件" as vuecomp  
+rectangle "微前端模块" as microfrontend
+cloud "CDN服务" as cdn
+node "Edge节点" as edge
+database "本地存储" as localstorage
 ```
 
 ### 参与者和边界
@@ -66,24 +79,32 @@ database "数据存储" as db1
 
 ### 包和分组
 ```puml
-package "包名称" {
-    [组件1]
-    [组件2]
+package "前端应用" {
+    [Web界面]
+    [移动界面]
 }
 
-folder "文件夹" {
-    [文件1]
-    [文件2]
+folder "组件库" {
+    [UI组件]
+    [业务组件]
 }
 
-frame "框架" {
-    [模块1]
-    [模块2]
+frame "微前端" {
+    [主应用]
+    [子应用A]
+    [子应用B]
 }
 
-cloud "云环境" {
-    [服务1] 
-    [服务2]
+cloud "部署环境" {
+    [Vercel部署] 
+    [Netlify部署]
+    [CDN分发]
+}
+
+rectangle "状态管理" {
+    [全局状态]
+    [组件状态]
+    [路由状态]
 }
 ```
 
@@ -144,34 +165,50 @@ A ||--o{ B
 
 ### 颜色定义
 ```puml
-' 预定义颜色常量
-!define PRIMARY_COLOR #2E86AB
-!define SECONDARY_COLOR #A23B72
-!define SUCCESS_COLOR #28a745
-!define WARNING_COLOR #ffc107
-!define DANGER_COLOR #dc3545
-!define INFO_COLOR #17a2b8
+' 大前端技术栈颜色
+!define REACT_COLOR #61DAFB
+!define VUE_COLOR #4FC08D
+!define ANGULAR_COLOR #DD0031
+!define TYPESCRIPT_COLOR #3178C6
+!define JAVASCRIPT_COLOR #F7DF1E
+!define NODE_COLOR #339933
+!define NEXT_COLOR #000000
+!define NUXT_COLOR #00DC82
 
-' 应用颜色
-[组件] <<PRIMARY_COLOR>>
-database DB <<INFO_COLOR>>
+' 功能层颜色
+!define UI_COLOR #FF6B6B
+!define STATE_COLOR #4ECDC4
+!define API_COLOR #45B7D1
+!define UTILS_COLOR #96CEB4
+
+' 应用颜色示例
+[React应用] <<REACT_COLOR>>
+[Vue应用] <<VUE_COLOR>>
+[API服务] <<API_COLOR>>
+[状态管理] <<STATE_COLOR>>
 ```
 
 ### 组件样式
 ```puml
-' 背景色
-component C1 #lightblue
-[组件] #red
+' 前端技术栈背景色
+component ReactApp #61DAFB
+[Vue应用] #4FC08D
+[Angular应用] #DD0031
 
 ' 文字样式  
-component "**粗体组件**" as C1
-component "//斜体组件//" as C2
-component "__下划线组件__" as C3
+component "**React主应用**" as MainApp
+component "//Vue子模块//" as SubModule
+component "__TypeScript工具__" as Utils
 
-' 组件类型标注
-[Web服务] <<Service>>
-[数据库] <<Database>>
-[缓存] <<Cache>>
+' 前端组件类型标注
+[Web应用] <<Frontend>>
+[移动应用] <<Mobile>>
+[小程序] <<MiniProgram>>
+[桌面应用] <<Desktop>>
+[组件库] <<Library>>
+[工具函数] <<Utils>>
+[状态管理] <<Store>>
+[路由管理] <<Router>>
 ```
 
 ### 皮肤主题
@@ -315,17 +352,27 @@ ComponentB .. SharedNote
 
 ### 宏定义
 ```puml
-' 定义宏
-!define MICROSERVICE(name, tech) component name <<tech>>
+' 前端应用宏
+!define WEBAPP(name, tech) component name <<Frontend>> tech
+!define MOBILEAPP(name, tech) component name <<Mobile>> tech
+!define MINIPROGRAM(name, tech) component name <<MiniProgram>> tech
+
+' 前端技术栈宏
+!define REACT_APP(name) component name <<React>> #61DAFB
+!define VUE_APP(name) component name <<Vue>> #4FC08D
+!define NEXT_APP(name) component name <<Next.js>> #000000
 
 ' 使用宏
-MICROSERVICE(UserService, "Spring Boot")
-MICROSERVICE(OrderService, "Node.js")
+REACT_APP("用户管理前端")
+VUE_APP("数据展示面板")
+NEXT_APP("SSR应用")
 
-' 带参数的宏
-!define REL(from, to, label) from --> to : label
+' 前端关系宏
+!define API_CALL(from, to, label) from --> to : label\n(HTTPS/REST)
+!define WEBSOCKET(from, to, label) from ..> to : label\n(WebSocket)
 
-REL(UserService, Database, "查询用户")
+API_CALL(WebApp, API, "获取数据")
+WEBSOCKET(WebApp, Server, "实时通信")
 ```
 
 ## 性能优化技巧
@@ -419,16 +466,76 @@ show all connections
 !endif
 ```
 
+## 大前端专用图表模板
+
+### 微前端架构模板
+```puml
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title 微前端架构 - 容器图
+
+!define MFE_COLOR #FF6B6B
+!define SHELL_COLOR #4ECDC4
+!define SHARED_COLOR #45B7D1
+
+Container(shell, "主应用", "single-spa", "应用路由和生命周期管理") <<SHELL_COLOR>>
+Container(mfe1, "模块A", "React 18", "业务模块A") <<MFE_COLOR>>
+Container(mfe2, "模块B", "Vue 3", "业务模块B") <<MFE_COLOR>>
+Container(shared, "共享库", "Webpack 5", "公共组件和工具") <<SHARED_COLOR>>
+
+Rel(shell, mfe1, "加载", "Module Federation")
+Rel(shell, mfe2, "加载", "Module Federation")
+Rel(mfe1, shared, "依赖", "远程模块")
+Rel(mfe2, shared, "依赖", "远程模块")
+
+@enduml
+```
+
+### 前端技术栈对比模板
+```puml
+@startuml
+title 前端技术栈对比
+
+!define REACT_COLOR #61DAFB
+!define VUE_COLOR #4FC08D
+!define ANGULAR_COLOR #DD0031
+
+package "框架对比" {
+    [React生态] <<REACT_COLOR>>
+    [Vue生态] <<VUE_COLOR>>
+    [Angular生态] <<ANGULAR_COLOR>>
+}
+
+package "特性对比" {
+    rectangle "React特性" <<REACT_COLOR>> {
+        [JSX语法]
+        [Virtual DOM]
+        [Hooks机制]
+        [生态丰富]
+    }
+    
+    rectangle "Vue特性" <<VUE_COLOR>> {
+        [模板语法]
+        [双向绑定]
+        [Composition API]
+        [渐进式]
+    }
+}
+
+@enduml
+```
+
 ## 团队协作最佳实践
 
-### 文件组织
-- 使用统一的文件命名约定
-- 将公共样式和组件抽取到独立文件
-- 建立项目级的样式库和组件库
-- 定期整理和清理废弃的图表文件
+### 大前端文件组织
+- 按技术栈分类：`react/`, `vue/`, `mobile/`, `desktop/`
+- 按功能模块分类：`user-module/`, `order-module/`
+- 公共样式库：`common-styles.puml`, `frontend-colors.puml`
+- 微前端专用模板：`microfrontend-template.puml`
 
 ### 版本管理
 - 使用Git管理PlantUML源文件
-- 重要变更时导出图片存档
-- 在提交信息中说明架构变更的原因
-- 建立图表的评审和审批流程
+- 为不同技术栈版本打标签：`v1.0-react`, `v1.0-vue`
+- 在提交信息中说明架构变更的技术影响
+- 建立前端架构图的设计评审流程
