@@ -1,0 +1,106 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Dynamic.puml
+
+title 餐厅POS系统 - 点餐出餐数据流程图
+
+LAYOUT_WITH_LEGEND()
+
+Person(customer, "顾客", "扫码点餐用户")
+Container(customerApp, "点餐小程序", "微信小程序", "顾客点餐界面")
+Container(customerBFF, "顾客端 BFF", "Node.js", "点餐业务聚合")
+Container(apiGateway, "API网关", "Kong", "统一API管理")
+Container(orderService, "订单服务", "Node.js", "订单处理")
+Container(menuService, "菜单服务", "Java", "菜单管理")
+Container(inventoryService, "库存服务", "Node.js", "库存管理")
+Container(paymentService, "支付服务", "Node.js", "支付处理")
+Container(kitchenService, "厨房服务", "Node.js", "厨房管理")
+Container(notificationService, "通知服务", "Node.js", "消息通知")
+
+ContainerDb(menuDb, "菜单数据库", "MongoDB", "菜品信息存储")
+ContainerDb(orderDb, "订单数据库", "PostgreSQL", "订单信息存储")
+Container(orderCache, "订单缓存", "Redis", "订单状态缓存")
+Container(messageQueue, "消息队列", "RabbitMQ", "异步事件处理")
+Container_Ext(paymentGateway, "支付网关", "微信支付", "第三方支付")
+Container_Ext(printerService, "打印服务", "ESC/POS", "厨房打印机")
+Container_Ext(kitchenDisplay, "厨房显示屏", "Vue PWA", "厨房订单展示")
+
+' 扫码进入阶段
+Rel_D(customer, customerApp, "1. 扫桌码进入", "微信扫码")
+Rel_D(customerApp, customerBFF, "2. 获取桌台信息", "GET /api/table/{tableId}")
+Rel_D(customerBFF, apiGateway, "3. 转发请求", "HTTP/REST")
+Rel_D(apiGateway, orderService, "4. 查询桌台", "gRPC调用")
+Rel_D(orderService, orderDb, "5. 读取桌台状态", "PostgreSQL查询")
+Rel_U(orderDb, orderService, "6. 返回桌台信息", "桌台状态、人数")
+Rel_U(orderService, apiGateway, "7. 响应桌台数据", "JSON格式")
+Rel_U(apiGateway, customerBFF, "8. 返回聚合数据", "桌台和菜单信息")
+Rel_U(customerBFF, customerApp, "9. 渲染点餐界面", "菜单展示")
+Rel_U(customerApp, customer, "10. 显示菜单", "分类菜品列表")
+
+' 菜单浏览阶段
+Rel_D(customer, customerApp, "11. 浏览菜单", "滑动查看菜品")
+Rel_D(customerApp, customerBFF, "12. 获取菜品详情", "GET /api/menu/items")
+Rel_D(customerBFF, apiGateway, "13. 菜单请求", "HTTP/REST")
+Rel_D(apiGateway, menuService, "14. 查询菜品", "gRPC调用")
+Rel_D(menuService, menuDb, "15. 读取菜品数据", "MongoDB查询")
+Rel_U(menuDb, menuService, "16. 返回菜品列表", "包含价格、图片、描述")
+Rel_U(menuService, apiGateway, "17. 响应菜品数据", "JSON格式")
+Rel_U(apiGateway, customerBFF, "18. 返回菜单", "带库存状态")
+Rel_U(customerBFF, customerApp, "19. 更新菜单", "实时库存显示")
+Rel_U(customerApp, customer, "20. 显示菜品", "可点击添加")
+
+' 点餐下单阶段
+Rel_D(customer, customerApp, "21. 选择菜品", "添加到购物车")
+Rel_D(customerApp, customerBFF, "22. 提交订单", "POST /api/orders")
+Rel_D(customerBFF, apiGateway, "23. 订单请求", "HTTP/REST")
+Rel_D(apiGateway, orderService, "24. 创建订单", "gRPC调用")
+
+' 库存检查
+Rel_D(orderService, inventoryService, "25. 检查库存", "gRPC调用")
+Rel_U(inventoryService, orderService, "26. 库存充足", "确认可下单")
+
+' 订单创建
+Rel_D(orderService, orderDb, "27. 创建订单", "PostgreSQL写入")
+Rel_D(orderService, orderCache, "28. 缓存订单", "Redis存储")
+Rel_D(orderService, messageQueue, "29. 发布订单事件", "订单创建消息")
+
+' 支付处理
+Rel_D(orderService, paymentService, "30. 发起支付", "gRPC调用")
+Rel_D(paymentService, paymentGateway, "31. 调用支付", "微信支付API")
+Rel_U(paymentGateway, paymentService, "32. 支付成功", "支付确认")
+Rel_D(paymentService, messageQueue, "33. 支付事件", "支付成功消息")
+
+' 厨房接单
+Rel_D(messageQueue, kitchenService, "34. 厨房接单", "消费订单事件")
+Rel_D(kitchenService, orderDb, "35. 更新订单状态", "已接单状态")
+Rel_D(kitchenService, printerService, "36. 打印厨房单", "ESC/POS指令")
+Rel_D(kitchenService, kitchenDisplay, "37. 显示订单", "WebSocket推送")
+
+' 库存扣减
+Rel_D(messageQueue, inventoryService, "38. 扣减库存", "消费支付事件")
+Rel_D(inventoryService, menuDb, "39. 更新库存", "减少菜品库存")
+
+' 制作完成
+Rel_D(kitchenDisplay, kitchenService, "40. 确认出餐", "厨师点击完成")
+Rel_D(kitchenService, orderDb, "41. 更新状态", "制作完成")
+Rel_D(kitchenService, messageQueue, "42. 出餐事件", "菜品完成消息")
+
+' 顾客通知
+Rel_D(messageQueue, notificationService, "43. 发送通知", "消费出餐事件")
+Rel_U(notificationService, customerApp, "44. 推送通知", "微信小程序通知")
+Rel_U(customerApp, customer, "45. 出餐提醒", "请取餐通知")
+
+' 完成用餐
+Rel_D(customer, customerApp, "46. 确认取餐", "点击已取餐")
+Rel_D(customerApp, customerBFF, "47. 确认取餐", "PUT /api/orders/confirm")
+Rel_D(customerBFF, apiGateway, "48. 确认请求", "HTTP/REST")
+Rel_D(apiGateway, orderService, "49. 完成订单", "gRPC调用")
+Rel_D(orderService, orderDb, "50. 订单完成", "更新最终状态")
+
+' 数据流程说明
+note over customer, menuDb : "扫码点餐阶段：\n1. 扫桌码获取桌台信息\n2. 加载当前可用菜单\n3. 显示实时库存状态\n4. 支持多规格选择"
+
+note over orderService, paymentGateway : "下单支付阶段：\n1. 创建订单前检查库存\n2. 微信小程序内支付\n3. 支付成功后自动接单\n4. 异步处理避免阻塞"
+
+note over kitchenService, customer : "厨房出餐阶段：\n1. 自动打印厨房单据\n2. 厨房显示屏实时更新\n3. 出餐后自动通知顾客\n4. 顾客确认完成整个流程"
+
+@enduml 

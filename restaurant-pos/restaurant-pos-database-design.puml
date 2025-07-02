@@ -1,0 +1,402 @@
+@startuml
+
+title 餐厅POS系统 - 数据库设计图
+
+!define PRIMARY_COLOR #61DAFB
+!define SECONDARY_COLOR #4FC08D  
+!define ACCENT_COLOR #FF6B35
+!define KITCHEN_COLOR #9C27B0
+
+package "餐厅管理" <<PRIMARY_COLOR>> {
+    entity "餐厅表" as restaurant {
+        * restaurant_id : bigint <<PK>>
+        --
+        * restaurant_name : varchar(100)
+        * restaurant_code : varchar(50) <<UK>>
+        * address : varchar(500)
+        * phone : varchar(20)
+        * business_hours : json
+        * status : enum('active','inactive','maintenance')
+        * created_at : timestamp
+        * updated_at : timestamp
+    }
+    
+    entity "桌台表" as table_info {
+        * table_id : bigint <<PK>>
+        --
+        * restaurant_id : bigint <<FK>>
+        * table_number : varchar(20)
+        * table_name : varchar(50)
+        * capacity : int
+        * area : varchar(50)
+        * qr_code : varchar(500)
+        * status : enum('available','occupied','reserved','cleaning')
+        * position_x : decimal(10,2)
+        * position_y : decimal(10,2)
+        * created_at : timestamp
+    }
+    
+    entity "区域表" as area {
+        * area_id : bigint <<PK>>
+        --
+        * restaurant_id : bigint <<FK>>
+        * area_name : varchar(50)
+        * description : varchar(200)
+        * sort_order : int
+        * is_active : boolean
+    }
+}
+
+package "菜单管理" <<SECONDARY_COLOR>> {
+    entity "菜品分类表" as category {
+        * category_id : bigint <<PK>>
+        --
+        * restaurant_id : bigint <<FK>>
+        * category_name : varchar(100)
+        * parent_id : bigint
+        * sort_order : int
+        * image_url : varchar(500)
+        * is_active : boolean
+        * created_at : timestamp
+    }
+    
+    entity "菜品表" as menu_item {
+        * item_id : bigint <<PK>>
+        --
+        * restaurant_id : bigint <<FK>>
+        * category_id : bigint <<FK>>
+        * item_name : varchar(200)
+        * item_code : varchar(100) <<UK>>
+        * description : text
+        * price : decimal(10,2)
+        * cost : decimal(10,2)
+        * unit : varchar(20)
+        * prep_time : int
+        * calories : int
+        * allergens : json
+        * ingredients : json
+        * image_urls : json
+        * status : enum('available','unavailable','sold_out')
+        * is_recommended : boolean
+        * sort_order : int
+        * created_at : timestamp
+        * updated_at : timestamp
+    }
+    
+    entity "菜品规格表" as item_spec {
+        * spec_id : bigint <<PK>>
+        --
+        * item_id : bigint <<FK>>
+        * spec_name : varchar(100)
+        * spec_value : varchar(100)
+        * price_diff : decimal(10,2)
+        * cost_diff : decimal(10,2)
+        * sort_order : int
+        * is_active : boolean
+    }
+    
+    entity "套餐表" as combo {
+        * combo_id : bigint <<PK>>
+        --
+        * restaurant_id : bigint <<FK>>
+        * combo_name : varchar(200)
+        * description : text
+        * price : decimal(10,2)
+        * image_url : varchar(500)
+        * valid_from : date
+        * valid_to : date
+        * is_active : boolean
+        * created_at : timestamp
+    }
+    
+    entity "套餐菜品表" as combo_item {
+        * id : bigint <<PK>>
+        --
+        * combo_id : bigint <<FK>>
+        * item_id : bigint <<FK>>
+        * quantity : int
+        * is_optional : boolean
+    }
+}
+
+package "订单管理" <<ACCENT_COLOR>> {
+    entity "订单表" as order_info {
+        * order_id : bigint <<PK>>
+        --
+        * restaurant_id : bigint <<FK>>
+        * table_id : bigint <<FK>>
+        * order_number : varchar(50) <<UK>>
+        * order_type : enum('dine_in','takeaway','delivery')
+        * customer_count : int
+        * subtotal : decimal(10,2)
+        * discount : decimal(10,2)
+        * tax : decimal(10,2)
+        * total : decimal(10,2)
+        * status : enum('pending','confirmed','cooking','ready','served','paid','cancelled')
+        * payment_status : enum('unpaid','partial','paid','refunded')
+        * notes : text
+        * created_by : bigint <<FK>>
+        * created_at : timestamp
+        * updated_at : timestamp
+        * served_at : timestamp
+    }
+    
+    entity "订单明细表" as order_item {
+        * item_id : bigint <<PK>>
+        --
+        * order_id : bigint <<FK>>
+        * menu_item_id : bigint <<FK>>
+        * item_name : varchar(200)
+        * quantity : int
+        * unit_price : decimal(10,2)
+        * total_price : decimal(10,2)
+        * specs : json
+        * notes : varchar(500)
+        * status : enum('pending','confirmed','cooking','ready','served')
+        * kitchen_note : varchar(500)
+        * created_at : timestamp
+        * updated_at : timestamp
+    }
+    
+    entity "订单状态日志表" as order_status_log {
+        * log_id : bigint <<PK>>
+        --
+        * order_id : bigint <<FK>>
+        * from_status : varchar(50)
+        * to_status : varchar(50)
+        * changed_by : bigint <<FK>>
+        * change_reason : varchar(200)
+        * changed_at : timestamp
+    }
+}
+
+package "支付管理" {
+    entity "支付方式表" as payment_method {
+        * method_id : bigint <<PK>>
+        --
+        * method_name : varchar(50)
+        * method_code : varchar(20) <<UK>>
+        * is_active : boolean
+        * sort_order : int
+    }
+    
+    entity "支付记录表" as payment {
+        * payment_id : bigint <<PK>>
+        --
+        * order_id : bigint <<FK>>
+        * method_id : bigint <<FK>>
+        * transaction_id : varchar(100)
+        * amount : decimal(10,2)
+        * status : enum('pending','success','failed','cancelled','refunded')
+        * payment_time : timestamp
+        * refund_amount : decimal(10,2)
+        * refund_time : timestamp
+        * notes : varchar(500)
+        * created_at : timestamp
+    }
+    
+    entity "优惠券表" as coupon {
+        * coupon_id : bigint <<PK>>
+        --
+        * restaurant_id : bigint <<FK>>
+        * coupon_code : varchar(50) <<UK>>
+        * coupon_name : varchar(200)
+        * discount_type : enum('amount','percentage')
+        * discount_value : decimal(10,2)
+        * min_amount : decimal(10,2)
+        * max_discount : decimal(10,2)
+        * valid_from : datetime
+        * valid_to : datetime
+        * usage_limit : int
+        * used_count : int
+        * is_active : boolean
+        * created_at : timestamp
+    }
+}
+
+package "会员管理" {
+    entity "会员表" as member {
+        * member_id : bigint <<PK>>
+        --
+        * member_code : varchar(50) <<UK>>
+        * phone : varchar(20) <<UK>>
+        * name : varchar(100)
+        * gender : enum('male','female')
+        * birthday : date
+        * points : int
+        * balance : decimal(10,2)
+        * level : varchar(20)
+        * status : enum('active','inactive','frozen')
+        * last_visit : datetime
+        * total_spent : decimal(10,2)
+        * visit_count : int
+        * created_at : timestamp
+        * updated_at : timestamp
+    }
+    
+    entity "积分记录表" as point_record {
+        * record_id : bigint <<PK>>
+        --
+        * member_id : bigint <<FK>>
+        * order_id : bigint <<FK>>
+        * points : int
+        * type : enum('earn','redeem','expire','adjust')
+        * description : varchar(200)
+        * created_at : timestamp
+    }
+    
+    entity "充值记录表" as recharge_record {
+        * record_id : bigint <<PK>>
+        --
+        * member_id : bigint <<FK>>
+        * amount : decimal(10,2)
+        * payment_method : varchar(50)
+        * transaction_id : varchar(100)
+        * status : enum('success','failed','refunded')
+        * created_at : timestamp
+    }
+}
+
+package "厨房管理" <<KITCHEN_COLOR>> {
+    entity "厨房区域表" as kitchen_area {
+        * area_id : bigint <<PK>>
+        --
+        * restaurant_id : bigint <<FK>>
+        * area_name : varchar(50)
+        * description : varchar(200)
+        * is_active : boolean
+    }
+    
+    entity "厨房设备表" as kitchen_equipment {
+        * equipment_id : bigint <<PK>>
+        --
+        * area_id : bigint <<FK>>
+        * equipment_name : varchar(100)
+        * equipment_type : varchar(50)
+        * capacity : int
+        * status : enum('available','busy','maintenance','offline')
+        * last_maintenance : date
+    }
+    
+    entity "制作记录表" as cooking_record {
+        * record_id : bigint <<PK>>
+        --
+        * order_item_id : bigint <<FK>>
+        * area_id : bigint <<FK>>
+        * chef_id : bigint <<FK>>
+        * start_time : timestamp
+        * end_time : timestamp
+        * actual_time : int
+        * status : enum('started','finished','cancelled')
+        * notes : varchar(500)
+    }
+}
+
+package "员工管理" {
+    entity "员工表" as employee {
+        * employee_id : bigint <<PK>>
+        --
+        * restaurant_id : bigint <<FK>>
+        * employee_code : varchar(50) <<UK>>
+        * name : varchar(100)
+        * phone : varchar(20)
+        * email : varchar(100)
+        * position : varchar(50)
+        * department : varchar(50)
+        * hire_date : date
+        * salary : decimal(10,2)
+        * status : enum('active','inactive','resigned')
+        * permissions : json
+        * created_at : timestamp
+    }
+    
+    entity "排班表" as work_schedule {
+        * schedule_id : bigint <<PK>>
+        --
+        * employee_id : bigint <<FK>>
+        * work_date : date
+        * start_time : time
+        * end_time : time
+        * break_time : int
+        * shift_type : varchar(20)
+        * status : enum('scheduled','worked','absent','leave')
+    }
+}
+
+package "库存管理" {
+    entity "原料表" as ingredient {
+        * ingredient_id : bigint <<PK>>
+        --
+        * restaurant_id : bigint <<FK>>
+        * ingredient_name : varchar(200)
+        * ingredient_code : varchar(100) <<UK>>
+        * category : varchar(50)
+        * unit : varchar(20)
+        * cost_per_unit : decimal(10,2)
+        * min_stock : decimal(10,2)
+        * max_stock : decimal(10,2)
+        * current_stock : decimal(10,2)
+        * supplier : varchar(200)
+        * shelf_life : int
+        * created_at : timestamp
+    }
+    
+    entity "库存记录表" as stock_record {
+        * record_id : bigint <<PK>>
+        --
+        * ingredient_id : bigint <<FK>>
+        * type : enum('in','out','adjust','waste')
+        * quantity : decimal(10,2)
+        * unit_cost : decimal(10,2)
+        * total_cost : decimal(10,2)
+        * reference_id : bigint
+        * notes : varchar(500)
+        * created_by : bigint <<FK>>
+        * created_at : timestamp
+    }
+}
+
+' 关系定义
+restaurant ||--o{ table_info : "拥有"
+restaurant ||--o{ area : "包含"
+area ||--o{ table_info : "位于"
+
+restaurant ||--o{ category : "分类"
+restaurant ||--o{ menu_item : "菜品"
+category ||--o{ menu_item : "包含"
+menu_item ||--o{ item_spec : "规格"
+restaurant ||--o{ combo : "套餐"
+combo ||--o{ combo_item : "包含"
+menu_item ||--o{ combo_item : "组成"
+
+restaurant ||--o{ order_info : "订单"
+table_info ||--o{ order_info : "对应"
+order_info ||--o{ order_item : "明细"
+menu_item ||--o{ order_item : "商品"
+order_info ||--o{ order_status_log : "状态"
+employee ||--o{ order_info : "创建"
+employee ||--o{ order_status_log : "操作"
+
+order_info ||--o{ payment : "支付"
+payment_method ||--o{ payment : "方式"
+restaurant ||--o{ coupon : "优惠券"
+
+member ||--o{ order_info : "下单"
+member ||--o{ point_record : "积分"
+order_info ||--o{ point_record : "获得"
+member ||--o{ recharge_record : "充值"
+
+restaurant ||--o{ kitchen_area : "厨房"
+kitchen_area ||--o{ kitchen_equipment : "设备"
+kitchen_area ||--o{ cooking_record : "制作"
+order_item ||--o{ cooking_record : "记录"
+employee ||--o{ cooking_record : "厨师"
+
+restaurant ||--o{ employee : "员工"
+employee ||--o{ work_schedule : "排班"
+
+restaurant ||--o{ ingredient : "原料"
+ingredient ||--o{ stock_record : "库存"
+employee ||--o{ stock_record : "操作"
+
+@enduml 

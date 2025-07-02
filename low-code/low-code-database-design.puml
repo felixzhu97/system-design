@@ -2,261 +2,342 @@
 
 title 低代码平台 - 数据库设计图
 
-!define PRIMARY_COLOR #2E86AB
-!define SECONDARY_COLOR #A23B72  
-!define ACCENT_COLOR #F18F01
+!define PRIMARY_COLOR #61DAFB
+!define SECONDARY_COLOR #4FC08D  
+!define ACCENT_COLOR #FF6B35
+!define AI_COLOR #9C27B0
 
-package "租户管理" <<PRIMARY_COLOR>> {
-    entity "租户表" as tenant {
-        * tenant_id : bigint <<PK>>
-        --
-        * tenant_code : varchar(50) <<UK>>
-        * tenant_name : varchar(100)
-        * status : varchar(20)
-        * max_users : int
-        * expire_time : datetime
-        * created_time : datetime
-        * updated_time : datetime
-    }
-    
+package "用户权限管理" <<PRIMARY_COLOR>> {
     entity "用户表" as user {
         * user_id : bigint <<PK>>
         --
-        * tenant_id : bigint <<FK>>
+        * email : varchar(100) <<UK>>
         * username : varchar(50) <<UK>>
-        * password : varchar(100)
-        * real_name : varchar(50)
-        * email : varchar(100)
-        * phone : varchar(20)
-        * status : varchar(20)
-        * last_login_time : datetime
-        * created_time : datetime
+        * password_hash : varchar(255)
+        * display_name : varchar(100)
+        * avatar_url : varchar(500)
+        * user_type : enum('admin','developer','business')
+        * status : enum('active','inactive','blocked')
+        * created_at : timestamp
+        * updated_at : timestamp
+        * last_login_at : timestamp
     }
     
-    entity "角色表" as role {
-        * role_id : bigint <<PK>>
+    entity "团队表" as team {
+        * team_id : bigint <<PK>>
         --
-        * tenant_id : bigint <<FK>>
-        * role_code : varchar(50)
-        * role_name : varchar(100)
+        * team_name : varchar(100)
+        * team_code : varchar(50) <<UK>>
         * description : text
-        * status : varchar(20)
-        * created_time : datetime
+        * owner_id : bigint <<FK>>
+        * plan_type : enum('free','pro','enterprise')
+        * status : enum('active','suspended')
+        * created_at : timestamp
     }
     
-    entity "用户角色关联表" as user_role {
-        * user_id : bigint <<FK>>
-        * role_id : bigint <<FK>>
+    entity "用户团队关系表" as user_team {
+        * id : bigint <<PK>>
         --
-        * created_time : datetime
+        * user_id : bigint <<FK>>
+        * team_id : bigint <<FK>>
+        * role : enum('owner','admin','developer','viewer')
+        * permissions : json
+        * joined_at : timestamp
     }
 }
 
-package "应用管理" <<SECONDARY_COLOR>> {
-    entity "应用表" as application {
-        * app_id : bigint <<PK>>
+package "项目管理" <<SECONDARY_COLOR>> {
+    entity "项目表" as project {
+        * project_id : bigint <<PK>>
         --
-        * tenant_id : bigint <<FK>>
-        * app_code : varchar(50) <<UK>>
-        * app_name : varchar(100)
-        * app_type : varchar(20)
+        * team_id : bigint <<FK>>
+        * project_name : varchar(200)
+        * project_code : varchar(100) <<UK>>
         * description : text
-        * icon : varchar(200)
-        * status : varchar(20)
-        * version : varchar(20)
-        * created_by : bigint
-        * created_time : datetime
-        * updated_time : datetime
-    }
-    
-    entity "应用版本表" as app_version {
-        * version_id : bigint <<PK>>
-        --
-        * app_id : bigint <<FK>>
-        * version_number : varchar(20)
-        * version_name : varchar(100)
-        * config_data : json
-        * status : varchar(20)
-        * published_time : datetime
-        * created_time : datetime
+        * project_type : enum('web','mobile','miniprogram','desktop')
+        * framework : enum('react','vue','angular','flutter')
+        * template_id : bigint <<FK>>
+        * config : json
+        * status : enum('developing','published','archived')
+        * created_by : bigint <<FK>>
+        * created_at : timestamp
+        * updated_at : timestamp
     }
     
     entity "页面表" as page {
         * page_id : bigint <<PK>>
         --
-        * app_id : bigint <<FK>>
-        * page_code : varchar(50)
-        * page_name : varchar(100)
-        * page_type : varchar(20)
-        * layout_config : json
-        * route_path : varchar(200)
+        * project_id : bigint <<FK>>
+        * page_name : varchar(200)
+        * page_path : varchar(500)
+        * page_title : varchar(200)
+        * page_type : enum('page','dialog','drawer','component')
         * parent_id : bigint
         * sort_order : int
-        * status : varchar(20)
-        * created_time : datetime
+        * is_home : boolean
+        * seo_config : json
+        * created_at : timestamp
+        * updated_at : timestamp
+    }
+    
+    entity "页面版本表" as page_version {
+        * version_id : bigint <<PK>>
+        --
+        * page_id : bigint <<FK>>
+        * version_number : varchar(20)
+        * design_data : json
+        * generated_code : text
+        * changelog : text
+        * created_by : bigint <<FK>>
+        * created_at : timestamp
+        * is_published : boolean
+    }
+}
+
+package "组件系统" <<ACCENT_COLOR>> {
+    entity "组件库表" as component_library {
+        * library_id : bigint <<PK>>
+        --
+        * library_name : varchar(100)
+        * library_code : varchar(50) <<UK>>
+        * description : text
+        * version : varchar(20)
+        * npm_package : varchar(200)
+        * framework : enum('react','vue','angular')
+        * is_public : boolean
+        * download_count : int
+        * star_count : int
+        * created_by : bigint <<FK>>
+        * created_at : timestamp
     }
     
     entity "组件表" as component {
         * component_id : bigint <<PK>>
         --
-        * page_id : bigint <<FK>>
-        * component_type : varchar(50)
+        * library_id : bigint <<FK>>
         * component_name : varchar(100)
-        * config_data : json
-        * style_config : json
-        * event_config : json
-        * parent_id : bigint
-        * sort_order : int
-        * created_time : datetime
+        * component_code : varchar(100)
+        * category : varchar(50)
+        * tags : json
+        * description : text
+        * props_schema : json
+        * style_schema : json
+        * event_schema : json
+        * preview_image : varchar(500)
+        * demo_code : text
+        * is_container : boolean
+        * usage_count : int
+        * created_at : timestamp
+    }
+    
+    entity "组件实例表" as component_instance {
+        * instance_id : bigint <<PK>>
+        --
+        * page_id : bigint <<FK>>
+        * component_id : bigint <<FK>>
+        * instance_name : varchar(100)
+        * parent_instance_id : bigint
+        * props_data : json
+        * style_data : json
+        * event_bindings : json
+        * position : json
+        * z_index : int
+        * is_locked : boolean
+        * is_hidden : boolean
+        * created_at : timestamp
     }
 }
 
-package "数据模型" <<ACCENT_COLOR>> {
+package "模板市场" {
+    entity "模板表" as template {
+        * template_id : bigint <<PK>>
+        --
+        * template_name : varchar(200)
+        * template_code : varchar(100) <<UK>>
+        * category : varchar(50)
+        * tags : json
+        * description : text
+        * preview_images : json
+        * demo_url : varchar(500)
+        * price : decimal(10,2)
+        * is_free : boolean
+        * download_count : int
+        * rating : decimal(3,2)
+        * created_by : bigint <<FK>>
+        * created_at : timestamp
+    }
+    
+    entity "模板页面表" as template_page {
+        * id : bigint <<PK>>
+        --
+        * template_id : bigint <<FK>>
+        * page_name : varchar(200)
+        * page_data : json
+        * sort_order : int
+    }
+}
+
+package "数据模型" {
+    entity "数据源表" as data_source {
+        * source_id : bigint <<PK>>
+        --
+        * project_id : bigint <<FK>>
+        * source_name : varchar(100)
+        * source_type : enum('rest_api','graphql','database','mock')
+        * connection_config : json
+        * auth_config : json
+        * is_active : boolean
+        * created_at : timestamp
+    }
+    
     entity "数据模型表" as data_model {
         * model_id : bigint <<PK>>
         --
-        * app_id : bigint <<FK>>
-        * model_code : varchar(50)
+        * project_id : bigint <<FK>>
+        * source_id : bigint <<FK>>
         * model_name : varchar(100)
-        * table_name : varchar(100)
-        * description : text
-        * created_time : datetime
+        * model_code : varchar(100)
+        * fields_schema : json
+        * relationships : json
+        * validation_rules : json
+        * created_at : timestamp
     }
     
-    entity "字段表" as field {
-        * field_id : bigint <<PK>>
+    entity "API接口表" as api_endpoint {
+        * endpoint_id : bigint <<PK>>
         --
-        * model_id : bigint <<FK>>
-        * field_code : varchar(50)
-        * field_name : varchar(100)
-        * field_type : varchar(30)
-        * field_length : int
-        * is_required : boolean
-        * is_unique : boolean
-        * default_value : varchar(200)
-        * validation_rule : text
-        * sort_order : int
-        * created_time : datetime
-    }
-    
-    entity "关联关系表" as relation {
-        * relation_id : bigint <<PK>>
-        --
-        * source_model_id : bigint <<FK>>
-        * target_model_id : bigint <<FK>>
-        * relation_type : varchar(20)
-        * source_field : varchar(50)
-        * target_field : varchar(50)
-        * created_time : datetime
+        * project_id : bigint <<FK>>
+        * source_id : bigint <<FK>>
+        * endpoint_name : varchar(100)
+        * method : enum('GET','POST','PUT','DELETE')
+        * path : varchar(500)
+        * request_schema : json
+        * response_schema : json
+        * mock_data : json
+        * created_at : timestamp
     }
 }
 
-package "工作流" <<NEUTRAL_COLOR>> {
-    entity "流程定义表" as workflow_definition {
-        * definition_id : bigint <<PK>>
+package "AI智能助手" <<AI_COLOR>> {
+    entity "AI会话表" as ai_conversation {
+        * conversation_id : bigint <<PK>>
         --
-        * app_id : bigint <<FK>>
-        * process_key : varchar(50) <<UK>>
-        * process_name : varchar(100)
-        * bpmn_xml : text
-        * version : int
-        * status : varchar(20)
-        * created_time : datetime
+        * user_id : bigint <<FK>>
+        * project_id : bigint <<FK>>
+        * conversation_type : enum('design','code','optimization')
+        * context_data : json
+        * created_at : timestamp
+        * updated_at : timestamp
     }
     
-    entity "流程实例表" as workflow_instance {
-        * instance_id : bigint <<PK>>
+    entity "AI消息表" as ai_message {
+        * message_id : bigint <<PK>>
         --
-        * definition_id : bigint <<FK>>
-        * business_key : varchar(100)
-        * initiator_id : bigint
-        * current_node : varchar(100)
-        * status : varchar(20)
-        * start_time : datetime
-        * end_time : datetime
+        * conversation_id : bigint <<FK>>
+        * role : enum('user','assistant','system')
+        * content : text
+        * attachments : json
+        * tokens_used : int
+        * model_version : varchar(50)
+        * created_at : timestamp
     }
     
-    entity "任务表" as task {
-        * task_id : bigint <<PK>>
+    entity "AI生成记录表" as ai_generation {
+        * generation_id : bigint <<PK>>
         --
-        * instance_id : bigint <<FK>>
-        * task_key : varchar(50)
-        * task_name : varchar(100)
-        * assignee_id : bigint
-        * status : varchar(20)
-        * create_time : datetime
-        * complete_time : datetime
+        * user_id : bigint <<FK>>
+        * project_id : bigint <<FK>>
+        * generation_type : enum('component','page','code','style')
+        * input_prompt : text
+        * output_result : json
+        * model_used : varchar(50)
+        * tokens_consumed : int
+        * quality_score : decimal(3,2)
+        * user_feedback : enum('positive','negative','neutral')
+        * created_at : timestamp
     }
 }
 
-package "运行时数据" {
-    entity "表单数据表" as form_data {
-        * data_id : bigint <<PK>>
+package "应用部署" {
+    entity "部署环境表" as deployment_env {
+        * env_id : bigint <<PK>>
         --
-        * app_id : bigint <<FK>>
-        * model_id : bigint <<FK>>
-        * form_data : json
-        * created_by : bigint
-        * created_time : datetime
-        * updated_time : datetime
+        * project_id : bigint <<FK>>
+        * env_name : varchar(100)
+        * env_type : enum('development','staging','production')
+        * platform : enum('vercel','netlify','aws','aliyun')
+        * domain : varchar(200)
+        * config : json
+        * status : enum('active','inactive','error')
+        * created_at : timestamp
     }
     
-    entity "文件表" as file {
-        * file_id : bigint <<PK>>
+    entity "部署记录表" as deployment {
+        * deployment_id : bigint <<PK>>
         --
-        * app_id : bigint <<FK>>
-        * file_name : varchar(200)
-        * file_path : varchar(500)
-        * file_size : bigint
-        * file_type : varchar(50)
-        * uploaded_by : bigint
-        * uploaded_time : datetime
+        * project_id : bigint <<FK>>
+        * env_id : bigint <<FK>>
+        * version : varchar(50)
+        * commit_hash : varchar(100)
+        * build_status : enum('pending','building','success','failed')
+        * build_log : text
+        * deployed_url : varchar(500)
+        * deployed_by : bigint <<FK>>
+        * deployed_at : timestamp
     }
-    
+}
+
+package "操作审计" {
     entity "操作日志表" as operation_log {
         * log_id : bigint <<PK>>
         --
-        * app_id : bigint <<FK>>
         * user_id : bigint <<FK>>
+        * project_id : bigint <<FK>>
         * operation_type : varchar(50)
-        * operation_desc : varchar(500)
-        * request_data : text
-        * response_data : text
-        * ip_address : varchar(50)
-        * created_time : datetime
+        * resource_type : varchar(50)
+        * resource_id : bigint
+        * operation_data : json
+        * ip_address : varchar(45)
+        * user_agent : varchar(500)
+        * created_at : timestamp
     }
 }
 
 ' 关系定义
-tenant ||--o{ user : "拥有"
-tenant ||--o{ role : "拥有"
-tenant ||--o{ application : "拥有"
-user }o--o{ role : "分配"
-user ||--o{ application : "创建"
+user ||--o{ user_team : "加入"
+team ||--o{ user_team : "成员"
+team ||--o{ project : "拥有"
+user ||--o{ project : "创建"
 
-application ||--o{ app_version : "版本"
-application ||--o{ page : "包含"
-application ||--o{ data_model : "包含"
-application ||--o{ workflow_definition : "包含"
-application ||--o{ form_data : "数据"
-application ||--o{ file : "文件"
-application ||--o{ operation_log : "日志"
+project ||--o{ page : "包含"
+page ||--o{ page_version : "版本"
+page ||--o{ component_instance : "实例"
+user ||--o{ page_version : "创建"
 
-page ||--o{ component : "包含"
-page ||--o{ page : "子页面"
+component_library ||--o{ component : "包含"
+component ||--o{ component_instance : "实例化"
+user ||--o{ component_library : "创建"
 
-data_model ||--o{ field : "字段"
-data_model ||--o{ relation : "源模型"
-data_model ||--o{ relation : "目标模型"
-data_model ||--o{ form_data : "数据"
+template ||--o{ template_page : "包含"
+user ||--o{ template : "创建"
+template ||--o{ project : "使用"
 
-workflow_definition ||--o{ workflow_instance : "实例"
-workflow_instance ||--o{ task : "任务"
+project ||--o{ data_source : "数据源"
+project ||--o{ data_model : "数据模型"
+data_source ||--o{ data_model : "关联"
+data_source ||--o{ api_endpoint : "接口"
 
-user ||--o{ workflow_instance : "发起"
-user ||--o{ task : "分配"
-user ||--o{ form_data : "创建"
-user ||--o{ file : "上传"
+user ||--o{ ai_conversation : "发起"
+project ||--o{ ai_conversation : "关联"
+ai_conversation ||--o{ ai_message : "消息"
+user ||--o{ ai_generation : "生成"
+
+project ||--o{ deployment_env : "环境"
+deployment_env ||--o{ deployment : "部署"
+user ||--o{ deployment : "执行"
+
 user ||--o{ operation_log : "操作"
+project ||--o{ operation_log : "日志"
 
+@enduml 
 @enduml 

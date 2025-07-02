@@ -5,144 +5,201 @@ title 低代码平台 - 系统架构设计图
 
 LAYOUT_WITH_LEGEND()
 
-!define PRIMARY_COLOR #2E86AB
-!define SECONDARY_COLOR #A23B72  
-!define ACCENT_COLOR #F18F01
-!define NEUTRAL_COLOR #C73E1D
+!define REACT_COLOR #61DAFB
+!define VUE_COLOR #4FC08D
+!define NODE_COLOR #339933
+!define PYTHON_COLOR #3776AB
+!define TYPESCRIPT_COLOR #3178C6
+!define AI_COLOR #FF6B35
+!define CACHE_COLOR #DC382D
 
-package "客户端层" {
-    [Web管理后台] as WebAdmin <<PRIMARY_COLOR>>
-    [可视化设计器] as VisualDesigner <<PRIMARY_COLOR>>
-    [移动端应用] as MobileApp <<PRIMARY_COLOR>>
-    [生成的应用] as GeneratedApp <<ACCENT_COLOR>>
-}
-
-package "网关层" {
-    [API网关] as APIGateway <<SECONDARY_COLOR>>
-    [负载均衡] as LoadBalancer <<SECONDARY_COLOR>>
-    [反向代理] as ReverseProxy <<SECONDARY_COLOR>>
-}
-
-package "应用服务层" {
-    package "设计时服务" {
-        [设计器服务] as DesignerService <<Service>>
-        [表单设计器] as FormDesigner <<Service>>
-        [页面设计器] as PageDesigner <<Service>>
-        [数据模型设计器] as DataModelDesigner <<Service>>
-        [流程设计器] as WorkflowDesigner <<Service>>
+package "多端设计层" {
+    package "Web端设计工具" {
+        [可视化设计器] as WebDesigner <<REACT_COLOR>>
+        [代码编辑器] as CodeEditor <<TYPESCRIPT_COLOR>>
+        [预览调试器] as PreviewDebugger <<REACT_COLOR>>
     }
     
-    package "运行时服务" {
-        [应用引擎] as AppEngine <<Service>>
-        [表单引擎] as FormEngine <<Service>>
-        [工作流引擎] as WorkflowEngine <<Service>>
-        [数据引擎] as DataEngine <<Service>>
-        [报表引擎] as ReportEngine <<Service>>
+    package "移动端设计" {
+        [移动设计器] as MobileDesigner <<REACT_COLOR>>
+        [小程序设计器] as MiniProgramDesigner <<Frontend>>
+        [响应式预览] as ResponsivePreview <<Frontend>>
+    }
+    
+    package "IDE集成" {
+        [VS Code插件] as VSCodeExtension <<TYPESCRIPT_COLOR>>
+        [WebStorm插件] as WebStormPlugin <<TYPESCRIPT_COLOR>>
+        [CLI工具] as CLITool <<NODE_COLOR>>
+    }
+    
+    package "管理后台" {
+        [平台管理] as AdminPortal <<VUE_COLOR>>
+        [用户管理] as UserManagement <<VUE_COLOR>>
+        [组件市场] as ComponentMarket <<VUE_COLOR>>
+    }
+}
+
+package "BFF聚合层" {
+    [设计器 BFF] as DesignerBFF <<NODE_COLOR>>
+    [预览 BFF] as PreviewBFF <<NODE_COLOR>>
+    [管理 BFF] as AdminBFF <<NODE_COLOR>>
+    [市场 BFF] as MarketBFF <<NODE_COLOR>>
+}
+
+package "API网关层" {
+    [主API网关] as MainGateway <<Middleware>>
+    [内部网关] as InternalGateway <<Middleware>>
+    [认证网关] as AuthGateway <<Middleware>>
+}
+
+package "核心引擎层" {
+    package "设计引擎" {
+        [画布引擎] as CanvasEngine <<NODE_COLOR>>
+        [组件引擎] as ComponentEngine <<NODE_COLOR>>
+        [布局引擎] as LayoutEngine <<NODE_COLOR>>
+        [交互引擎] as InteractionEngine <<NODE_COLOR>>
+    }
+    
+    package "代码生成引擎" {
+        [React代码生成] as ReactCodeGen <<NODE_COLOR>>
+        [Vue代码生成] as VueCodeGen <<NODE_COLOR>>
+        [小程序代码生成] as MiniProgramCodeGen <<NODE_COLOR>>
+        [原生代码生成] as NativeCodeGen <<NODE_COLOR>>
+    }
+    
+    package "AI智能引擎" {
+        [智能设计助手] as AIDesignAssistant <<AI_COLOR>>
+        [代码智能生成] as AICodeGenerator <<AI_COLOR>>
+        [组件智能推荐] as AIComponentRecommend <<AI_COLOR>>
+        [UI智能优化] as AIUIOptimizer <<AI_COLOR>>
+    }
+    
+    package "运行时引擎" {
+        [预览引擎] as PreviewEngine <<NODE_COLOR>>
+        [调试引擎] as DebugEngine <<NODE_COLOR>>
+        [热更新引擎] as HotReloadEngine <<NODE_COLOR>>
+        [性能监控引擎] as PerformanceEngine <<NODE_COLOR>>
+    }
+}
+
+package "业务服务层" {
+    package "核心服务" {
+        [项目服务] as ProjectService <<NODE_COLOR>>
+        [页面服务] as PageService <<NODE_COLOR>>
+        [组件服务] as ComponentService <<NODE_COLOR>>
+        [模板服务] as TemplateService <<NODE_COLOR>>
     }
     
     package "平台服务" {
-        [用户服务] as UserService <<Service>>
-        [权限服务] as PermissionService <<Service>>
-        [租户服务] as TenantService <<Service>>
-        [配置服务] as ConfigService <<Service>>
-        [监控服务] as MonitorService <<Service>>
+        [用户服务] as UserService <<NODE_COLOR>>
+        [权限服务] as PermissionService <<NODE_COLOR>>
+        [团队协作服务] as CollaborationService <<NODE_COLOR>>
+        [版本管理服务] as VersionService <<NODE_COLOR>>
     }
     
-    package "代码生成与部署" {
-        [代码生成器] as CodeGenerator <<Service>>
-        [应用打包器] as AppPackager <<Service>>
-        [部署管理器] as DeployManager <<Service>>
-        [版本管理器] as VersionManager <<Service>>
+    package "构建部署服务" {
+        [构建服务] as BuildService <<NODE_COLOR>>
+        [部署服务] as DeployService <<NODE_COLOR>>
+        [CDN服务] as CDNService <<CDN>>
+        [监控服务] as MonitorService <<Monitor>>
     }
 }
 
-package "中间件层" {
-    [消息队列] as MessageQueue <<Middleware>>
-    [分布式缓存] as DistributedCache <<Cache>>
-    [搜索引擎] as SearchEngine <<Middleware>>
-    [定时任务] as ScheduledJobs <<Middleware>>
-    [文件存储] as FileStorage <<Storage>>
+package "数据存储层" {
+    package "业务数据库" {
+        [项目数据库] as ProjectDB <<Database>>
+        [用户数据库] as UserDB <<Database>>
+        [组件数据库] as ComponentDB <<Database>>
+    }
+    
+    package "文件存储" {
+        [代码仓库] as CodeRepository <<Storage>>
+        [资源存储] as AssetStorage <<Storage>>
+        [构建产物] as BuildArtifacts <<Storage>>
+    }
+    
+    package "缓存层" {
+        [设计缓存] as DesignCache <<CACHE_COLOR>>
+        [预览缓存] as PreviewCache <<CACHE_COLOR>>
+        [构建缓存] as BuildCache <<CACHE_COLOR>>
+    }
+    
+    package "搜索分析" {
+        [全文搜索] as FullTextSearch <<Search>>
+        [日志分析] as LogAnalysis <<Analytics>>
+        [用户行为分析] as UserAnalytics <<Analytics>>
+    }
 }
 
-package "数据层" {
-    [平台数据库] as PlatformDB <<Database>>
-    [业务数据库] as BusinessDB <<Database>>
-    [配置数据库] as ConfigDB <<Database>>
-    [日志数据库] as LogDB <<Database>>
-    [数据仓库] as DataWarehouse <<Database>>
+package "基础设施层" {
+    [消息队列] as MessageQueue <<Middleware>>
+    [任务调度] as TaskScheduler <<Middleware>>
+    [配置中心] as ConfigCenter <<Middleware>>
+    [服务注册] as ServiceRegistry <<Middleware>>
+    [监控告警] as AlertSystem <<Monitor>>
 }
 
 package "外部集成" {
-    [企业SSO] as EnterpriseSSO <<External>>
-    [第三方API] as ThirdPartyAPI <<External>>
-    [容器平台] as ContainerPlatform <<External>>
-    [CI/CD平台] as CICDPlatform <<External>>
-    [监控平台] as MonitoringPlatform <<External>>
+    [AI大模型] as LLMService <<External>>
+    [云部署平台] as CloudPlatform <<External>>
+    [第三方组件库] as ThirdPartyComponents <<External>>
+    [设计工具集成] as DesignToolIntegration <<External>>
+    [数据源集成] as DataSourceIntegration <<External>>
 }
 
-' 客户端到网关的连接
-WebAdmin --> APIGateway : "HTTPS"
-VisualDesigner --> APIGateway : "HTTPS"
-MobileApp --> APIGateway : "HTTPS"
-GeneratedApp --> APIGateway : "HTTPS"
+' 前端到BFF连接
+WebDesigner --> DesignerBFF : "HTTPS/tRPC"
+MobileDesigner --> DesignerBFF : "HTTPS/REST"
+VSCodeExtension --> DesignerBFF : "WebSocket"
+AdminPortal --> AdminBFF : "HTTPS/REST"
+PreviewDebugger --> PreviewBFF : "HTTPS/WebSocket"
 
-' 网关层内部连接
-LoadBalancer --> ReverseProxy : "HTTP"
-ReverseProxy --> APIGateway : "HTTP"
+' BFF到网关连接
+DesignerBFF --> MainGateway : "HTTP/gRPC"
+PreviewBFF --> MainGateway : "HTTP/gRPC"
+AdminBFF --> AuthGateway : "HTTP/gRPC"
+MarketBFF --> MainGateway : "HTTP/gRPC"
 
-' 网关到服务层
-APIGateway --> DesignerService : "HTTP/gRPC"
-APIGateway --> AppEngine : "HTTP/gRPC"
-APIGateway --> UserService : "HTTP/gRPC"
+' 网关到引擎连接
+MainGateway --> CanvasEngine : "gRPC"
+MainGateway --> ComponentEngine : "gRPC"
+MainGateway --> ReactCodeGen : "gRPC"
+MainGateway --> PreviewEngine : "gRPC"
 
-' 设计时服务内部连接
-DesignerService --> FormDesigner : "RPC"
-DesignerService --> PageDesigner : "RPC"
-DesignerService --> DataModelDesigner : "RPC"
-DesignerService --> WorkflowDesigner : "RPC"
+' 引擎内部调用
+CanvasEngine --> InteractionEngine : "内部调用"
+ReactCodeGen --> AICodeGenerator : "gRPC"
+ComponentEngine --> AIComponentRecommend : "HTTP/API"
+PreviewEngine --> HotReloadEngine : "内部调用"
 
-' 运行时服务连接
-AppEngine --> FormEngine : "RPC"
-AppEngine --> WorkflowEngine : "RPC"
-AppEngine --> DataEngine : "RPC"
-AppEngine --> ReportEngine : "RPC"
+' 引擎到服务连接
+CanvasEngine --> PageService : "gRPC"
+ComponentEngine --> ComponentService : "gRPC"
+ReactCodeGen --> BuildService : "gRPC"
+PreviewEngine --> CDNService : "HTTP"
 
-' 平台服务连接
-AppEngine --> UserService : "RPC"
-AppEngine --> PermissionService : "RPC"
-AppEngine --> TenantService : "RPC"
-FormEngine --> ConfigService : "RPC"
+' 服务到存储连接
+ProjectService --> ProjectDB : "PostgreSQL"
+UserService --> UserDB : "PostgreSQL"
+ComponentService --> ComponentDB : "MongoDB"
+BuildService --> CodeRepository : "Git"
+PageService --> DesignCache : "Redis"
 
-' 代码生成和部署流程
-DesignerService --> CodeGenerator : "生成代码"
-CodeGenerator --> AppPackager : "打包应用"
-AppPackager --> DeployManager : "部署应用"
-DeployManager --> VersionManager : "版本管理"
+' AI服务集成
+AIDesignAssistant --> LLMService : "HTTPS/API"
+AICodeGenerator --> LLMService : "HTTPS/API"
+AIUIOptimizer --> DesignToolIntegration : "HTTPS/API"
 
-' 服务到中间件连接
-AppEngine --> DistributedCache : "Redis协议"
-WorkflowEngine --> MessageQueue : "AMQP"
-DesignerService --> FileStorage : "文件API"
-ReportEngine --> SearchEngine : "查询API"
-DeployManager --> ScheduledJobs : "定时任务"
+' 外部集成
+BuildService --> CloudPlatform : "HTTPS/API"
+ComponentService --> ThirdPartyComponents : "HTTPS/API"
+DeployService --> CDNService : "HTTPS/API"
+MonitorService --> AlertSystem : "HTTP/API"
 
-' 服务到数据库连接
-UserService --> PlatformDB : "JDBC"
-DataEngine --> BusinessDB : "JDBC"
-ConfigService --> ConfigDB : "JDBC"
-MonitorService --> LogDB : "JDBC"
-ReportEngine --> DataWarehouse : "JDBC"
-
-' 外部系统集成
-UserService --> EnterpriseSSO : "SAML/OAuth"
-AppEngine --> ThirdPartyAPI : "HTTPS/API"
-DeployManager --> ContainerPlatform : "K8s API"
-VersionManager --> CICDPlatform : "Webhook"
-MonitorService --> MonitoringPlatform : "Metrics API"
-
-' 数据同步
-PlatformDB --> DataWarehouse : "ETL"
-BusinessDB --> DataWarehouse : "ETL"
-LogDB --> DataWarehouse : "ETL"
+' 基础设施连接
+BuildService --> MessageQueue : "构建任务"
+DeployService --> TaskScheduler : "部署调度"
+ComponentService --> ServiceRegistry : "服务注册"
+UserService --> ConfigCenter : "配置获取"
 
 @enduml 

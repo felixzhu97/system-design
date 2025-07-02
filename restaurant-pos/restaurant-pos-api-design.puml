@@ -1,0 +1,306 @@
+@startuml
+
+title 餐厅POS系统 - API设计图
+
+!define PRIMARY_COLOR #61DAFB
+!define SECONDARY_COLOR #4FC08D  
+!define ACCENT_COLOR #FF6B35
+!define KITCHEN_COLOR #9C27B0
+
+package "点餐相关API" <<PRIMARY_COLOR>> {
+    interface "/menu/categories" as MenuCategoryAPI {
+        GET: 获取菜品分类
+        --
+        Query: restaurantId, parentId
+        Response: categories[], count
+        --
+        支持层级分类结构
+    }
+    
+    interface "/menu/items" as MenuItemAPI {
+        GET: 获取菜品列表
+        --
+        Query: categoryId, keyword, page, size
+        Response: items[], totalCount, hasMore
+        --
+        支持分页、搜索、库存状态
+    }
+    
+    interface "/menu/items/{id}" as MenuItemDetailAPI {
+        GET: 获取菜品详情
+        --
+        Response: item, specs[], combos[]
+        Include: 价格、图片、规格、库存
+    }
+    
+    interface "/tables/{tableId}/session" as TableSessionAPI {
+        GET: 获取桌台信息
+        POST: 开台
+        PUT: 更新桌台状态
+        --
+        扫码点餐入口，桌台状态管理
+    }
+}
+
+package "订单管理API" <<SECONDARY_COLOR>> {
+    interface "/orders" as OrderAPI {
+        GET: 订单列表
+        POST: 创建订单
+        --
+        Query: status, tableId, dateRange
+        Body: items[], tableId, notes
+        --
+        支持多种订单类型
+    }
+    
+    interface "/orders/{id}" as OrderDetailAPI {
+        GET: 订单详情
+        PUT: 更新订单
+        DELETE: 取消订单
+        --
+        Include: items[], payment[], status
+    }
+    
+    interface "/orders/{id}/items" as OrderItemAPI {
+        POST: 添加菜品
+        PUT: 修改菜品
+        DELETE: 删除菜品
+        --
+        订单明细管理，支持加菜退菜
+    }
+    
+    interface "/orders/{id}/status" as OrderStatusAPI {
+        PUT: 更新订单状态
+        GET: 状态历史
+        --
+        Status: pending→confirmed→cooking→ready→served
+    }
+    
+    interface "/orders/{id}/split" as OrderSplitAPI {
+        POST: 拆分订单
+        --
+        支持拆单、并单操作
+    }
+}
+
+package "支付相关API" <<ACCENT_COLOR>> {
+    interface "/payments/methods" as PaymentMethodAPI {
+        GET: 支付方式列表
+        --
+        Response: methods[], configs
+        --
+        现金、刷卡、扫码、会员卡
+    }
+    
+    interface "/payments" as PaymentAPI {
+        POST: 发起支付
+        GET: 支付记录
+        --
+        Request: orderId, amount, method
+        Response: paymentId, status, qrCode
+    }
+    
+    interface "/payments/{id}/confirm" as PaymentConfirmAPI {
+        PUT: 确认支付
+        --
+        支付结果确认，更新订单状态
+    }
+    
+    interface "/payments/{id}/refund" as RefundAPI {
+        POST: 申请退款
+        --
+        Request: amount, reason
+        支持部分退款、全额退款
+    }
+    
+    interface "/coupons/validate" as CouponValidateAPI {
+        POST: 验证优惠券
+        --
+        Request: couponCode, orderAmount
+        Response: isValid, discount, message
+    }
+}
+
+package "会员服务API" {
+    interface "/members/search" as MemberSearchAPI {
+        GET: 查询会员
+        --
+        Query: phone, memberCode
+        Response: member, points, level
+    }
+    
+    interface "/members/{id}/points" as MemberPointAPI {
+        GET: 积分记录
+        POST: 积分兑换
+        --
+        积分获得、消费、兑换历史
+    }
+    
+    interface "/members/{id}/recharge" as MemberRechargeAPI {
+        POST: 会员充值
+        GET: 充值记录
+        --
+        会员余额充值和消费记录
+    }
+}
+
+package "厨房管理API" <<KITCHEN_COLOR>> {
+    interface "/kitchen/orders" as KitchenOrderAPI {
+        GET: 厨房订单列表
+        PUT: 更新制作状态
+        --
+        Query: status, area, priority
+        实时厨房订单展示
+    }
+    
+    interface "/kitchen/orders/{id}/start" as KitchenStartAPI {
+        POST: 开始制作
+        --
+        厨师确认开始制作菜品
+    }
+    
+    interface "/kitchen/orders/{id}/finish" as KitchenFinishAPI {
+        POST: 完成制作
+        --
+        Request: actualTime, notes
+        出餐确认，通知前台
+    }
+    
+    interface "/kitchen/display" as KitchenDisplayAPI {
+        WebSocket: 实时厨房显示
+        --
+        Events: newOrder, statusUpdate, cancel
+        厨房显示屏实时数据
+    }
+}
+
+package "POS终端API" {
+    interface "/pos/sync" as POSSyncAPI {
+        POST: 数据同步
+        --
+        Request: lastSyncTime, localData
+        Response: updatedData, conflicts
+        --
+        离线数据同步机制
+    }
+    
+    interface "/pos/print" as POSPrintAPI {
+        POST: 打印小票
+        --
+        Request: orderId, type, template
+        Type: receipt, kitchen, label
+        --
+        多种打印格式支持
+    }
+    
+    interface "/pos/hardware" as POSHardwareAPI {
+        POST: 硬件控制
+        --
+        Request: device, command, params
+        Device: cashDrawer, display, scanner
+        --
+        POS硬件设备控制
+    }
+}
+
+package "报表分析API" {
+    interface "/reports/sales" as SalesReportAPI {
+        GET: 销售报表
+        --
+        Query: dateRange, period, groupBy
+        Response: salesData[], charts[], summary
+        --
+        日报、月报、年报
+    }
+    
+    interface "/reports/menu" as MenuReportAPI {
+        GET: 菜品销量分析
+        --
+        Query: dateRange, categoryId
+        Response: itemSales[], rankings[]
+        --
+        菜品销量排行和分析
+    }
+    
+    interface "/reports/revenue" as RevenueReportAPI {
+        GET: 营收分析
+        --
+        Response: revenue[], trends[], forecast
+        --
+        营收趋势和预测分析
+    }
+}
+
+package "系统管理API" {
+    interface "/employees" as EmployeeAPI {
+        GET: 员工列表
+        POST: 添加员工
+        PUT: 更新员工
+        --
+        员工信息和权限管理
+    }
+    
+    interface "/employees/{id}/schedule" as ScheduleAPI {
+        GET: 排班信息
+        POST: 创建排班
+        --
+        员工排班管理
+    }
+    
+    interface "/system/config" as SystemConfigAPI {
+        GET: 系统配置
+        PUT: 更新配置
+        --
+        餐厅参数配置
+    }
+    
+    interface "/auth/login" as AuthAPI {
+        POST: 员工登录
+        --
+        Request: username, password
+        Response: token, permissions, profile
+    }
+}
+
+' BFF层聚合
+[Customer BFF] --> MenuCategoryAPI : "菜单聚合"
+[Customer BFF] --> OrderAPI : "订单聚合"
+[Customer BFF] --> PaymentAPI : "支付聚合"
+[Customer BFF] --> MemberSearchAPI : "会员聚合"
+
+[Staff BFF] --> OrderAPI : "订单管理聚合"
+[Staff BFF] --> MenuItemAPI : "菜品管理聚合"
+[Staff BFF] --> KitchenOrderAPI : "厨房聚合"
+
+[POS BFF] --> PaymentAPI : "收银聚合"
+[POS BFF] --> POSSyncAPI : "POS数据聚合"
+[POS BFF] --> POSPrintAPI : "打印聚合"
+
+[Admin BFF] --> SalesReportAPI : "报表聚合"
+[Admin BFF] --> EmployeeAPI : "员工管理聚合"
+[Admin BFF] --> SystemConfigAPI : "系统配置聚合"
+
+' 服务间调用
+OrderAPI --> MenuItemAPI : "菜品信息验证"
+OrderAPI --> MemberSearchAPI : "会员信息查询"
+PaymentAPI --> OrderDetailAPI : "订单金额确认"
+KitchenOrderAPI --> OrderStatusAPI : "状态更新"
+
+' WebSocket连接
+KitchenDisplayAPI --> KitchenOrderAPI : "实时订单同步"
+POSPrintAPI --> KitchenDisplayAPI : "打印通知"
+
+' 认证和权限
+AuthAPI ..> OrderAPI : "员工权限验证"
+AuthAPI ..> EmployeeAPI : "管理权限验证"
+AuthAPI ..> SalesReportAPI : "报表权限验证"
+
+note top of MenuItemAPI : "菜品API支持：\n实时库存查询\n多规格价格\n图片CDN加速\n缓存优化"
+
+note top of OrderAPI : "订单API特性：\n支持拆单并单\n状态流转控制\n异步事件处理\n数据一致性保证"
+
+note top of PaymentAPI : "支付API集成：\n微信支付宝\n银联云闪付\n会员卡支付\n优惠券系统"
+
+note top of KitchenDisplayAPI : "厨房API功能：\nWebSocket实时推送\n制作时间统计\n厨房设备状态\n出餐优先级管理"
+
+@enduml 

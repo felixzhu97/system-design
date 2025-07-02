@@ -1,57 +1,99 @@
 @startuml
 !include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Dynamic.puml
 
-title 低代码平台 - 数据流程图
+title 低代码平台 - 应用开发数据流程图
 
 LAYOUT_WITH_LEGEND()
 
-Person(designer, "应用设计者", "业务用户或开发者")
-Container(webPortal, "Web设计器", "React", "可视化设计界面")
-Container(designerService, "设计器服务", "Spring Boot", "设计器后端服务")
-Container(codeGenerator, "代码生成器", "Velocity", "根据配置生成代码")
-Container(deployService, "部署服务", "Docker", "应用打包部署")
-Container(appEngine, "应用引擎", "Spring Boot", "应用运行引擎")
-Person(endUser, "最终用户", "使用生成的应用")
+Person(businessUser, "业务用户", "拖拽式开发")
+Container(webDesigner, "Web设计器", "React 18", "可视化设计界面")
+Container(designerBFF, "Designer BFF", "Node.js", "设计器业务聚合")
+Container(apiGateway, "API网关", "Kong", "统一API管理")
+Container(designEngine, "设计引擎", "Node.js", "组件设计管理")
+Container(codeGenEngine, "代码生成引擎", "Node.js", "智能代码生成")
+Container(previewEngine, "预览引擎", "Node.js", "实时预览调试")
+Container(deployEngine, "部署引擎", "Node.js", "应用构建部署")
+Container(aiAssistant, "AI助手", "Python", "智能设计推荐")
 
-ContainerDb(configDb, "配置数据库", "MySQL", "存储应用配置")
-ContainerDb(businessDb, "业务数据库", "MySQL", "存储业务数据")
-Container(fileStorage, "文件存储", "MinIO", "存储应用资源")
-Container(containerPlatform, "容器平台", "Kubernetes", "应用运行环境")
+ContainerDb(designDb, "设计数据库", "PostgreSQL", "页面设计存储")
+ContainerDb(codeDb, "代码仓库", "Git", "生成代码管理")
+Container(redisCache, "缓存集群", "Redis", "设计缓存")
+Container(messageQueue, "消息队列", "RabbitMQ", "异步任务处理")
+Container_Ext(aiService, "AI服务", "OpenAI", "大模型接口")
+Container_Ext(cloudPlatform, "云平台", "Vercel", "应用部署")
+Container_Ext(cdnNetwork, "CDN网络", "Cloudflare", "资源分发")
 
-' 应用设计阶段
-Rel_D(designer, webPortal, "1. 设计应用", "拖拽组件、配置属性")
-Rel_D(webPortal, designerService, "2. 保存设计", "JSON配置数据")
-Rel_D(designerService, configDb, "3. 存储配置", "应用元数据、表单结构、页面布局")
+' 设计阶段 - 组件拖拽
+Rel_D(businessUser, webDesigner, "1. 打开设计器", "访问可视化界面")
+Rel_D(webDesigner, designerBFF, "2. 加载组件库", "GET /api/components")
+Rel_D(designerBFF, apiGateway, "3. 转发请求", "HTTP/REST")
+Rel_D(apiGateway, designEngine, "4. 查询组件", "gRPC调用")
+Rel_D(designEngine, designDb, "5. 读取组件数据", "PostgreSQL查询")
+Rel_U(designDb, designEngine, "6. 返回组件列表", "组件配置信息")
+Rel_U(designEngine, apiGateway, "7. 响应组件数据", "JSON格式")
+Rel_U(apiGateway, designerBFF, "8. 返回聚合数据", "组件库数据")
+Rel_U(designerBFF, webDesigner, "9. 渲染组件面板", "React组件渲染")
+Rel_U(webDesigner, businessUser, "10. 显示组件库", "界面展示")
 
-' 代码生成阶段  
-Rel_D(designer, webPortal, "4. 触发生成", "点击生成按钮")
-Rel_D(webPortal, codeGenerator, "5. 请求生成", "应用ID")
-Rel_D(codeGenerator, configDb, "6. 读取配置", "查询应用配置")
-Rel_U(configDb, codeGenerator, "7. 返回配置", "完整配置数据")
-Rel_D(codeGenerator, fileStorage, "8. 生成代码", "Java/Vue代码文件")
+' AI智能推荐阶段
+Rel_D(businessUser, webDesigner, "11. 拖拽组件", "组件拖放操作")
+Rel_D(webDesigner, designerBFF, "12. 请求AI推荐", "POST /api/ai/recommend")
+Rel_D(designerBFF, apiGateway, "13. AI推荐请求", "HTTP/REST")
+Rel_D(apiGateway, aiAssistant, "14. 智能分析", "gRPC调用")
+Rel_D(aiAssistant, aiService, "15. 调用AI模型", "OpenAI API")
+Rel_U(aiService, aiAssistant, "16. AI推荐结果", "智能建议")
+Rel_U(aiAssistant, apiGateway, "17. 返回推荐", "推荐组件列表")
+Rel_U(apiGateway, designerBFF, "18. 响应推荐", "智能推荐数据")
+Rel_U(designerBFF, webDesigner, "19. 显示推荐", "推荐面板展示")
+Rel_U(webDesigner, businessUser, "20. 查看推荐", "智能推荐提示")
+
+' 页面设计保存阶段
+Rel_D(businessUser, webDesigner, "21. 完成设计", "保存页面设计")
+Rel_D(webDesigner, designerBFF, "22. 保存设计数据", "POST /api/pages/save")
+Rel_D(designerBFF, apiGateway, "23. 设计保存请求", "HTTP/REST")
+Rel_D(apiGateway, designEngine, "24. 处理设计数据", "gRPC调用")
+Rel_D(designEngine, designDb, "25. 持久化设计", "PostgreSQL写入")
+Rel_D(designEngine, redisCache, "26. 缓存设计", "Redis存储")
+Rel_D(designEngine, messageQueue, "27. 发布设计事件", "设计变更消息")
+
+' 实时预览阶段
+Rel_D(messageQueue, previewEngine, "28. 消费预览事件", "异步消费")
+Rel_D(previewEngine, codeGenEngine, "29. 请求临时代码", "生成预览代码")
+Rel_D(codeGenEngine, designDb, "30. 读取设计数据", "PostgreSQL查询")
+Rel_D(codeGenEngine, aiAssistant, "31. AI代码优化", "智能代码生成")
+Rel_U(codeGenEngine, previewEngine, "32. 返回预览代码", "React组件代码")
+Rel_U(previewEngine, webDesigner, "33. 推送预览", "WebSocket实时更新")
+Rel_U(webDesigner, businessUser, "34. 显示预览", "iframe预览窗口")
+
+' 代码生成阶段
+Rel_D(businessUser, webDesigner, "35. 确认发布", "点击生成代码")
+Rel_D(webDesigner, designerBFF, "36. 代码生成请求", "POST /api/code/generate")
+Rel_D(designerBFF, apiGateway, "37. 转发生成请求", "HTTP/REST")
+Rel_D(apiGateway, codeGenEngine, "38. 执行代码生成", "gRPC调用")
+Rel_D(codeGenEngine, designDb, "39. 读取完整设计", "PostgreSQL查询")
+Rel_D(codeGenEngine, aiAssistant, "40. AI代码生成", "智能优化代码")
+Rel_D(codeGenEngine, codeDb, "41. 提交代码", "Git提交")
+Rel_D(codeGenEngine, messageQueue, "42. 发布构建事件", "代码生成完成")
 
 ' 应用部署阶段
-Rel_D(designer, webPortal, "9. 部署应用", "点击部署按钮")
-Rel_D(webPortal, deployService, "10. 请求部署", "应用ID、版本号")
-Rel_D(deployService, fileStorage, "11. 获取代码", "下载生成的代码")
-Rel_U(fileStorage, deployService, "12. 返回代码", "应用代码包")
-Rel_D(deployService, containerPlatform, "13. 部署容器", "Docker镜像")
+Rel_D(messageQueue, deployEngine, "43. 消费部署事件", "异步部署任务")
+Rel_D(deployEngine, codeDb, "44. 拉取代码", "Git拉取")
+Rel_D(deployEngine, cloudPlatform, "45. 部署应用", "Vercel API")
+Rel_U(cloudPlatform, deployEngine, "46. 部署成功", "部署状态确认")
+Rel_D(deployEngine, cdnNetwork, "47. 配置CDN", "资源分发设置")
+Rel_D(deployEngine, messageQueue, "48. 部署完成通知", "部署状态消息")
 
-' 应用运行阶段
-Rel_D(endUser, appEngine, "14. 访问应用", "HTTP请求")
-Rel_D(appEngine, configDb, "15. 读取配置", "获取应用配置")
-Rel_U(configDb, appEngine, "16. 返回配置", "运行时配置")
-Rel_D(appEngine, businessDb, "17. 数据操作", "CRUD操作")
-Rel_U(businessDb, appEngine, "18. 返回数据", "业务数据")
-Rel_U(appEngine, endUser, "19. 响应结果", "页面/数据")
+' 用户反馈阶段
+Rel_U(deployEngine, apiGateway, "49. 部署结果", "部署状态信息")
+Rel_U(apiGateway, designerBFF, "50. 返回状态", "部署成功信息")
+Rel_U(designerBFF, webDesigner, "51. 更新UI", "显示部署状态")
+Rel_U(webDesigner, businessUser, "52. 显示应用链接", "访问生成的应用")
 
-' 数据更新流程
-note over designerService, configDb : "配置数据包含：\n- 表单字段定义\n- 页面布局配置\n- 业务规则设置\n- 权限配置信息"
+' 数据流程说明
+note over businessUser, designDb : "设计阶段：\n1. 拖拽式组件设计\n2. AI智能推荐相关组件\n3. 实时保存设计数据\n4. 支持多人协作编辑"
 
-note over codeGenerator, fileStorage : "生成的代码包含：\n- 后端Controller/Service\n- 前端Vue组件\n- 数据模型定义\n- 配置文件"
+note over aiAssistant, redisCache : "AI辅助阶段：\n1. 基于设计上下文推荐组件\n2. 智能生成页面布局\n3. 代码质量优化建议\n4. 性能优化推荐"
 
-note over deployService, containerPlatform : "部署流程：\n1. 代码编译打包\n2. 构建Docker镜像\n3. 推送到镜像仓库\n4. 在K8s中部署"
-
-note over appEngine, businessDb : "运行时数据：\n- 用户输入数据\n- 业务流程状态\n- 文件上传内容\n- 操作审计日志"
+note over codeGenEngine, cdnNetwork : "生成部署阶段：\n1. 基于设计生成React代码\n2. 自动优化代码结构\n3. 一键部署到云平台\n4. CDN加速全球访问"
 
 @enduml 

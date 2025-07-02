@@ -1,265 +1,225 @@
 @startuml
-!define RECTANGLE class
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
 
-title 餐饮业POS系统架构设计
+title 餐厅POS系统 - 系统架构设计图
 
-' 定义颜色主题
-!define PRIMARY_COLOR #FF6B35
-!define SECONDARY_COLOR #004E89
-!define ACCENT_COLOR #00A896
-!define NEUTRAL_COLOR #9A031E
+LAYOUT_WITH_LEGEND()
 
-package "前端设备层" {
-    [POS收银终端] as POSTerminal <<POS Terminal>>
-    [移动端APP] as MobileApp <<Mobile App>>
-    [Web管理后台] as WebAdmin <<Web Admin>>
-    [自助点餐机] as SelfOrderKiosk <<Self-Order Kiosk>>
-    [服务员手持设备] as HandheldDevice <<Handheld Device>>
-}
+!define REACT_COLOR #61DAFB
+!define VUE_COLOR #4FC08D
+!define NODE_COLOR #339933
+!define JAVA_COLOR #ED8B00
+!define PYTHON_COLOR #3776AB
+!define ELECTRON_COLOR #47848F
+!define CACHE_COLOR #DC382D
 
-package "网关层" {
-    [API网关] as APIGateway <<API Gateway>>
-    [负载均衡器] as LoadBalancer <<Load Balancer>>
-}
-
-package "核心业务服务层" {
-    package "订单管理" {
-        [订单服务] as OrderService <<Order Management>>
-        [桌台管理服务] as TableService <<Table Management>>
-        [排队服务] as QueueService <<Queue Management>>
-        [外卖服务] as DeliveryService <<Delivery Management>>
+package "多端客户层" {
+    package "顾客端" {
+        [扫码点餐小程序] as CustomerMP <<Frontend>>
+        [自助点餐H5] as CustomerH5 <<REACT_COLOR>>
+        [外卖小程序] as DeliveryMP <<Frontend>>
     }
     
-    package "商品管理" {
-        [菜品管理服务] as MenuService <<Menu Management>>
-        [库存管理服务] as InventoryService <<Inventory Management>>
-        [供应商管理服务] as SupplierService <<Supplier Management>>
-        [采购管理服务] as ProcurementService <<Procurement Management>>
+    package "员工端" {
+        [服务员移动端] as WaiterApp <<REACT_COLOR>>
+        [POS收银终端] as POSTerminal <<ELECTRON_COLOR>>
+        [厨房显示屏] as KitchenDisplay <<VUE_COLOR>>
+        [传菜员手持] as RunnerDevice <<Frontend>>
     }
     
-    package "支付系统" {
-        [支付处理服务] as PaymentService <<Payment Processing>>
-        [账单管理服务] as BillService <<Bill Management>>
-        [优惠券服务] as CouponService <<Coupon Management>>
-        [会员积分服务] as LoyaltyService <<Loyalty Program>>
+    package "管理端" {
+        [餐厅管理后台] as ManagerPortal <<REACT_COLOR>>
+        [总部管理系统] as HeadquartersSystem <<VUE_COLOR>>
+        [财务报表系统] as FinanceSystem <<REACT_COLOR>>
     }
     
-    package "用户管理" {
-        [会员管理服务] as CustomerService <<Customer Management>>
-        [员工管理服务] as EmployeeService <<Employee Management>>
-        [权限管理服务] as AuthService <<Authentication & Authorization>>
-        [角色管理服务] as RoleService <<Role Management>>
-    }
-    
-    package "厨房系统" {
-        [厨房显示服务] as KitchenDisplayService <<Kitchen Display>>
-        [制作流程服务] as CookingProcessService <<Cooking Process>>
-        [食材管理服务] as IngredientService <<Ingredient Management>>
-    }
-    
-    package "营销系统" {
-        [促销活动服务] as PromotionService <<Promotion Management>>
-        [会员营销服务] as MarketingService <<Marketing Campaign>>
-        [推荐服务] as RecommendationService <<Recommendation>>
-    }
-    
-    package "报表分析" {
-        [销售报表服务] as SalesReportService <<Sales Reporting>>
-        [财务分析服务] as FinancialAnalysisService <<Financial Analysis>>
-        [库存分析服务] as InventoryAnalysisService <<Inventory Analysis>>
-        [客户分析服务] as CustomerAnalysisService <<Customer Analytics>>
+    package "智能设备" {
+        [智能取餐柜] as SmartLocker <<IoT>>
+        [自助收银机] as SelfCheckout <<ELECTRON_COLOR>>
+        [智能叫号屏] as CallNumberDisplay <<Frontend>>
     }
 }
 
-package "缓存层" {
-    [Redis集群] as RedisCluster <<Redis Cluster>>
-    [本地缓存] as LocalCache <<Local Cache>>
+package "BFF聚合层" {
+    [顾客端 BFF] as CustomerBFF <<NODE_COLOR>>
+    [员工端 BFF] as StaffBFF <<NODE_COLOR>>
+    [管理端 BFF] as AdminBFF <<NODE_COLOR>>
+    [设备端 BFF] as DeviceBFF <<NODE_COLOR>>
+}
+
+package "API网关层" {
+    [主API网关] as MainGateway <<Middleware>>
+    [内部API网关] as InternalGateway <<Middleware>>
+    [设备API网关] as DeviceGateway <<Middleware>>
+}
+
+package "核心业务服务" {
+    package "订单域服务" {
+        [点餐服务] as OrderService <<NODE_COLOR>>
+        [桌台服务] as TableService <<NODE_COLOR>>
+        [排队服务] as QueueService <<NODE_COLOR>>
+        [外卖服务] as DeliveryService <<NODE_COLOR>>
+    }
+    
+    package "商品域服务" {
+        [菜单服务] as MenuService <<JAVA_COLOR>>
+        [库存服务] as InventoryService <<NODE_COLOR>>
+        [采购服务] as ProcurementService <<JAVA_COLOR>>
+        [成本核算服务] as CostService <<PYTHON_COLOR>>
+    }
+    
+    package "支付域服务" {
+        [支付服务] as PaymentService <<NODE_COLOR>>
+        [收银服务] as CashierService <<NODE_COLOR>>
+        [退款服务] as RefundService <<NODE_COLOR>>
+        [对账服务] as ReconciliationService <<JAVA_COLOR>>
+    }
+    
+    package "会员域服务" {
+        [会员服务] as MemberService <<JAVA_COLOR>>
+        [积分服务] as PointService <<NODE_COLOR>>
+        [优惠券服务] as CouponService <<NODE_COLOR>>
+        [营销服务] as MarketingService <<PYTHON_COLOR>>
+    }
+    
+    package "厨房域服务" {
+        [厨房服务] as KitchenService <<NODE_COLOR>>
+        [出餐服务] as ServingService <<NODE_COLOR>>
+        [排期服务] as SchedulingService <<NODE_COLOR>>
+        [传菜服务] as RunnerService <<NODE_COLOR>>
+    }
+    
+    package "报表域服务" {
+        [营业报表服务] as ReportService <<PYTHON_COLOR>>
+        [数据分析服务] as AnalyticsService <<PYTHON_COLOR>>
+        [财务服务] as FinanceService <<JAVA_COLOR>>
+        [BI服务] as BIService <<PYTHON_COLOR>>
+    }
+}
+
+package "支撑服务层" {
+    [用户认证服务] as AuthService <<NODE_COLOR>>
+    [权限管理服务] as PermissionService <<JAVA_COLOR>>
+    [消息通知服务] as NotificationService <<NODE_COLOR>>
+    [文件管理服务] as FileService <<NODE_COLOR>>
+    [打印服务] as PrintService <<NODE_COLOR>>
+    [设备管理服务] as DeviceService <<NODE_COLOR>>
 }
 
 package "数据存储层" {
-    package "关系型数据库" {
-        [订单数据库] as OrderDB <<MySQL/PostgreSQL>>
-        [商品数据库] as ProductDB <<MySQL/PostgreSQL>>
-        [用户数据库] as UserDB <<MySQL/PostgreSQL>>
-        [财务数据库] as FinanceDB <<MySQL/PostgreSQL>>
+    package "业务数据库" {
+        [订单数据库] as OrderDB <<Database>>
+        [菜单数据库] as MenuDB <<Database>>
+        [会员数据库] as MemberDB <<Database>>
+        [财务数据库] as FinanceDB <<Database>>
     }
     
-    package "时序数据库" {
-        [销售数据库] as SalesTimeSeriesDB <<InfluxDB>>
-        [操作日志数据库] as LogTimeSeriesDB <<InfluxDB>>
+    package "缓存层" {
+        [订单缓存] as OrderCache <<CACHE_COLOR>>
+        [菜单缓存] as MenuCache <<CACHE_COLOR>>
+        [会话缓存] as SessionCache <<CACHE_COLOR>>
     }
     
-    package "文档数据库" {
-        [配置数据库] as ConfigDB <<MongoDB>>
-        [日志数据库] as LogDB <<MongoDB>>
+    package "文件存储" {
+        [菜品图片存储] as ImageStorage <<Storage>>
+        [小票模板存储] as TemplateStorage <<Storage>>
+        [报表文件存储] as ReportStorage <<Storage>>
+    }
+    
+    package "时序数据" {
+        [营业数据库] as BusinessDB <<TimeSeries>>
+        [设备监控数据] as DeviceDB <<TimeSeries>>
+        [用户行为数据] as BehaviorDB <<TimeSeries>>
     }
 }
 
-package "外部硬件设备" {
-    [热敏打印机] as ThermalPrinter <<Thermal Printer>>
-    [厨房打印机] as KitchenPrinter <<Kitchen Printer>>
-    [厨房显示屏] as KitchenDisplay <<Kitchen Display Screen>>
-    [扫码枪] as BarcodeScanner <<Barcode Scanner>>
-    [收银盒] as CashDrawer <<Cash Drawer>>
-    [称重设备] as WeighingScale <<Weighing Scale>>
+package "基础设施层" {
+    [消息队列] as MessageQueue <<Middleware>>
+    [任务调度] as TaskScheduler <<Middleware>>
+    [配置中心] as ConfigCenter <<Middleware>>
+    [服务注册] as ServiceRegistry <<Middleware>>
+    [链路追踪] as TracingService <<Monitor>>
+    [监控告警] as AlertSystem <<Monitor>>
 }
 
-package "外部服务" {
-    [支付网关] as PaymentGateway <<Payment Gateway>>
-    [短信服务] as SMSService <<SMS Service>>
-    [第三方外卖平台] as DeliveryPlatform <<Delivery Platform API>>
-    [电子发票服务] as EInvoiceService <<E-Invoice Service>>
-    [税务系统] as TaxSystem <<Tax System>>
+package "外部集成" {
+    [微信支付] as WeChatPay <<External>>
+    [支付宝] as AliPay <<External>>
+    [美团外卖] as MeituanAPI <<External>>
+    [饿了么] as ElemeAPI <<External>>
+    [会员系统] as CRMSystem <<External>>
+    [ERP系统] as ERPSystem <<External>>
+    [财务系统] as AccountingSystem <<External>>
+    [供应商平台] as SupplierPlatform <<External>>
 }
 
-package "消息队列" {
-    [消息队列] as MessageQueue <<Message Queue>>
-}
+' 前端到BFF连接
+CustomerMP --> CustomerBFF : "HTTPS/REST"
+WaiterApp --> StaffBFF : "HTTPS/REST"
+POSTerminal --> StaffBFF : "HTTPS/WebSocket"
+KitchenDisplay --> StaffBFF : "WebSocket"
+ManagerPortal --> AdminBFF : "HTTPS/REST"
+SmartLocker --> DeviceBFF : "MQTT/HTTP"
 
-package "监控运维" {
-    [监控系统] as MonitoringSystem <<System Monitoring>>
-    [日志系统] as LoggingSystem <<Logging System>>
-    [备份系统] as BackupSystem <<Backup System>>
-}
+' BFF到网关连接
+CustomerBFF --> MainGateway : "HTTP/gRPC"
+StaffBFF --> MainGateway : "HTTP/gRPC"
+AdminBFF --> InternalGateway : "HTTP/gRPC"
+DeviceBFF --> DeviceGateway : "HTTP/gRPC"
 
-' 前端设备到网关
-POSTerminal --> LoadBalancer
-MobileApp --> LoadBalancer
-WebAdmin --> LoadBalancer
-SelfOrderKiosk --> LoadBalancer
-HandheldDevice --> LoadBalancer
+' 网关到核心服务连接
+MainGateway --> OrderService : "gRPC"
+MainGateway --> MenuService : "gRPC"
+MainGateway --> PaymentService : "gRPC"
+MainGateway --> MemberService : "gRPC"
+InternalGateway --> ReportService : "gRPC"
+DeviceGateway --> DeviceService : "gRPC"
 
-' 网关层连接
-LoadBalancer --> APIGateway
+' 核心服务内部调用
+OrderService --> TableService : "gRPC"
+OrderService --> InventoryService : "gRPC"
+PaymentService --> MemberService : "gRPC"
+KitchenService --> ServingService : "gRPC"
+OrderService --> KitchenService : "gRPC"
 
-' API网关到核心服务
-APIGateway --> OrderService
-APIGateway --> MenuService
-APIGateway --> PaymentService
-APIGateway --> CustomerService
-APIGateway --> EmployeeService
-APIGateway --> AuthService
+' 服务到数据库连接
+OrderService --> OrderDB : "PostgreSQL"
+MenuService --> MenuDB : "MongoDB"
+MemberService --> MemberDB : "PostgreSQL"
+FinanceService --> FinanceDB : "PostgreSQL"
+OrderService --> OrderCache : "Redis"
+MenuService --> MenuCache : "Redis"
 
-' 订单管理连接
-OrderService --> OrderDB
-OrderService --> RedisCluster
-OrderService --> MessageQueue
-TableService --> OrderDB
-TableService --> RedisCluster
-QueueService --> RedisCluster
-DeliveryService --> OrderDB
-DeliveryService --> DeliveryPlatform
-
-' 商品管理连接
-MenuService --> ProductDB
-MenuService --> RedisCluster
-InventoryService --> ProductDB
-InventoryService --> RedisCluster
-SupplierService --> ProductDB
-ProcurementService --> ProductDB
-
-' 支付系统连接
-PaymentService --> FinanceDB
-PaymentService --> PaymentGateway
-PaymentService --> MessageQueue
-BillService --> FinanceDB
-BillService --> EInvoiceService
-CouponService --> UserDB
-CouponService --> RedisCluster
-LoyaltyService --> UserDB
-LoyaltyService --> RedisCluster
-
-' 用户管理连接
-CustomerService --> UserDB
-CustomerService --> RedisCluster
-EmployeeService --> UserDB
-AuthService --> UserDB
-AuthService --> RedisCluster
-RoleService --> UserDB
-
-' 厨房系统连接
-KitchenDisplayService --> OrderDB
-KitchenDisplayService --> KitchenDisplay
-KitchenDisplayService --> MessageQueue
-CookingProcessService --> OrderDB
-CookingProcessService --> MessageQueue
-IngredientService --> ProductDB
-
-' 营销系统连接
-PromotionService --> UserDB
-PromotionService --> RedisCluster
-MarketingService --> UserDB
-MarketingService --> SMSService
-RecommendationService --> OrderDB
-RecommendationService --> UserDB
-
-' 报表分析连接
-SalesReportService --> SalesTimeSeriesDB
-SalesReportService --> OrderDB
-FinancialAnalysisService --> FinanceDB
-FinancialAnalysisService --> SalesTimeSeriesDB
-InventoryAnalysisService --> ProductDB
-CustomerAnalysisService --> UserDB
-CustomerAnalysisService --> OrderDB
-
-' 硬件设备连接
-OrderService --> ThermalPrinter
-OrderService --> KitchenPrinter
-PaymentService --> CashDrawer
-InventoryService --> BarcodeScanner
-InventoryService --> WeighingScale
+' 支撑服务连接
+OrderService --> NotificationService : "gRPC"
+PaymentService --> PrintService : "gRPC"
+KitchenService --> DeviceService : "gRPC"
+AuthService --> SessionCache : "Redis"
 
 ' 消息队列连接
-MessageQueue --> KitchenDisplayService
-MessageQueue --> CookingProcessService
-MessageQueue --> SalesReportService
-MessageQueue --> InventoryService
+OrderService --> MessageQueue : "订单事件"
+PaymentService --> MessageQueue : "支付事件"
+KitchenService --> MessageQueue : "厨房事件"
+NotificationService --> MessageQueue : "通知事件"
 
-' 监控连接
-MonitoringSystem --> LogTimeSeriesDB
-LoggingSystem --> LogDB
-BackupSystem --> OrderDB
-BackupSystem --> ProductDB
-BackupSystem --> UserDB
-BackupSystem --> FinanceDB
+' 外部系统集成
+PaymentService --> WeChatPay : "HTTPS/API"
+PaymentService --> AliPay : "HTTPS/API"
+DeliveryService --> MeituanAPI : "HTTPS/API"
+DeliveryService --> ElemeAPI : "HTTPS/API"
+MemberService --> CRMSystem : "HTTPS/API"
+ProcurementService --> SupplierPlatform : "HTTPS/API"
+FinanceService --> AccountingSystem : "HTTPS/API"
 
-' 税务连接
-BillService --> TaxSystem
+' 数据分析连接
+AnalyticsService --> BusinessDB : "InfluxDB"
+BIService --> ReportStorage : "File System"
+ReportService --> FinanceService : "gRPC"
 
-note right of OrderService
-    订单服务核心功能：
-    - 堂食订单处理
-    - 外卖订单管理
-    - 订单状态跟踪
-    - 拆单合单处理
-    - 订单修改退款
-end note
-
-note right of PaymentService
-    支付服务功能：
-    - 多种支付方式支持
-    - 分账处理
-    - 退款处理
-    - 优惠计算
-    - 发票开具
-end note
-
-note bottom of RedisCluster
-    缓存策略：
-    - 菜品信息缓存
-    - 桌台状态缓存
-    - 会员信息缓存
-    - 库存实时数据
-    - 营销活动缓存
-end note
-
-note right of MessageQueue
-    异步消息处理：
-    - 订单状态变更通知
-    - 厨房制作指令
-    - 库存变更通知
-    - 会员积分变更
-    - 报表数据更新
-end note
+' 基础设施连接
+OrderService --> ServiceRegistry : "服务注册"
+PaymentService --> ConfigCenter : "配置获取"
+TaskScheduler --> ReportService : "定时任务"
+TracingService --> AlertSystem : "监控数据"
 
 @enduml 
