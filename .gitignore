@@ -1,0 +1,11 @@
+# IDEA
+.idea/
+
+# VSCode
+.vscode/
+
+# Mac
+.DS_Store
+
+# Windows
+Thumbs.db

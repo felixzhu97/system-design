@@ -1,0 +1,66 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title 低代码平台 - 容器图 (C4 Level 2)
+
+LAYOUT_WITH_LEGEND()
+
+Person(businessUser, "业务用户", "使用可视化方式创建应用")
+Person(developer, "开发者", "进行高级配置和扩展开发")
+Person(admin, "平台管理员", "平台管理和权限配置")
+Person(endUser, "最终用户", "使用生成的应用")
+
+System_Boundary(c1, "低代码开发平台") {
+    Container(webPortal, "Web门户", "React, TypeScript", "提供可视化应用构建界面")
+    Container(designerEngine, "设计器引擎", "Vue.js, Fabric.js", "拖拽式表单和页面设计器")
+    Container(workflowEngine, "工作流引擎", "Activiti, Spring Boot", "业务流程编排和执行")
+    Container(apiGateway, "API网关", "Spring Cloud Gateway", "统一API管理和路由")
+    Container(appEngine, "应用引擎", "Spring Boot, Java 17", "应用运行时引擎")
+    Container(dataEngine, "数据引擎", "MyBatis-Plus, Spring Boot", "数据模型管理和ORM")
+    Container(codeGenerator, "代码生成器", "Velocity, Spring Boot", "根据配置生成应用代码")
+    Container(deployService, "部署服务", "Docker, Spring Boot", "应用打包和部署管理")
+    
+    ContainerDb(platformDb, "平台数据库", "MySQL 8.0", "存储平台配置、用户数据、应用元数据")
+    Container(redis, "缓存服务", "Redis 6.0", "会话缓存、临时数据存储")
+    Container(messageQueue, "消息队列", "RabbitMQ", "异步任务处理和事件通知")
+    Container(fileManager, "文件管理", "MinIO, Spring Boot", "文件上传、存储和管理")
+    Container(logService, "日志服务", "ELK Stack", "系统日志收集和分析")
+}
+
+Container_Ext(targetDb, "目标数据库", "MySQL/PostgreSQL", "生成应用的业务数据库")
+Container_Ext(containerPlatform, "容器平台", "Kubernetes", "应用部署和运行环境")
+
+Rel(businessUser, webPortal, "访问", "HTTPS")
+Rel(developer, webPortal, "开发", "HTTPS")
+Rel(admin, webPortal, "管理", "HTTPS")
+Rel(endUser, appEngine, "使用应用", "HTTPS")
+
+Rel(webPortal, apiGateway, "API调用", "HTTPS/REST")
+Rel(designerEngine, apiGateway, "设计数据", "HTTPS/REST")
+Rel(apiGateway, appEngine, "路由", "HTTP")
+Rel(apiGateway, workflowEngine, "流程调用", "HTTP")
+Rel(apiGateway, dataEngine, "数据操作", "HTTP")
+
+Rel(appEngine, dataEngine, "数据访问", "HTTP/RPC")
+Rel(appEngine, workflowEngine, "流程执行", "HTTP/RPC")
+Rel(appEngine, fileManager, "文件操作", "HTTP")
+Rel(appEngine, redis, "缓存访问", "Redis Protocol")
+
+Rel(codeGenerator, appEngine, "生成代码", "HTTP")
+Rel(deployService, codeGenerator, "触发生成", "HTTP")
+Rel(deployService, containerPlatform, "部署应用", "K8s API")
+
+Rel(dataEngine, platformDb, "数据存储", "JDBC")
+Rel(dataEngine, targetDb, "业务数据", "JDBC")
+Rel(workflowEngine, platformDb, "流程数据", "JDBC")
+Rel(fileManager, platformDb, "文件元数据", "JDBC")
+
+Rel(appEngine, messageQueue, "异步消息", "AMQP")
+Rel(workflowEngine, messageQueue, "流程事件", "AMQP")
+Rel(deployService, messageQueue, "部署通知", "AMQP")
+
+Rel_U(logService, appEngine, "日志收集", "Logback")
+Rel_U(logService, workflowEngine, "日志收集", "Logback")
+Rel_U(logService, dataEngine, "日志收集", "Logback")
+
+@enduml 

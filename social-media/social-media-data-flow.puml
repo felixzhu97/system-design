@@ -1,0 +1,152 @@
+@startuml
+!theme plain
+title 社交媒体系统数据流设计
+
+actor "用户" as User
+
+box "客户端层" #LightBlue
+    participant "移动/Web客户端" as Client
+end box
+
+box "API层" #LightGreen
+    participant "API网关" as Gateway
+    participant "负载均衡器" as LB
+end box
+
+box "应用服务层" #LightYellow
+    participant "用户服务" as UserService
+    participant "内容服务" as ContentService
+    participant "推荐服务" as RecommendationService
+    participant "通知服务" as NotificationService
+    participant "搜索服务" as SearchService
+end box
+
+box "缓存层" #LightPink
+    participant "Redis缓存" as Redis
+    participant "CDN" as CDN
+end box
+
+box "数据存储层" #LightGray
+    participant "用户数据库" as UserDB
+    participant "内容数据库" as ContentDB
+    participant "图数据库" as GraphDB
+    participant "搜索引擎" as SearchEngine
+end box
+
+box "大数据处理" #LightCyan
+    participant "Kafka消息队列" as Kafka
+    participant "实时计算引擎" as StreamProcessor
+    participant "机器学习平台" as MLPlatform
+    participant "数据仓库" as DataWarehouse
+end box
+
+== 用户注册/登录流程 ==
+User -> Client: 注册/登录请求
+Client -> Gateway: HTTP请求
+Gateway -> LB: 路由请求
+LB -> UserService: 用户认证
+UserService -> UserDB: 验证用户信息
+UserDB -> UserService: 返回用户数据
+UserService -> Redis: 缓存会话信息
+UserService -> LB: 返回认证结果
+LB -> Gateway: 认证成功
+Gateway -> Client: 返回Token
+Client -> User: 登录成功
+
+== 发布内容流程 ==
+User -> Client: 发布帖子/图片/视频
+Client -> Gateway: 上传内容
+Gateway -> ContentService: 处理内容发布
+ContentService -> ContentDB: 存储内容元数据
+ContentService -> CDN: 上传媒体文件
+ContentService -> Redis: 缓存热点内容
+ContentService -> Kafka: 发送内容发布事件
+Kafka -> StreamProcessor: 实时处理内容
+StreamProcessor -> SearchEngine: 更新搜索索引
+StreamProcessor -> MLPlatform: 触发推荐算法更新
+MLPlatform -> DataWarehouse: 存储特征数据
+ContentService -> NotificationService: 触发粉丝通知
+NotificationService -> User: 推送通知给关注者
+
+== 内容推荐流程 ==
+User -> Client: 请求推荐内容
+Client -> Gateway: 获取推荐请求
+Gateway -> RecommendationService: 推荐算法处理
+RecommendationService -> Redis: 检查缓存推荐
+alt 缓存命中
+    Redis -> RecommendationService: 返回缓存结果
+else 缓存未命中
+    RecommendationService -> MLPlatform: 实时计算推荐
+    MLPlatform -> DataWarehouse: 获取用户特征
+    MLPlatform -> GraphDB: 获取社交关系
+    MLPlatform -> RecommendationService: 返回推荐结果
+    RecommendationService -> Redis: 缓存推荐结果
+end
+RecommendationService -> ContentService: 获取内容详情
+ContentService -> ContentDB: 查询内容数据
+ContentService -> CDN: 获取媒体文件
+ContentService -> RecommendationService: 返回完整内容
+RecommendationService -> Gateway: 返回推荐列表
+Gateway -> Client: 返回推荐内容
+Client -> User: 展示推荐内容
+
+== 用户互动流程 ==
+User -> Client: 点赞/评论/分享
+Client -> Gateway: 发送互动请求
+Gateway -> ContentService: 处理互动
+ContentService -> ContentDB: 更新互动数据
+ContentService -> Redis: 更新实时计数
+ContentService -> Kafka: 发送互动事件
+Kafka -> StreamProcessor: 处理用户行为
+StreamProcessor -> MLPlatform: 更新用户画像
+StreamProcessor -> GraphDB: 更新用户关系权重
+StreamProcessor -> NotificationService: 触发通知
+NotificationService -> User: 通知内容作者
+
+== 搜索流程 ==
+User -> Client: 搜索内容/用户
+Client -> Gateway: 搜索请求
+Gateway -> SearchService: 处理搜索
+SearchService -> Redis: 检查热门搜索缓存
+SearchService -> SearchEngine: 执行搜索查询
+SearchEngine -> SearchService: 返回搜索结果
+SearchService -> ContentService: 获取内容详情
+SearchService -> Kafka: 记录搜索行为
+SearchService -> Gateway: 返回搜索结果
+Gateway -> Client: 展示搜索结果
+Client -> User: 显示搜索内容
+
+== 实时数据处理流程 ==
+note over Kafka: 所有用户行为事件汇聚
+Kafka -> StreamProcessor: 实时流处理
+StreamProcessor -> MLPlatform: 实时特征计算
+StreamProcessor -> Redis: 更新实时排行榜
+StreamProcessor -> DataWarehouse: 批量数据入库
+MLPlatform -> Redis: 更新推荐模型缓存
+
+note over DataWarehouse
+    离线批处理：
+    - 用户画像建模
+    - 内容标签生成
+    - 推荐模型训练
+    - 数据分析报告
+end note
+
+note over Redis
+    实时缓存：
+    - 用户会话信息
+    - 热点内容缓存
+    - 实时计数器
+    - 推荐结果缓存
+    - 排行榜数据
+end note
+
+note over Kafka
+    事件流处理：
+    - 用户行为事件
+    - 内容发布事件
+    - 系统状态事件
+    - 通知事件
+end note
+
+@enduml 

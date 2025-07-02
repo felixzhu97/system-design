@@ -1,0 +1,110 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title 餐饮POS系统 - 容器图 (C4 Level 2)
+
+LAYOUT_WITH_LEGEND()
+
+Person(cashier, "收银员", "前台收银员工")
+Person(waiter, "服务员", "餐厅服务员工")
+Person(chef, "厨师", "厨房员工")
+Person(manager, "店长", "店铺管理人员")
+Person(customer, "顾客", "餐厅客户")
+
+System_Boundary(c1, "餐饮POS系统") {
+    Container(posTerminal, "POS收银终端", "Windows/Android", "收银员使用的专用收银设备")
+    Container(handheldDevice, "手持点餐设备", "Android/iOS", "服务员使用的移动点餐设备")
+    Container(kitchenDisplay, "厨房显示系统", "Web/Android", "厨房订单显示和管理界面")
+    Container(selfOrderKiosk, "自助点餐机", "Android/Windows", "客户自助点餐设备")
+    Container(webAdmin, "Web管理后台", "React/Vue.js", "管理员和店长使用的Web管理界面")
+    Container(customerApp, "顾客小程序", "微信小程序/H5", "顾客点餐和会员服务")
+    
+    Container(apiGateway, "API网关", "Kong/Nginx", "统一API入口和路由")
+    Container(loadBalancer, "负载均衡", "Nginx/HAProxy", "请求分发和负载均衡")
+    
+    Container(orderService, "订单服务", "Spring Boot/Java", "处理点餐、订单管理业务")
+    Container(paymentService, "支付服务", "Spring Boot/Java", "处理支付、账单、优惠券")
+    Container(menuService, "菜品服务", "Spring Boot/Java", "菜品管理、价格管理")
+    Container(inventoryService, "库存服务", "Spring Boot/Java", "库存管理、进销存")
+    Container(customerService, "会员服务", "Spring Boot/Java", "会员管理、积分系统")
+    Container(reportService, "报表服务", "Spring Boot/Java", "销售报表、数据分析")
+    Container(kitchenService, "厨房服务", "Node.js/Go", "厨房订单处理、制作流程")
+    Container(notificationService, "通知服务", "Node.js/Go", "消息推送、短信通知")
+    
+    ContainerDb(orderDb, "订单数据库", "MySQL", "存储订单、桌台、流水等数据")
+    ContainerDb(productDb, "商品数据库", "MySQL", "存储菜品、库存、供应商数据")
+    ContainerDb(customerDb, "客户数据库", "MySQL", "存储会员、员工、权限数据")
+    ContainerDb(financeDb, "财务数据库", "MySQL", "存储财务、账单、支付数据")
+    ContainerDb(cacheDb, "缓存数据库", "Redis", "缓存热点数据和会话信息")
+    ContainerDb(logDb, "日志数据库", "MongoDB", "存储操作日志和系统日志")
+    ContainerDb(analyticsDb, "分析数据库", "InfluxDB", "存储时间序列数据和指标")
+    
+    Container(messageQueue, "消息队列", "RabbitMQ", "异步消息处理")
+    Container(fileStorage, "文件存储", "MinIO/阿里云OSS", "存储菜品图片、报表文件")
+    Container(printServer, "打印服务器", "Node.js", "管理打印机和打印任务")
+}
+
+System_Ext(paymentGateway, "支付网关", "第三方支付服务")
+System_Ext(smsService, "短信服务", "短信通知服务")
+System_Ext(deliveryPlatform, "外卖平台", "第三方外卖平台")
+System_Ext(supplierApi, "供应商API", "供应商系统接口")
+System_Ext(printers, "打印设备", "热敏打印机、厨房打印机")
+
+Rel(cashier, posTerminal, "操作", "触摸屏/键盘")
+Rel(waiter, handheldDevice, "点餐", "移动APP")
+Rel(chef, kitchenDisplay, "查看订单", "触摸屏")
+Rel(manager, webAdmin, "管理", "Web浏览器")
+Rel(customer, selfOrderKiosk, "自助点餐", "触摸屏")
+Rel(customer, customerApp, "点餐", "微信小程序")
+
+Rel(posTerminal, loadBalancer, "API调用", "HTTPS")
+Rel(handheldDevice, loadBalancer, "API调用", "HTTPS")
+Rel(kitchenDisplay, loadBalancer, "API调用", "HTTPS/WebSocket")
+Rel(selfOrderKiosk, loadBalancer, "API调用", "HTTPS")
+Rel(webAdmin, loadBalancer, "API调用", "HTTPS")
+Rel(customerApp, loadBalancer, "API调用", "HTTPS")
+
+Rel(loadBalancer, apiGateway, "转发", "HTTP")
+
+Rel(apiGateway, orderService, "订单API", "HTTP/REST")
+Rel(apiGateway, paymentService, "支付API", "HTTP/REST")
+Rel(apiGateway, menuService, "菜品API", "HTTP/REST")
+Rel(apiGateway, inventoryService, "库存API", "HTTP/REST")
+Rel(apiGateway, customerService, "会员API", "HTTP/REST")
+Rel(apiGateway, reportService, "报表API", "HTTP/REST")
+Rel(apiGateway, kitchenService, "厨房API", "HTTP/WebSocket")
+
+Rel(orderService, orderDb, "读写", "JDBC/SQL")
+Rel(orderService, cacheDb, "缓存", "Redis")
+Rel(orderService, messageQueue, "发布", "AMQP")
+
+Rel(paymentService, financeDb, "读写", "JDBC/SQL")
+Rel(paymentService, paymentGateway, "支付", "HTTPS/API")
+Rel(paymentService, messageQueue, "发布", "AMQP")
+
+Rel(menuService, productDb, "读写", "JDBC/SQL")
+Rel(menuService, cacheDb, "缓存", "Redis")
+Rel(menuService, fileStorage, "图片", "HTTP/REST")
+
+Rel(inventoryService, productDb, "读写", "JDBC/SQL")
+Rel(inventoryService, supplierApi, "同步", "HTTPS/API")
+Rel(inventoryService, messageQueue, "发布", "AMQP")
+
+Rel(customerService, customerDb, "读写", "JDBC/SQL")
+Rel(customerService, cacheDb, "缓存", "Redis")
+
+Rel(reportService, orderDb, "查询", "JDBC/SQL")
+Rel(reportService, financeDb, "查询", "JDBC/SQL")
+Rel(reportService, analyticsDb, "写入", "HTTP/API")
+
+Rel(kitchenService, orderDb, "读写", "JDBC/SQL")
+Rel(kitchenService, messageQueue, "订阅", "AMQP")
+Rel(kitchenService, printServer, "打印", "HTTP/REST")
+
+Rel(notificationService, messageQueue, "订阅", "AMQP")
+Rel(notificationService, smsService, "发送", "HTTPS/API")
+
+Rel(messageQueue, deliveryPlatform, "同步", "HTTPS/API")
+Rel(printServer, printers, "打印", "TCP/USB")
+
+@enduml 

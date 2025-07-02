@@ -1,0 +1,148 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title 低代码平台 - 系统架构设计图
+
+LAYOUT_WITH_LEGEND()
+
+!define PRIMARY_COLOR #2E86AB
+!define SECONDARY_COLOR #A23B72  
+!define ACCENT_COLOR #F18F01
+!define NEUTRAL_COLOR #C73E1D
+
+package "客户端层" {
+    [Web管理后台] as WebAdmin <<PRIMARY_COLOR>>
+    [可视化设计器] as VisualDesigner <<PRIMARY_COLOR>>
+    [移动端应用] as MobileApp <<PRIMARY_COLOR>>
+    [生成的应用] as GeneratedApp <<ACCENT_COLOR>>
+}
+
+package "网关层" {
+    [API网关] as APIGateway <<SECONDARY_COLOR>>
+    [负载均衡] as LoadBalancer <<SECONDARY_COLOR>>
+    [反向代理] as ReverseProxy <<SECONDARY_COLOR>>
+}
+
+package "应用服务层" {
+    package "设计时服务" {
+        [设计器服务] as DesignerService <<Service>>
+        [表单设计器] as FormDesigner <<Service>>
+        [页面设计器] as PageDesigner <<Service>>
+        [数据模型设计器] as DataModelDesigner <<Service>>
+        [流程设计器] as WorkflowDesigner <<Service>>
+    }
+    
+    package "运行时服务" {
+        [应用引擎] as AppEngine <<Service>>
+        [表单引擎] as FormEngine <<Service>>
+        [工作流引擎] as WorkflowEngine <<Service>>
+        [数据引擎] as DataEngine <<Service>>
+        [报表引擎] as ReportEngine <<Service>>
+    }
+    
+    package "平台服务" {
+        [用户服务] as UserService <<Service>>
+        [权限服务] as PermissionService <<Service>>
+        [租户服务] as TenantService <<Service>>
+        [配置服务] as ConfigService <<Service>>
+        [监控服务] as MonitorService <<Service>>
+    }
+    
+    package "代码生成与部署" {
+        [代码生成器] as CodeGenerator <<Service>>
+        [应用打包器] as AppPackager <<Service>>
+        [部署管理器] as DeployManager <<Service>>
+        [版本管理器] as VersionManager <<Service>>
+    }
+}
+
+package "中间件层" {
+    [消息队列] as MessageQueue <<Middleware>>
+    [分布式缓存] as DistributedCache <<Cache>>
+    [搜索引擎] as SearchEngine <<Middleware>>
+    [定时任务] as ScheduledJobs <<Middleware>>
+    [文件存储] as FileStorage <<Storage>>
+}
+
+package "数据层" {
+    [平台数据库] as PlatformDB <<Database>>
+    [业务数据库] as BusinessDB <<Database>>
+    [配置数据库] as ConfigDB <<Database>>
+    [日志数据库] as LogDB <<Database>>
+    [数据仓库] as DataWarehouse <<Database>>
+}
+
+package "外部集成" {
+    [企业SSO] as EnterpriseSSO <<External>>
+    [第三方API] as ThirdPartyAPI <<External>>
+    [容器平台] as ContainerPlatform <<External>>
+    [CI/CD平台] as CICDPlatform <<External>>
+    [监控平台] as MonitoringPlatform <<External>>
+}
+
+' 客户端到网关的连接
+WebAdmin --> APIGateway : "HTTPS"
+VisualDesigner --> APIGateway : "HTTPS"
+MobileApp --> APIGateway : "HTTPS"
+GeneratedApp --> APIGateway : "HTTPS"
+
+' 网关层内部连接
+LoadBalancer --> ReverseProxy : "HTTP"
+ReverseProxy --> APIGateway : "HTTP"
+
+' 网关到服务层
+APIGateway --> DesignerService : "HTTP/gRPC"
+APIGateway --> AppEngine : "HTTP/gRPC"
+APIGateway --> UserService : "HTTP/gRPC"
+
+' 设计时服务内部连接
+DesignerService --> FormDesigner : "RPC"
+DesignerService --> PageDesigner : "RPC"
+DesignerService --> DataModelDesigner : "RPC"
+DesignerService --> WorkflowDesigner : "RPC"
+
+' 运行时服务连接
+AppEngine --> FormEngine : "RPC"
+AppEngine --> WorkflowEngine : "RPC"
+AppEngine --> DataEngine : "RPC"
+AppEngine --> ReportEngine : "RPC"
+
+' 平台服务连接
+AppEngine --> UserService : "RPC"
+AppEngine --> PermissionService : "RPC"
+AppEngine --> TenantService : "RPC"
+FormEngine --> ConfigService : "RPC"
+
+' 代码生成和部署流程
+DesignerService --> CodeGenerator : "生成代码"
+CodeGenerator --> AppPackager : "打包应用"
+AppPackager --> DeployManager : "部署应用"
+DeployManager --> VersionManager : "版本管理"
+
+' 服务到中间件连接
+AppEngine --> DistributedCache : "Redis协议"
+WorkflowEngine --> MessageQueue : "AMQP"
+DesignerService --> FileStorage : "文件API"
+ReportEngine --> SearchEngine : "查询API"
+DeployManager --> ScheduledJobs : "定时任务"
+
+' 服务到数据库连接
+UserService --> PlatformDB : "JDBC"
+DataEngine --> BusinessDB : "JDBC"
+ConfigService --> ConfigDB : "JDBC"
+MonitorService --> LogDB : "JDBC"
+ReportEngine --> DataWarehouse : "JDBC"
+
+' 外部系统集成
+UserService --> EnterpriseSSO : "SAML/OAuth"
+AppEngine --> ThirdPartyAPI : "HTTPS/API"
+DeployManager --> ContainerPlatform : "K8s API"
+VersionManager --> CICDPlatform : "Webhook"
+MonitorService --> MonitoringPlatform : "Metrics API"
+
+' 数据同步
+PlatformDB --> DataWarehouse : "ETL"
+BusinessDB --> DataWarehouse : "ETL"
+LogDB --> DataWarehouse : "ETL"
+
+@enduml 

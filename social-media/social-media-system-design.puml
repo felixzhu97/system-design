@@ -1,0 +1,237 @@
+@startuml
+!define RECTANGLE class
+
+title 社交媒体系统架构设计
+
+' 定义颜色主题
+!define PRIMARY_COLOR #2E86AB
+!define SECONDARY_COLOR #A23B72
+!define ACCENT_COLOR #F18F01
+!define NEUTRAL_COLOR #C73E1D
+
+package "客户端层" {
+    [移动端APP] as MobileApp <<Mobile Application>>
+    [Web前端] as WebApp <<Web Application>>
+    [桌面客户端] as DesktopApp <<Desktop Application>>
+}
+
+package "负载均衡层" {
+    [负载均衡器] as LoadBalancer <<Load Balancer>>
+    [API网关] as APIGateway <<API Gateway>>
+}
+
+package "应用服务层" {
+    package "用户服务" {
+        [用户管理服务] as UserService <<User Management>>
+        [认证授权服务] as AuthService <<Authentication & Authorization>>
+        [用户关系服务] as RelationshipService <<User Relationships>>
+    }
+    
+    package "内容服务" {
+        [内容发布服务] as PostService <<Content Publishing>>
+        [评论服务] as CommentService <<Comment System>>
+        [点赞服务] as LikeService <<Like System>>
+        [分享服务] as ShareService <<Share System>>
+    }
+    
+    package "推荐系统" {
+        [内容推荐服务] as RecommendationService <<Content Recommendation>>
+        [用户推荐服务] as UserRecommendationService <<User Recommendation>>
+        [机器学习引擎] as MLEngine <<Machine Learning>>
+    }
+    
+    package "实时通信" {
+        [消息服务] as MessageService <<Messaging>>
+        [通知服务] as NotificationService <<Notification>>
+        [实时推送服务] as PushService <<Real-time Push>>
+    }
+    
+    package "媒体服务" {
+        [图片处理服务] as ImageService <<Image Processing>>
+        [视频处理服务] as VideoService <<Video Processing>>
+        [文件存储服务] as FileStorageService <<File Storage>>
+    }
+    
+    package "搜索服务" {
+        [内容搜索服务] as SearchService <<Content Search>>
+        [用户搜索服务] as UserSearchService <<User Search>>
+    }
+    
+    package "安全服务" {
+        [内容审核服务] as ModerationService <<Content Moderation>>
+        [反垃圾服务] as AntiSpamService <<Anti-Spam>>
+        [风控服务] as RiskControlService <<Risk Control>>
+    }
+}
+
+package "缓存层" {
+    [Redis集群] as RedisCluster <<Redis Cluster>>
+    [Memcached] as Memcached <<Memory Cache>>
+    [CDN] as CDN <<Content Delivery Network>>
+}
+
+package "数据存储层" {
+    package "关系型数据库" {
+        [用户数据库] as UserDB <<MySQL/PostgreSQL>>
+        [内容数据库] as ContentDB <<MySQL/PostgreSQL>>
+        [关系数据库] as RelationshipDB <<MySQL/PostgreSQL>>
+    }
+    
+    package "NoSQL数据库" {
+        [MongoDB集群] as MongoDB <<Document Store>>
+        [Cassandra集群] as Cassandra <<Wide Column Store>>
+        [Neo4j] as Neo4j <<Graph Database>>
+    }
+    
+    package "时序数据库" {
+        [InfluxDB] as InfluxDB <<Time Series DB>>
+    }
+    
+    package "搜索引擎" {
+        [Elasticsearch集群] as Elasticsearch <<Search Engine>>
+    }
+    
+    package "对象存储" {
+        [AWS S3/阿里云OSS] as ObjectStorage <<Object Storage>>
+    }
+}
+
+package "大数据处理" {
+    [Apache Kafka] as Kafka <<Message Queue>>
+    [Apache Spark] as Spark <<Data Processing>>
+    [Apache Flink] as Flink <<Stream Processing>>
+    [数据仓库] as DataWarehouse <<Data Warehouse>>
+}
+
+package "监控与运维" {
+    [监控系统] as MonitoringSystem <<Monitoring>>
+    [日志系统] as LoggingSystem <<Logging>>
+    [告警系统] as AlertingSystem <<Alerting>>
+}
+
+package "外部服务" {
+    [短信服务] as SMSService <<SMS Gateway>>
+    [邮件服务] as EmailService <<Email Service>>
+    [第三方登录] as ThirdPartyAuth <<OAuth Providers>>
+    [支付服务] as PaymentService <<Payment Gateway>>
+}
+
+' 客户端到负载均衡
+MobileApp --> LoadBalancer
+WebApp --> LoadBalancer
+DesktopApp --> LoadBalancer
+
+' 负载均衡到API网关
+LoadBalancer --> APIGateway
+
+' API网关到各个服务
+APIGateway --> UserService
+APIGateway --> AuthService
+APIGateway --> PostService
+APIGateway --> MessageService
+APIGateway --> SearchService
+
+' 用户服务相关连接
+UserService --> UserDB
+UserService --> RedisCluster
+AuthService --> UserDB
+AuthService --> ThirdPartyAuth
+RelationshipService --> RelationshipDB
+RelationshipService --> Neo4j
+
+' 内容服务相关连接
+PostService --> ContentDB
+PostService --> MongoDB
+PostService --> RedisCluster
+CommentService --> ContentDB
+CommentService --> MongoDB
+LikeService --> RedisCluster
+LikeService --> Cassandra
+ShareService --> ContentDB
+
+' 推荐系统连接
+RecommendationService --> MLEngine
+RecommendationService --> RedisCluster
+RecommendationService --> Cassandra
+UserRecommendationService --> Neo4j
+UserRecommendationService --> MLEngine
+MLEngine --> DataWarehouse
+MLEngine --> Spark
+
+' 实时通信连接
+MessageService --> MongoDB
+MessageService --> Kafka
+NotificationService --> RedisCluster
+NotificationService --> Kafka
+PushService --> Kafka
+PushService --> SMSService
+PushService --> EmailService
+
+' 媒体服务连接
+ImageService --> ObjectStorage
+VideoService --> ObjectStorage
+FileStorageService --> ObjectStorage
+ImageService --> CDN
+VideoService --> CDN
+
+' 搜索服务连接
+SearchService --> Elasticsearch
+UserSearchService --> Elasticsearch
+
+' 安全服务连接
+ModerationService --> MLEngine
+ModerationService --> MongoDB
+AntiSpamService --> RedisCluster
+RiskControlService --> InfluxDB
+
+' 大数据处理连接
+Kafka --> Flink
+Kafka --> Spark
+Flink --> DataWarehouse
+Spark --> DataWarehouse
+
+' 缓存连接
+RedisCluster --> UserDB
+RedisCluster --> ContentDB
+CDN --> ObjectStorage
+
+' 监控连接
+MonitoringSystem --> InfluxDB
+LoggingSystem --> Elasticsearch
+AlertingSystem --> MonitoringSystem
+
+' 数据流连接
+UserService --> Kafka
+PostService --> Kafka
+CommentService --> Kafka
+LikeService --> Kafka
+MessageService --> Kafka
+
+note right of MLEngine
+    机器学习引擎负责：
+    - 协同过滤推荐
+    - 内容基础推荐
+    - 深度学习推荐
+    - 用户行为分析
+    - 内容质量评估
+end note
+
+note right of Kafka
+    消息队列处理：
+    - 用户行为事件
+    - 内容更新事件
+    - 通知消息
+    - 数据同步
+    - 异步任务处理
+end note
+
+note bottom of RedisCluster
+    缓存策略：
+    - 用户会话信息
+    - 热点内容缓存
+    - 计数器（点赞、评论数）
+    - 排行榜数据
+    - 实时推荐结果
+end note
+
+@enduml 

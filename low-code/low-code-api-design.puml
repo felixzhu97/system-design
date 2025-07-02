@@ -1,0 +1,196 @@
+@startuml
+
+title 低代码平台 - API设计图
+
+!define PRIMARY_COLOR #2E86AB
+!define SECONDARY_COLOR #A23B72  
+!define ACCENT_COLOR #F18F01
+
+package "认证与授权API" <<PRIMARY_COLOR>> {
+    interface "/auth/login" as LoginAPI {
+        POST: 用户登录
+        --
+        Request: username, password
+        Response: token, userInfo
+    }
+    
+    interface "/auth/logout" as LogoutAPI {
+        POST: 用户登出
+        --
+        Request: token
+        Response: success
+    }
+    
+    interface "/auth/refresh" as RefreshAPI {
+        POST: 刷新令牌
+        --
+        Request: refreshToken
+        Response: newToken
+    }
+    
+    interface "/users" as UserAPI {
+        GET: 查询用户列表
+        POST: 创建用户
+        PUT: 更新用户
+        DELETE: 删除用户
+        --
+        权限控制: 管理员
+    }
+}
+
+package "应用管理API" <<SECONDARY_COLOR>> {
+    interface "/apps" as AppAPI {
+        GET: 查询应用列表
+        POST: 创建应用
+        PUT: 更新应用
+        DELETE: 删除应用
+        --
+        支持分页和筛选
+    }
+    
+    interface "/apps/{id}/pages" as PageAPI {
+        GET: 查询页面列表
+        POST: 创建页面
+        PUT: 更新页面
+        DELETE: 删除页面
+        --
+        页面配置管理
+    }
+    
+    interface "/apps/{id}/models" as ModelAPI {
+        GET: 查询数据模型
+        POST: 创建数据模型
+        PUT: 更新数据模型
+        DELETE: 删除数据模型
+        --
+        数据结构定义
+    }
+    
+    interface "/apps/{id}/deploy" as DeployAPI {
+        POST: 部署应用
+        GET: 查询部署状态
+        --
+        应用发布管理
+    }
+}
+
+package "设计器API" <<ACCENT_COLOR>> {
+    interface "/designer/components" as ComponentAPI {
+        GET: 获取组件库
+        POST: 保存组件配置
+        --
+        拖拽组件管理
+    }
+    
+    interface "/designer/forms" as FormAPI {
+        GET: 表单配置
+        POST: 保存表单设计
+        PUT: 更新表单
+        --
+        表单设计器
+    }
+    
+    interface "/designer/workflows" as WorkflowAPI {
+        GET: 工作流配置
+        POST: 保存流程设计
+        PUT: 更新流程
+        --
+        流程设计器
+    }
+    
+    interface "/designer/preview" as PreviewAPI {
+        POST: 预览应用
+        --
+        实时预览功能
+    }
+}
+
+package "运行时API" {
+    interface "/runtime/forms/{id}" as RuntimeFormAPI {
+        GET: 渲染表单
+        POST: 提交表单数据
+        --
+        动态表单引擎
+    }
+    
+    interface "/runtime/data/{model}" as RuntimeDataAPI {
+        GET: 查询业务数据
+        POST: 新增数据
+        PUT: 更新数据
+        DELETE: 删除数据
+        --
+        动态数据操作
+    }
+    
+    interface "/runtime/workflows" as RuntimeWorkflowAPI {
+        GET: 查询流程实例
+        POST: 启动流程
+        PUT: 处理任务
+        --
+        工作流执行
+    }
+    
+    interface "/runtime/reports" as RuntimeReportAPI {
+        GET: 查询报表
+        POST: 生成报表
+        --
+        报表引擎
+    }
+}
+
+package "系统管理API" {
+    interface "/system/tenants" as TenantAPI {
+        GET: 租户管理
+        POST: 创建租户
+        PUT: 更新租户
+        --
+        多租户管理
+    }
+    
+    interface "/system/configs" as ConfigAPI {
+        GET: 系统配置
+        PUT: 更新配置
+        --
+        系统参数配置
+    }
+    
+    interface "/system/logs" as LogAPI {
+        GET: 操作日志
+        --
+        日志查询和监控
+    }
+    
+    interface "/system/files" as FileAPI {
+        POST: 文件上传
+        GET: 文件下载
+        DELETE: 文件删除
+        --
+        文件管理服务
+    }
+}
+
+' API Gateway路由
+[API Gateway] --> LoginAPI
+[API Gateway] --> AppAPI
+[API Gateway] --> ComponentAPI
+[API Gateway] --> RuntimeFormAPI
+[API Gateway] --> TenantAPI
+
+' 服务间调用关系
+AppAPI --> ModelAPI : "数据模型管理"
+FormAPI --> ComponentAPI : "组件配置"
+RuntimeFormAPI --> RuntimeDataAPI : "数据操作"
+RuntimeWorkflowAPI --> RuntimeFormAPI : "表单关联"
+DeployAPI --> RuntimeFormAPI : "应用部署"
+
+' 权限控制
+LoginAPI ..> UserAPI : "认证"
+UserAPI ..> AppAPI : "授权"
+TenantAPI ..> UserAPI : "租户隔离"
+
+note top of LoginAPI : "JWT Token认证\n支持SSO集成\n密码策略控制"
+note top of AppAPI : "支持多租户隔离\n版本管理\n权限控制"
+note top of RuntimeFormAPI : "动态表单渲染\n数据验证\n业务规则"
+note top of DeployAPI : "容器化部署\n版本回滚\n健康检查"
+
+@enduml 

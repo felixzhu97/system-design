@@ -1,0 +1,265 @@
+@startuml
+!define RECTANGLE class
+
+title 餐饮业POS系统架构设计
+
+' 定义颜色主题
+!define PRIMARY_COLOR #FF6B35
+!define SECONDARY_COLOR #004E89
+!define ACCENT_COLOR #00A896
+!define NEUTRAL_COLOR #9A031E
+
+package "前端设备层" {
+    [POS收银终端] as POSTerminal <<POS Terminal>>
+    [移动端APP] as MobileApp <<Mobile App>>
+    [Web管理后台] as WebAdmin <<Web Admin>>
+    [自助点餐机] as SelfOrderKiosk <<Self-Order Kiosk>>
+    [服务员手持设备] as HandheldDevice <<Handheld Device>>
+}
+
+package "网关层" {
+    [API网关] as APIGateway <<API Gateway>>
+    [负载均衡器] as LoadBalancer <<Load Balancer>>
+}
+
+package "核心业务服务层" {
+    package "订单管理" {
+        [订单服务] as OrderService <<Order Management>>
+        [桌台管理服务] as TableService <<Table Management>>
+        [排队服务] as QueueService <<Queue Management>>
+        [外卖服务] as DeliveryService <<Delivery Management>>
+    }
+    
+    package "商品管理" {
+        [菜品管理服务] as MenuService <<Menu Management>>
+        [库存管理服务] as InventoryService <<Inventory Management>>
+        [供应商管理服务] as SupplierService <<Supplier Management>>
+        [采购管理服务] as ProcurementService <<Procurement Management>>
+    }
+    
+    package "支付系统" {
+        [支付处理服务] as PaymentService <<Payment Processing>>
+        [账单管理服务] as BillService <<Bill Management>>
+        [优惠券服务] as CouponService <<Coupon Management>>
+        [会员积分服务] as LoyaltyService <<Loyalty Program>>
+    }
+    
+    package "用户管理" {
+        [会员管理服务] as CustomerService <<Customer Management>>
+        [员工管理服务] as EmployeeService <<Employee Management>>
+        [权限管理服务] as AuthService <<Authentication & Authorization>>
+        [角色管理服务] as RoleService <<Role Management>>
+    }
+    
+    package "厨房系统" {
+        [厨房显示服务] as KitchenDisplayService <<Kitchen Display>>
+        [制作流程服务] as CookingProcessService <<Cooking Process>>
+        [食材管理服务] as IngredientService <<Ingredient Management>>
+    }
+    
+    package "营销系统" {
+        [促销活动服务] as PromotionService <<Promotion Management>>
+        [会员营销服务] as MarketingService <<Marketing Campaign>>
+        [推荐服务] as RecommendationService <<Recommendation>>
+    }
+    
+    package "报表分析" {
+        [销售报表服务] as SalesReportService <<Sales Reporting>>
+        [财务分析服务] as FinancialAnalysisService <<Financial Analysis>>
+        [库存分析服务] as InventoryAnalysisService <<Inventory Analysis>>
+        [客户分析服务] as CustomerAnalysisService <<Customer Analytics>>
+    }
+}
+
+package "缓存层" {
+    [Redis集群] as RedisCluster <<Redis Cluster>>
+    [本地缓存] as LocalCache <<Local Cache>>
+}
+
+package "数据存储层" {
+    package "关系型数据库" {
+        [订单数据库] as OrderDB <<MySQL/PostgreSQL>>
+        [商品数据库] as ProductDB <<MySQL/PostgreSQL>>
+        [用户数据库] as UserDB <<MySQL/PostgreSQL>>
+        [财务数据库] as FinanceDB <<MySQL/PostgreSQL>>
+    }
+    
+    package "时序数据库" {
+        [销售数据库] as SalesTimeSeriesDB <<InfluxDB>>
+        [操作日志数据库] as LogTimeSeriesDB <<InfluxDB>>
+    }
+    
+    package "文档数据库" {
+        [配置数据库] as ConfigDB <<MongoDB>>
+        [日志数据库] as LogDB <<MongoDB>>
+    }
+}
+
+package "外部硬件设备" {
+    [热敏打印机] as ThermalPrinter <<Thermal Printer>>
+    [厨房打印机] as KitchenPrinter <<Kitchen Printer>>
+    [厨房显示屏] as KitchenDisplay <<Kitchen Display Screen>>
+    [扫码枪] as BarcodeScanner <<Barcode Scanner>>
+    [收银盒] as CashDrawer <<Cash Drawer>>
+    [称重设备] as WeighingScale <<Weighing Scale>>
+}
+
+package "外部服务" {
+    [支付网关] as PaymentGateway <<Payment Gateway>>
+    [短信服务] as SMSService <<SMS Service>>
+    [第三方外卖平台] as DeliveryPlatform <<Delivery Platform API>>
+    [电子发票服务] as EInvoiceService <<E-Invoice Service>>
+    [税务系统] as TaxSystem <<Tax System>>
+}
+
+package "消息队列" {
+    [消息队列] as MessageQueue <<Message Queue>>
+}
+
+package "监控运维" {
+    [监控系统] as MonitoringSystem <<System Monitoring>>
+    [日志系统] as LoggingSystem <<Logging System>>
+    [备份系统] as BackupSystem <<Backup System>>
+}
+
+' 前端设备到网关
+POSTerminal --> LoadBalancer
+MobileApp --> LoadBalancer
+WebAdmin --> LoadBalancer
+SelfOrderKiosk --> LoadBalancer
+HandheldDevice --> LoadBalancer
+
+' 网关层连接
+LoadBalancer --> APIGateway
+
+' API网关到核心服务
+APIGateway --> OrderService
+APIGateway --> MenuService
+APIGateway --> PaymentService
+APIGateway --> CustomerService
+APIGateway --> EmployeeService
+APIGateway --> AuthService
+
+' 订单管理连接
+OrderService --> OrderDB
+OrderService --> RedisCluster
+OrderService --> MessageQueue
+TableService --> OrderDB
+TableService --> RedisCluster
+QueueService --> RedisCluster
+DeliveryService --> OrderDB
+DeliveryService --> DeliveryPlatform
+
+' 商品管理连接
+MenuService --> ProductDB
+MenuService --> RedisCluster
+InventoryService --> ProductDB
+InventoryService --> RedisCluster
+SupplierService --> ProductDB
+ProcurementService --> ProductDB
+
+' 支付系统连接
+PaymentService --> FinanceDB
+PaymentService --> PaymentGateway
+PaymentService --> MessageQueue
+BillService --> FinanceDB
+BillService --> EInvoiceService
+CouponService --> UserDB
+CouponService --> RedisCluster
+LoyaltyService --> UserDB
+LoyaltyService --> RedisCluster
+
+' 用户管理连接
+CustomerService --> UserDB
+CustomerService --> RedisCluster
+EmployeeService --> UserDB
+AuthService --> UserDB
+AuthService --> RedisCluster
+RoleService --> UserDB
+
+' 厨房系统连接
+KitchenDisplayService --> OrderDB
+KitchenDisplayService --> KitchenDisplay
+KitchenDisplayService --> MessageQueue
+CookingProcessService --> OrderDB
+CookingProcessService --> MessageQueue
+IngredientService --> ProductDB
+
+' 营销系统连接
+PromotionService --> UserDB
+PromotionService --> RedisCluster
+MarketingService --> UserDB
+MarketingService --> SMSService
+RecommendationService --> OrderDB
+RecommendationService --> UserDB
+
+' 报表分析连接
+SalesReportService --> SalesTimeSeriesDB
+SalesReportService --> OrderDB
+FinancialAnalysisService --> FinanceDB
+FinancialAnalysisService --> SalesTimeSeriesDB
+InventoryAnalysisService --> ProductDB
+CustomerAnalysisService --> UserDB
+CustomerAnalysisService --> OrderDB
+
+' 硬件设备连接
+OrderService --> ThermalPrinter
+OrderService --> KitchenPrinter
+PaymentService --> CashDrawer
+InventoryService --> BarcodeScanner
+InventoryService --> WeighingScale
+
+' 消息队列连接
+MessageQueue --> KitchenDisplayService
+MessageQueue --> CookingProcessService
+MessageQueue --> SalesReportService
+MessageQueue --> InventoryService
+
+' 监控连接
+MonitoringSystem --> LogTimeSeriesDB
+LoggingSystem --> LogDB
+BackupSystem --> OrderDB
+BackupSystem --> ProductDB
+BackupSystem --> UserDB
+BackupSystem --> FinanceDB
+
+' 税务连接
+BillService --> TaxSystem
+
+note right of OrderService
+    订单服务核心功能：
+    - 堂食订单处理
+    - 外卖订单管理
+    - 订单状态跟踪
+    - 拆单合单处理
+    - 订单修改退款
+end note
+
+note right of PaymentService
+    支付服务功能：
+    - 多种支付方式支持
+    - 分账处理
+    - 退款处理
+    - 优惠计算
+    - 发票开具
+end note
+
+note bottom of RedisCluster
+    缓存策略：
+    - 菜品信息缓存
+    - 桌台状态缓存
+    - 会员信息缓存
+    - 库存实时数据
+    - 营销活动缓存
+end note
+
+note right of MessageQueue
+    异步消息处理：
+    - 订单状态变更通知
+    - 厨房制作指令
+    - 库存变更通知
+    - 会员积分变更
+    - 报表数据更新
+end note
+
+@enduml 

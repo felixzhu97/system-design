@@ -1,0 +1,151 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# 系统设计图和C4模型PlantUML规范
+
+## 项目结构约定
+
+本项目使用PlantUML格式创建系统设计图和C4模型图，每个业务领域应包含以下标准文件：
+
+- `{domain}-c4-context.puml` - C4上下文图（Level 1）
+- `{domain}-c4-container.puml` - C4容器图（Level 2）  
+- `{domain}-c4-component.puml` - C4组件图（Level 3）
+- `{domain}-system-design.puml` - 详细系统架构设计图
+- `{domain}-data-flow.puml` - 数据流程图
+- `{domain}-database-design.puml` - 数据库设计图
+- `{domain}-api-design.puml` - API设计图
+
+## C4模型层次结构
+
+### Level 1: 系统上下文图 (Context)
+- 展示系统与用户、外部系统的交互关系
+- 使用 `!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml`
+- 包含：`Person()`、`System()`、`System_Ext()`、`Rel()`
+- 参考示例：[restaurant-pos-c4-context.puml](mdc:restaurant-pos/restaurant-pos-c4-context.puml)
+
+### Level 2: 容器图 (Container)  
+- 展示系统内部的高级技术构建块
+- 使用 `!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml`
+- 包含：`Container()`、`ContainerDb()`、`Container_Ext()`
+
+### Level 3: 组件图 (Component)
+- 展示容器内部的组件及其交互
+- 使用 `!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml`  
+- 包含：`Component()`、`ComponentDb()`、`ComponentQueue()`
+
+## 系统设计图约定
+
+### 架构层次组织
+使用package结构组织不同架构层：
+
+```puml
+package "客户端层" {
+    [移动端APP] as MobileApp
+    [Web前端] as WebApp
+}
+
+package "服务层" {
+    package "业务服务" {
+        [用户服务] as UserService
+        [订单服务] as OrderService
+    }
+}
+
+package "数据层" {
+    [MySQL数据库] as MySQL
+    [Redis缓存] as Redis
+}
+```
+
+参考示例：[social-media-system-design.puml](mdc:social-media/social-media-system-design.puml)
+
+### 组件命名约定
+- 使用中文描述，英文别名：`[用户管理服务] as UserService`
+- 添加组件类型标注：`<<Service>>`、`<<Database>>`、`<<Cache>>`
+- 外部系统使用 `_Ext` 后缀
+
+### 连接关系表示
+- 使用 `-->` 表示同步调用
+- 使用 `..>` 表示异步调用  
+- 使用 `-up->`, `-down->`, `-left->`, `-right->` 控制方向
+- 添加关系描述：`UserService --> UserDB : "查询用户信息"`
+
+## 文件头部标准
+
+每个PlantUML文件应包含：
+
+```puml
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+title {系统名称} - {图表类型}
+
+LAYOUT_WITH_LEGEND()
+```
+
+## 颜色和主题
+
+### 颜色定义
+```puml
+!define PRIMARY_COLOR #2E86AB
+!define SECONDARY_COLOR #A23B72  
+!define ACCENT_COLOR #F18F01
+!define NEUTRAL_COLOR #C73E1D
+```
+
+### 主题应用
+- 关键业务组件使用主色调
+- 外部系统使用中性色调
+- 缓存和存储使用次要色调
+
+## 注释和文档
+
+### 组件描述
+- 每个组件应包含简洁的中文描述
+- 说明组件的主要职责和功能
+- 标注技术栈和关键特性
+
+### 关系说明  
+- 描述交互协议：`"HTTPS/API"`、`"WebSocket"`、`"消息队列"`
+- 说明数据传输内容：`"用户认证信息"`、`"订单数据"`
+
+## 外部系统集成
+
+### 常见外部系统模式
+- 支付系统：`System_Ext(paymentGateway, "支付网关", "支付宝、微信支付等")`
+- 短信服务：`System_Ext(smsService, "短信服务", "发送验证码和通知")`  
+- 第三方登录：`System_Ext(oauthProviders, "第三方登录", "微信、QQ等OAuth服务")`
+
+## 数据流图规范
+
+### 流程表示
+```puml
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Dynamic.puml
+
+title 数据处理流程
+
+Rel_D(user, api, "1. 提交请求")
+Rel_D(api, service, "2. 业务处理") 
+Rel_D(service, db, "3. 数据持久化")
+Rel_U(db, service, "4. 返回结果")
+Rel_U(service, api, "5. 响应数据")
+Rel_U(api, user, "6. 返回给用户")
+```
+
+## 最佳实践
+
+1. **模块化设计**：将复杂系统拆分为多个相互关联的图表
+2. **一致性**：在项目内保持命名、颜色、布局的一致性  
+3. **可读性**：避免过度复杂的图表，必要时拆分为多个视图
+4. **更新维护**：系统变更时及时更新相关图表
+5. **版本控制**：重要变更时保留历史版本注释
+
+## 工具集成
+
+- 使用PlantUML官方插件进行实时预览
+- 集成CI/CD生成图片文档  
+- 建议使用SVG格式输出以保证清晰度
+- 配置自动化图表生成和更新流程

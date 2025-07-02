@@ -1,0 +1,183 @@
+@startuml
+!theme plain
+title 社交媒体系统API设计
+
+package "认证授权API" {
+    class AuthAPI {
+        + POST /api/v1/auth/register
+        + POST /api/v1/auth/login
+        + POST /api/v1/auth/logout
+        + POST /api/v1/auth/refresh
+        + POST /api/v1/auth/forgot-password
+        + POST /api/v1/auth/reset-password
+    }
+}
+
+package "用户管理API" {
+    class UserAPI {
+        + GET /api/v1/users/profile
+        + PUT /api/v1/users/profile
+        + GET /api/v1/users/{user_id}
+        + POST /api/v1/users/{user_id}/follow
+        + DELETE /api/v1/users/{user_id}/follow
+        + GET /api/v1/users/{user_id}/followers
+        + GET /api/v1/users/{user_id}/following
+        + POST /api/v1/users/{user_id}/block
+        + DELETE /api/v1/users/{user_id}/block
+    }
+}
+
+package "内容管理API" {
+    class PostAPI {
+        + POST /api/v1/posts
+        + GET /api/v1/posts/{post_id}
+        + PUT /api/v1/posts/{post_id}
+        + DELETE /api/v1/posts/{post_id}
+        + GET /api/v1/posts/feed
+        + GET /api/v1/users/{user_id}/posts
+        + GET /api/v1/posts/trending
+    }
+}
+
+package "互动功能API" {
+    class InteractionAPI {
+        + POST /api/v1/posts/{post_id}/like
+        + DELETE /api/v1/posts/{post_id}/like
+        + GET /api/v1/posts/{post_id}/likes
+        + POST /api/v1/posts/{post_id}/comments
+        + GET /api/v1/posts/{post_id}/comments
+        + PUT /api/v1/comments/{comment_id}
+        + DELETE /api/v1/comments/{comment_id}
+        + POST /api/v1/posts/{post_id}/share
+        + GET /api/v1/posts/{post_id}/shares
+    }
+}
+
+package "消息通信API" {
+    class MessageAPI {
+        + GET /api/v1/conversations
+        + POST /api/v1/conversations
+        + GET /api/v1/conversations/{id}
+        + PUT /api/v1/conversations/{id}
+        + DELETE /api/v1/conversations/{id}
+        + GET /api/v1/conversations/{id}/messages
+        + POST /api/v1/conversations/{id}/messages
+        + PUT /api/v1/messages/{id}/read
+        + DELETE /api/v1/messages/{id}
+    }
+}
+
+package "搜索API" {
+    class SearchAPI {
+        + GET /api/v1/search/users
+        + GET /api/v1/search/posts
+        + GET /api/v1/search/hashtags
+        + GET /api/v1/search/suggestions
+        + GET /api/v1/trending/hashtags
+        + GET /api/v1/trending/topics
+    }
+}
+
+package "通知API" {
+    class NotificationAPI {
+        + GET /api/v1/notifications
+        + PUT /api/v1/notifications/{id}/read
+        + PUT /api/v1/notifications/read-all
+        + DELETE /api/v1/notifications/{id}
+        + GET /api/v1/notifications/unread-count
+        + PUT /api/v1/notifications/settings
+    }
+}
+
+package "媒体文件API" {
+    class MediaAPI {
+        + POST /api/v1/media/upload
+        + GET /api/v1/media/{file_id}
+        + DELETE /api/v1/media/{file_id}
+        + POST /api/v1/media/upload/avatar
+        + POST /api/v1/media/upload/batch
+        + GET /api/v1/media/user/{user_id}
+    }
+}
+
+package "推荐系统API" {
+    class RecommendationAPI {
+        + GET /api/v1/recommendations/posts
+        + GET /api/v1/recommendations/users
+        + POST /api/v1/recommendations/feedback
+        + GET /api/v1/recommendations/explore
+        + PUT /api/v1/recommendations/preferences
+    }
+}
+
+package "管理后台API" {
+    class AdminAPI {
+        + GET /api/v1/admin/users
+        + PUT /api/v1/admin/users/{id}/status
+        + GET /api/v1/admin/posts
+        + PUT /api/v1/admin/posts/{id}/status
+        + GET /api/v1/admin/reports
+        + PUT /api/v1/admin/reports/{id}/handle
+        + GET /api/v1/admin/statistics
+        + GET /api/v1/admin/system/health
+    }
+}
+
+note as CommonResponse
+    通用响应格式:
+    {
+        "code": 200,
+        "message": "success", 
+        "data": {...},
+        "timestamp": "2024-01-01T00:00:00Z"
+    }
+    
+    分页响应:
+    {
+        "code": 200,
+        "message": "success",
+        "data": {
+            "items": [...],
+            "total": 100,
+            "page": 1,
+            "limit": 20,
+            "has_more": true
+        }
+    }
+end note
+
+note as Authentication
+    认证方式:
+    - JWT Token认证
+    - Header: Authorization: Bearer <token>
+    - Token有效期: 24小时
+    - Refresh Token有效期: 30天
+    
+    权限级别:
+    - Public: 无需认证
+    - User: 需要用户认证
+    - Admin: 需要管理员权限
+end note
+
+note as RateLimiting
+    API限流策略:
+    - 登录/注册: 5次/分钟
+    - 发帖: 10次/分钟
+    - 点赞/评论: 60次/分钟
+    - 搜索: 30次/分钟
+    - 上传文件: 20次/分钟
+    - 其他接口: 100次/分钟
+end note
+
+note as ErrorCodes
+    常见错误码:
+    - 400: 请求参数错误
+    - 401: 未认证
+    - 403: 权限不足
+    - 404: 资源不存在
+    - 409: 资源冲突
+    - 429: 请求过于频繁
+    - 500: 服务器内部错误
+end note
+
+@enduml 

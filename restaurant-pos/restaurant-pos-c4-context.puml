@@ -1,0 +1,44 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+title 餐饮POS系统 - 系统上下文图 (C4 Level 1)
+
+LAYOUT_WITH_LEGEND()
+
+Person(cashier, "收银员", "负责收银、下单、处理支付的前台员工")
+Person(waiter, "服务员", "负责点餐、传菜、客户服务的服务员工")
+Person(chef, "厨师", "负责制作菜品的厨房员工")
+Person(manager, "店长", "负责店铺管理、数据分析的管理人员")
+Person(customer, "顾客", "到店就餐的客户")
+Person(admin, "系统管理员", "负责系统维护和配置的技术人员")
+
+System_Boundary(c1, "餐饮POS系统") {
+    System(posSystem, "POS收银系统", "完整的餐饮业务管理系统，包含点餐、收银、库存、报表等功能")
+}
+
+System_Ext(paymentGateway, "支付网关", "支付宝、微信支付、银联等第三方支付服务")
+System_Ext(smsService, "短信服务", "发送订单通知、营销短信等")
+System_Ext(deliveryPlatform, "外卖平台", "美团、饿了么等第三方外卖平台API")
+System_Ext(supplierSystem, "供应商系统", "食材供应商的库存管理系统")
+System_Ext(taxSystem, "税务系统", "税务局电子发票系统")
+System_Ext(accountingSystem, "财务系统", "企业ERP财务管理系统")
+System_Ext(loyaltyProvider, "会员服务商", "第三方会员积分服务平台")
+System_Ext(printerDriver, "打印机驱动", "热敏打印机、厨房打印机驱动程序")
+
+Rel(cashier, posSystem, "使用收银功能", "POS终端")
+Rel(waiter, posSystem, "使用点餐功能", "手持设备/平板")
+Rel(chef, posSystem, "查看订单", "厨房显示屏")
+Rel(manager, posSystem, "查看报表", "Web管理后台")
+Rel(customer, posSystem, "自助点餐", "自助点餐机/小程序")
+Rel(admin, posSystem, "系统管理", "Web管理后台")
+
+Rel(posSystem, paymentGateway, "处理支付", "HTTPS/API")
+Rel(posSystem, smsService, "发送通知", "HTTPS/API")
+Rel(posSystem, deliveryPlatform, "同步订单", "HTTPS/API")
+Rel(posSystem, supplierSystem, "同步库存", "HTTPS/API")
+Rel(posSystem, taxSystem, "电子发票", "HTTPS/API")
+Rel(posSystem, accountingSystem, "财务数据", "HTTPS/API")
+Rel(posSystem, loyaltyProvider, "积分服务", "HTTPS/API")
+Rel(posSystem, printerDriver, "打印订单", "USB/网络")
+
+@enduml 

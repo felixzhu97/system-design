@@ -1,0 +1,67 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title 社交媒体系统 - 内容服务组件图 (C4 Level 3)
+
+LAYOUT_WITH_LEGEND()
+
+Container(webApp, "Web应用", "React/Vue.js", "社交媒体Web客户端")
+Container(mobileApp, "移动应用", "React Native/Flutter", "移动客户端")
+Container(apiGateway, "API网关", "Kong/Zuul", "API统一入口")
+
+Container_Boundary(contentService, "内容服务") {
+    Component(contentController, "内容控制器", "Spring MVC Controller", "处理内容相关HTTP请求")
+    Component(postService, "发帖服务", "Spring Service", "处理发帖业务逻辑")
+    Component(commentService, "评论服务", "Spring Service", "处理评论业务逻辑")
+    Component(likeService, "点赞服务", "Spring Service", "处理点赞业务逻辑")
+    Component(shareService, "分享服务", "Spring Service", "处理分享业务逻辑")
+    Component(contentValidator, "内容验证器", "Spring Component", "验证内容格式和规则")
+    Component(contentProcessor, "内容处理器", "Spring Component", "处理内容格式化、敏感词过滤")
+    Component(contentRepository, "内容仓储", "Spring Data JPA", "内容数据访问层")
+    Component(cacheManager, "缓存管理器", "Spring Cache", "管理内容缓存")
+    Component(eventPublisher, "事件发布器", "Spring Event", "发布内容变更事件")
+}
+
+ContainerDb(contentDb, "内容数据库", "MySQL/PostgreSQL", "存储内容数据")
+ContainerDb(cacheDb, "缓存数据库", "Redis", "缓存热点内容")
+Container(messageQueue, "消息队列", "Apache Kafka", "异步消息处理")
+Container(mediaService, "媒体服务", "Go/Java", "处理图片视频")
+Container(searchService, "搜索服务", "Elasticsearch", "内容搜索")
+Container(moderationService, "内容审核服务", "Python/AI", "AI内容审核")
+
+Rel(webApp, apiGateway, "HTTP请求", "HTTPS/REST")
+Rel(mobileApp, apiGateway, "HTTP请求", "HTTPS/REST")
+Rel(apiGateway, contentController, "路由请求", "HTTP/REST")
+
+Rel(contentController, postService, "调用", "Java Method")
+Rel(contentController, commentService, "调用", "Java Method")
+Rel(contentController, likeService, "调用", "Java Method")
+Rel(contentController, shareService, "调用", "Java Method")
+
+Rel(postService, contentValidator, "验证内容", "Java Method")
+Rel(postService, contentProcessor, "处理内容", "Java Method")
+Rel(postService, contentRepository, "保存数据", "JPA")
+Rel(postService, cacheManager, "更新缓存", "Redis")
+Rel(postService, eventPublisher, "发布事件", "Spring Event")
+
+Rel(commentService, contentValidator, "验证评论", "Java Method")
+Rel(commentService, contentRepository, "保存评论", "JPA")
+Rel(commentService, cacheManager, "更新缓存", "Redis")
+Rel(commentService, eventPublisher, "发布事件", "Spring Event")
+
+Rel(likeService, contentRepository, "更新点赞", "JPA")
+Rel(likeService, cacheManager, "更新缓存", "Redis")
+Rel(likeService, eventPublisher, "发布事件", "Spring Event")
+
+Rel(shareService, contentRepository, "记录分享", "JPA")
+Rel(shareService, eventPublisher, "发布事件", "Spring Event")
+
+Rel(contentRepository, contentDb, "读写数据", "JDBC/SQL")
+Rel(cacheManager, cacheDb, "缓存操作", "Redis Protocol")
+Rel(eventPublisher, messageQueue, "发送消息", "Kafka Protocol")
+
+Rel(contentProcessor, mediaService, "处理媒体", "HTTP/REST")
+Rel(contentProcessor, moderationService, "内容审核", "HTTP/REST")
+Rel(eventPublisher, searchService, "更新索引", "HTTP/REST")
+
+@enduml 

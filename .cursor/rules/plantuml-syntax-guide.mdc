@@ -1,0 +1,434 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# PlantUML语法技巧指南
+
+## 基础语法结构
+
+### 文件基本结构
+```puml
+@startuml
+' 注释：图表标题和包含
+title 图表标题
+!include 库文件路径
+
+' 注释：元素定义
+[元素定义区域]
+
+' 注释：关系定义
+[关系定义区域]
+
+' 注释：样式和布局
+[样式定义区域]
+
+@enduml
+```
+
+### 常用库文件引用
+```puml
+' C4模型库
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Dynamic.puml
+
+' AWS图标库
+!include https://raw.githubusercontent.com/plantuml-stdlib/AWS-PlantUML/master/dist/AWSCommon.puml
+
+' Azure图标库  
+!include https://raw.githubusercontent.com/plantuml-stdlib/Azure-PlantUML/master/dist/AzureCommon.puml
+```
+
+## 元素定义语法
+
+### 基础组件元素
+```puml
+' 简单组件
+[组件名称] as alias
+component "组件名称" as alias  
+rectangle "矩形组件" as alias
+database "数据库" as alias
+cloud "云服务" as alias
+node "节点" as alias
+```
+
+### 参与者和边界
+```puml
+' 参与者
+actor "参与者" as actor1
+boundary "边界" as boundary1  
+control "控制器" as control1
+entity "实体" as entity1
+database "数据存储" as db1
+```
+
+### 包和分组
+```puml
+package "包名称" {
+    [组件1]
+    [组件2]
+}
+
+folder "文件夹" {
+    [文件1]
+    [文件2]
+}
+
+frame "框架" {
+    [模块1]
+    [模块2]
+}
+
+cloud "云环境" {
+    [服务1] 
+    [服务2]
+}
+```
+
+## 关系和连接语法
+
+### 基本连接类型
+```puml
+' 实线箭头（依赖）
+A --> B
+
+' 虚线箭头（实现）
+A ..> B
+
+' 粗线箭头（组合）
+A ==> B
+
+' 无箭头实线（关联）
+A -- B
+
+' 无箭头虚线
+A .. B
+```
+
+### 方向控制
+```puml
+' 明确方向
+A -up-> B    ' 向上
+A -down-> B  ' 向下  
+A -left-> B  ' 向左
+A -right-> B ' 向右
+
+' 长距离连接
+A -up--> B   ' 较长的向上连接
+A ---> B     ' 较长的水平连接
+```
+
+### 关系标注
+```puml
+' 关系描述
+A --> B : 使用
+A --> B : 调用API
+A --> B : 数据传输
+
+' 在关系线上添加标签
+A --> B : label1
+A --> B : label2
+
+' 关系上的注释
+A --> B
+note on link : 这是关系说明
+
+' 关系的基数
+A "1" --> "many" B
+A ||--o{ B
+```
+
+## 样式和主题
+
+### 颜色定义
+```puml
+' 预定义颜色常量
+!define PRIMARY_COLOR #2E86AB
+!define SECONDARY_COLOR #A23B72
+!define SUCCESS_COLOR #28a745
+!define WARNING_COLOR #ffc107
+!define DANGER_COLOR #dc3545
+!define INFO_COLOR #17a2b8
+
+' 应用颜色
+[组件] <<PRIMARY_COLOR>>
+database DB <<INFO_COLOR>>
+```
+
+### 组件样式
+```puml
+' 背景色
+component C1 #lightblue
+[组件] #red
+
+' 文字样式  
+component "**粗体组件**" as C1
+component "//斜体组件//" as C2
+component "__下划线组件__" as C3
+
+' 组件类型标注
+[Web服务] <<Service>>
+[数据库] <<Database>>
+[缓存] <<Cache>>
+```
+
+### 皮肤主题
+```puml
+' 预定义主题
+!theme amiga
+!theme aws-orange
+!theme blueprint
+!theme carbon-gray
+!theme cerulean
+!theme cerulean-outline
+!theme crt-amber
+!theme crt-green
+!theme superhero
+!theme superhero-outline
+
+' 自定义皮肤
+skinparam backgroundColor #FEFECE
+skinparam componentStyle rectangle
+skinparam rectangleBorderColor #Black
+skinparam rectangleFontColor #Black
+```
+
+## 布局控制技巧
+
+### 布局方向
+```puml
+' 全局布局方向
+!define DIRECTION top to bottom direction
+!define DIRECTION left to right direction
+
+' 局部布局控制
+top to bottom direction
+package "垂直布局" {
+    A --> B
+    B --> C
+}
+
+left to right direction  
+package "水平布局" {
+    D --> E --> F
+}
+```
+
+### 隐藏元素
+```puml
+' 隐藏特定类型
+hide stereotype
+hide methods
+hide attributes
+hide circle
+hide empty members
+
+' 隐藏具体元素
+hide ComponentA
+hide <<Database>>
+```
+
+### 对齐和排列
+```puml
+' 使用together关键字
+together {
+    [组件A]
+    [组件B]  
+    [组件C]
+}
+
+' 使用虚拟的隐藏连接对齐
+[A] -[hidden]right- [B]
+[B] -[hidden]right- [C]
+```
+
+## 注释和文档
+
+### 注释类型
+```puml
+' 单行注释
+
+/'
+多行注释
+可以跨越多行
+'/
+
+' 组件注释
+[组件] : 这是组件说明
+
+' 浮动注释
+note "这是浮动注释" as N1
+note top : 顶部注释  
+note bottom : 底部注释
+note left : 左侧注释
+note right : 右侧注释
+```
+
+### 高级注释
+```puml
+' 关联注释到特定组件
+note top of ComponentA : 这是ComponentA的说明
+
+' 多行注释
+note right of ComponentB
+  这是一个
+  多行的注释
+  可以包含详细说明
+end note
+
+' 注释连接
+note "共享注释" as SharedNote
+ComponentA .. SharedNote
+ComponentB .. SharedNote
+```
+
+## 高级功能
+
+### 条件编译
+```puml
+' 定义变量
+!define SHOW_DETAILS
+!define VERSION 2.0
+
+' 条件包含
+!ifdef SHOW_DETAILS
+    note "详细模式" as detail
+!endif
+
+' 版本控制
+!if %version()=="2.0"
+    [新功能组件]
+!endif
+```
+
+### 包含其他文件
+```puml
+' 包含外部PlantUML文件
+!include common-styles.puml
+!include shared-components.puml
+
+' 包含特定的图表部分
+!include_once library/database-components.puml
+```
+
+### 宏定义
+```puml
+' 定义宏
+!define MICROSERVICE(name, tech) component name <<tech>>
+
+' 使用宏
+MICROSERVICE(UserService, "Spring Boot")
+MICROSERVICE(OrderService, "Node.js")
+
+' 带参数的宏
+!define REL(from, to, label) from --> to : label
+
+REL(UserService, Database, "查询用户")
+```
+
+## 性能优化技巧
+
+### 提高渲染性能
+```puml
+' 减少不必要的样式
+!pragma useVerticalIf on
+
+' 优化大型图表
+!pragma maxMessageSize 1000
+
+' 使用简化模式
+skinparam componentStyle rectangle
+skinparam linetype ortho
+```
+
+### 内存优化
+```puml
+' 避免过深的嵌套
+' 拆分大型图表为多个文件
+' 使用引用而非重复定义
+
+' 清理未使用的定义
+hide empty members
+hide <<unused>>
+```
+
+## 导出和集成
+
+### 导出格式配置
+```puml
+' SVG导出（推荐）
+!pragma svgsize 1200x800
+
+' PNG导出设置
+!pragma dpi 300
+
+' 字体设置
+skinparam defaultFontName "Microsoft YaHei"
+skinparam defaultFontSize 12
+```
+
+### CI/CD集成示例
+```bash
+# 批量生成图片
+java -jar plantuml.jar -tsvg *.puml
+
+# 生成特定格式
+java -jar plantuml.jar -tpng -o output/ src/**/*.puml
+
+# 检查语法
+java -jar plantuml.jar -checkonly *.puml
+```
+
+## 常见问题解决
+
+### 中文字体问题
+```puml
+' 设置中文字体
+skinparam defaultFontName "SimHei"
+skinparam componentFontName "Microsoft YaHei"
+
+' 字符编码
+' 文件保存为UTF-8格式
+```
+
+### 布局调优
+```puml
+' 调整组件间距
+skinparam componentSpacing 20
+skinparam packageSpacing 10
+
+' 调整箭头样式
+skinparam ArrowThickness 2
+skinparam ArrowColor #333333
+```
+
+### 调试技巧
+```puml
+' 显示隐藏的连接线
+show <<hidden>>
+
+' 临时显示所有关系
+show all connections
+
+' 添加调试信息
+!define DEBUG
+!ifdef DEBUG
+    note "调试信息：当前版本v1.0" as debug
+!endif
+```
+
+## 团队协作最佳实践
+
+### 文件组织
+- 使用统一的文件命名约定
+- 将公共样式和组件抽取到独立文件
+- 建立项目级的样式库和组件库
+- 定期整理和清理废弃的图表文件
+
+### 版本管理
+- 使用Git管理PlantUML源文件
+- 重要变更时导出图片存档
+- 在提交信息中说明架构变更的原因
+- 建立图表的评审和审批流程

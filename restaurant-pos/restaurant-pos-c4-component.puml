@@ -1,0 +1,87 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title 餐饮POS系统 - 订单服务组件图 (C4 Level 3)
+
+LAYOUT_WITH_LEGEND()
+
+Container(posTerminal, "POS收银终端", "Windows/Android", "收银员操作界面")
+Container(handheldDevice, "手持点餐设备", "Android/iOS", "服务员点餐设备")
+Container(kitchenDisplay, "厨房显示系统", "Web/Android", "厨房订单界面")
+Container(apiGateway, "API网关", "Kong/Nginx", "API统一入口")
+
+Container_Boundary(orderService, "订单服务") {
+    Component(orderController, "订单控制器", "Spring MVC Controller", "处理订单相关HTTP请求")
+    Component(tableController, "桌台控制器", "Spring MVC Controller", "处理桌台管理请求")
+    Component(queueController, "排队控制器", "Spring MVC Controller", "处理排队叫号请求")
+    
+    Component(orderManager, "订单管理器", "Spring Service", "核心订单业务逻辑")
+    Component(tableManager, "桌台管理器", "Spring Service", "桌台状态管理逻辑")
+    Component(queueManager, "排队管理器", "Spring Service", "排队叫号业务逻辑")
+    Component(kitchenManager, "厨房管理器", "Spring Service", "厨房订单流程管理")
+    
+    Component(orderValidator, "订单验证器", "Spring Component", "验证订单数据有效性")
+    Component(priceCalculator, "价格计算器", "Spring Component", "计算订单总价和优惠")
+    Component(statusTracker, "状态跟踪器", "Spring Component", "跟踪订单状态变化")
+    Component(kitchenDispatcher, "厨房分发器", "Spring Component", "将订单分发到厨房")
+    
+    Component(orderRepository, "订单仓储", "Spring Data JPA", "订单数据访问层")
+    Component(tableRepository, "桌台仓储", "Spring Data JPA", "桌台数据访问层")
+    Component(queueRepository, "排队仓储", "Spring Data JPA", "排队数据访问层")
+    
+    Component(cacheManager, "缓存管理器", "Spring Cache", "订单缓存管理")
+    Component(eventPublisher, "事件发布器", "Spring Event", "发布订单状态变更事件")
+    Component(notificationSender, "通知发送器", "Spring Component", "发送订单通知")
+}
+
+ContainerDb(orderDb, "订单数据库", "MySQL", "存储订单相关数据")
+ContainerDb(cacheDb, "缓存数据库", "Redis", "缓存热点数据")
+Container(messageQueue, "消息队列", "RabbitMQ", "异步消息处理")
+Container(menuService, "菜品服务", "Spring Boot", "菜品信息服务")
+Container(paymentService, "支付服务", "Spring Boot", "支付处理服务")
+Container(kitchenService, "厨房服务", "Node.js", "厨房订单处理")
+Container(inventoryService, "库存服务", "Spring Boot", "库存管理服务")
+
+Rel(posTerminal, apiGateway, "订单操作", "HTTPS/REST")
+Rel(handheldDevice, apiGateway, "点餐操作", "HTTPS/REST")
+Rel(kitchenDisplay, apiGateway, "厨房操作", "HTTPS/WebSocket")
+Rel(apiGateway, orderController, "路由订单请求", "HTTP/REST")
+Rel(apiGateway, tableController, "路由桌台请求", "HTTP/REST")
+Rel(apiGateway, queueController, "路由排队请求", "HTTP/REST")
+
+Rel(orderController, orderManager, "调用", "Java Method")
+Rel(tableController, tableManager, "调用", "Java Method")
+Rel(queueController, queueManager, "调用", "Java Method")
+
+Rel(orderManager, orderValidator, "验证订单", "Java Method")
+Rel(orderManager, priceCalculator, "计算价格", "Java Method")
+Rel(orderManager, statusTracker, "状态跟踪", "Java Method")
+Rel(orderManager, kitchenDispatcher, "分发厨房", "Java Method")
+Rel(orderManager, orderRepository, "数据操作", "JPA")
+Rel(orderManager, cacheManager, "缓存操作", "Spring Cache")
+Rel(orderManager, eventPublisher, "发布事件", "Spring Event")
+
+Rel(tableManager, tableRepository, "数据操作", "JPA")
+Rel(tableManager, cacheManager, "缓存操作", "Spring Cache")
+Rel(tableManager, eventPublisher, "发布事件", "Spring Event")
+
+Rel(queueManager, queueRepository, "数据操作", "JPA")
+Rel(queueManager, notificationSender, "发送通知", "Java Method")
+
+Rel(kitchenManager, orderRepository, "查询订单", "JPA")
+Rel(kitchenManager, kitchenDispatcher, "分发订单", "Java Method")
+Rel(kitchenManager, statusTracker, "更新状态", "Java Method")
+
+Rel(orderRepository, orderDb, "读写数据", "JDBC/SQL")
+Rel(tableRepository, orderDb, "读写数据", "JDBC/SQL")
+Rel(queueRepository, orderDb, "读写数据", "JDBC/SQL")
+Rel(cacheManager, cacheDb, "缓存操作", "Redis Protocol")
+Rel(eventPublisher, messageQueue, "发送消息", "AMQP")
+
+Rel(priceCalculator, menuService, "获取价格", "HTTP/REST")
+Rel(orderManager, paymentService, "支付处理", "HTTP/REST")
+Rel(kitchenDispatcher, kitchenService, "厨房指令", "HTTP/REST")
+Rel(orderManager, inventoryService, "库存检查", "HTTP/REST")
+Rel(notificationSender, messageQueue, "通知消息", "AMQP")
+
+@enduml 

@@ -1,0 +1,86 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title 社交媒体系统 - 容器图 (C4 Level 2)
+
+LAYOUT_WITH_LEGEND()
+
+Person(user, "用户", "社交媒体平台的普通用户")
+Person(admin, "管理员", "平台管理员")
+
+System_Boundary(c1, "社交媒体系统") {
+    Container(webApp, "Web应用", "React/Vue.js", "提供社交媒体功能的单页面应用")
+    Container(mobileApp, "移动应用", "React Native/Flutter", "iOS和Android移动客户端")
+    Container(adminWeb, "管理后台", "React/Angular", "管理员使用的Web管理界面")
+    
+    Container(apiGateway, "API网关", "Kong/Zuul", "统一API入口，负责路由、认证、限流")
+    Container(loadBalancer, "负载均衡器", "Nginx/HAProxy", "分发请求到后端服务")
+    
+    Container(userService, "用户服务", "Spring Boot/Node.js", "处理用户注册、登录、个人信息管理")
+    Container(contentService, "内容服务", "Spring Boot/Node.js", "处理内容发布、编辑、删除")
+    Container(socialService, "社交服务", "Spring Boot/Node.js", "处理关注、点赞、评论、分享")
+    Container(recommendationService, "推荐服务", "Python/TensorFlow", "个性化内容推荐和用户推荐")
+    Container(messageService, "消息服务", "Node.js/Go", "实时消息和通知处理")
+    Container(searchService, "搜索服务", "Elasticsearch", "全文搜索和内容检索")
+    Container(mediaService, "媒体服务", "Go/Java", "图片视频上传处理和存储")
+    
+    ContainerDb(userDb, "用户数据库", "MySQL/PostgreSQL", "存储用户信息、关系数据")
+    ContainerDb(contentDb, "内容数据库", "MySQL/PostgreSQL", "存储内容、评论、点赞数据")
+    ContainerDb(socialGraphDb, "社交图数据库", "Neo4j", "存储用户关系图谱")
+    ContainerDb(cacheDb, "缓存数据库", "Redis", "热点数据缓存")
+    ContainerDb(messageDb, "消息数据库", "MongoDB", "存储聊天消息和通知")
+    ContainerDb(mediaStorage, "媒体存储", "AWS S3/阿里云OSS", "存储图片、视频文件")
+    
+    Container(messageQueue, "消息队列", "Apache Kafka", "异步消息处理")
+    Container(streamProcessor, "流处理器", "Apache Flink", "实时数据流处理")
+}
+
+System_Ext(smsService, "短信服务", "第三方短信服务")
+System_Ext(emailService, "邮件服务", "第三方邮件服务")
+System_Ext(pushService, "推送服务", "第三方推送服务")
+System_Ext(cdnService, "CDN服务", "内容分发网络")
+
+Rel(user, webApp, "访问", "HTTPS")
+Rel(user, mobileApp, "使用", "HTTPS")
+Rel(admin, adminWeb, "管理", "HTTPS")
+
+Rel(webApp, loadBalancer, "API调用", "HTTPS")
+Rel(mobileApp, loadBalancer, "API调用", "HTTPS")
+Rel(adminWeb, loadBalancer, "API调用", "HTTPS")
+
+Rel(loadBalancer, apiGateway, "转发请求", "HTTP")
+
+Rel(apiGateway, userService, "用户操作", "HTTP/REST")
+Rel(apiGateway, contentService, "内容操作", "HTTP/REST")
+Rel(apiGateway, socialService, "社交操作", "HTTP/REST")
+Rel(apiGateway, messageService, "消息操作", "HTTP/WebSocket")
+Rel(apiGateway, searchService, "搜索操作", "HTTP/REST")
+Rel(apiGateway, mediaService, "媒体操作", "HTTP/REST")
+
+Rel(userService, userDb, "读写", "JDBC/SQL")
+Rel(userService, cacheDb, "缓存", "Redis Protocol")
+Rel(contentService, contentDb, "读写", "JDBC/SQL")
+Rel(contentService, cacheDb, "缓存", "Redis Protocol")
+Rel(socialService, socialGraphDb, "读写", "Bolt Protocol")
+Rel(socialService, cacheDb, "缓存", "Redis Protocol")
+Rel(messageService, messageDb, "读写", "MongoDB Protocol")
+Rel(searchService, contentDb, "同步数据", "JDBC/SQL")
+Rel(mediaService, mediaStorage, "存储", "AWS S3 API")
+
+Rel(recommendationService, userDb, "读取", "JDBC/SQL")
+Rel(recommendationService, contentDb, "读取", "JDBC/SQL")
+Rel(recommendationService, socialGraphDb, "读取", "Bolt Protocol")
+Rel(recommendationService, cacheDb, "缓存结果", "Redis Protocol")
+
+Rel(userService, messageQueue, "发布事件", "Kafka Protocol")
+Rel(contentService, messageQueue, "发布事件", "Kafka Protocol")
+Rel(socialService, messageQueue, "发布事件", "Kafka Protocol")
+Rel(messageQueue, streamProcessor, "流处理", "Kafka Protocol")
+Rel(streamProcessor, recommendationService, "触发推荐", "HTTP/REST")
+
+Rel(messageService, smsService, "发送短信", "HTTPS/API")
+Rel(messageService, emailService, "发送邮件", "SMTP/API")
+Rel(messageService, pushService, "推送通知", "HTTPS/API")
+Rel(mediaService, cdnService, "内容分发", "HTTPS")
+
+@enduml 

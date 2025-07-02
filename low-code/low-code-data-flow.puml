@@ -1,0 +1,57 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Dynamic.puml
+
+title 低代码平台 - 数据流程图
+
+LAYOUT_WITH_LEGEND()
+
+Person(designer, "应用设计者", "业务用户或开发者")
+Container(webPortal, "Web设计器", "React", "可视化设计界面")
+Container(designerService, "设计器服务", "Spring Boot", "设计器后端服务")
+Container(codeGenerator, "代码生成器", "Velocity", "根据配置生成代码")
+Container(deployService, "部署服务", "Docker", "应用打包部署")
+Container(appEngine, "应用引擎", "Spring Boot", "应用运行引擎")
+Person(endUser, "最终用户", "使用生成的应用")
+
+ContainerDb(configDb, "配置数据库", "MySQL", "存储应用配置")
+ContainerDb(businessDb, "业务数据库", "MySQL", "存储业务数据")
+Container(fileStorage, "文件存储", "MinIO", "存储应用资源")
+Container(containerPlatform, "容器平台", "Kubernetes", "应用运行环境")
+
+' 应用设计阶段
+Rel_D(designer, webPortal, "1. 设计应用", "拖拽组件、配置属性")
+Rel_D(webPortal, designerService, "2. 保存设计", "JSON配置数据")
+Rel_D(designerService, configDb, "3. 存储配置", "应用元数据、表单结构、页面布局")
+
+' 代码生成阶段  
+Rel_D(designer, webPortal, "4. 触发生成", "点击生成按钮")
+Rel_D(webPortal, codeGenerator, "5. 请求生成", "应用ID")
+Rel_D(codeGenerator, configDb, "6. 读取配置", "查询应用配置")
+Rel_U(configDb, codeGenerator, "7. 返回配置", "完整配置数据")
+Rel_D(codeGenerator, fileStorage, "8. 生成代码", "Java/Vue代码文件")
+
+' 应用部署阶段
+Rel_D(designer, webPortal, "9. 部署应用", "点击部署按钮")
+Rel_D(webPortal, deployService, "10. 请求部署", "应用ID、版本号")
+Rel_D(deployService, fileStorage, "11. 获取代码", "下载生成的代码")
+Rel_U(fileStorage, deployService, "12. 返回代码", "应用代码包")
+Rel_D(deployService, containerPlatform, "13. 部署容器", "Docker镜像")
+
+' 应用运行阶段
+Rel_D(endUser, appEngine, "14. 访问应用", "HTTP请求")
+Rel_D(appEngine, configDb, "15. 读取配置", "获取应用配置")
+Rel_U(configDb, appEngine, "16. 返回配置", "运行时配置")
+Rel_D(appEngine, businessDb, "17. 数据操作", "CRUD操作")
+Rel_U(businessDb, appEngine, "18. 返回数据", "业务数据")
+Rel_U(appEngine, endUser, "19. 响应结果", "页面/数据")
+
+' 数据更新流程
+note over designerService, configDb : "配置数据包含：\n- 表单字段定义\n- 页面布局配置\n- 业务规则设置\n- 权限配置信息"
+
+note over codeGenerator, fileStorage : "生成的代码包含：\n- 后端Controller/Service\n- 前端Vue组件\n- 数据模型定义\n- 配置文件"
+
+note over deployService, containerPlatform : "部署流程：\n1. 代码编译打包\n2. 构建Docker镜像\n3. 推送到镜像仓库\n4. 在K8s中部署"
+
+note over appEngine, businessDb : "运行时数据：\n- 用户输入数据\n- 业务流程状态\n- 文件上传内容\n- 操作审计日志"
+
+@enduml 

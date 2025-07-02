@@ -1,0 +1,36 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+title 社交媒体系统 - 系统上下文图 (C4 Level 1)
+
+LAYOUT_WITH_LEGEND()
+
+Person(user, "用户", "社交媒体平台的普通用户，发布内容、互动交流")
+Person(admin, "管理员", "平台管理员，负责内容审核和系统管理")
+Person(advertiser, "广告商", "在平台投放广告的商家")
+
+System_Boundary(c1, "社交媒体平台") {
+    System(socialMedia, "社交媒体系统", "提供内容发布、社交互动、推荐算法等功能的综合平台")
+}
+
+System_Ext(paymentSystem, "支付系统", "处理广告费用、会员费用等支付业务")
+System_Ext(smsService, "短信服务", "发送验证码、通知短信等")
+System_Ext(emailService, "邮件服务", "发送邮件通知、营销邮件等")
+System_Ext(pushService, "推送服务", "向移动设备推送消息通知")
+System_Ext(oauthProviders, "第三方登录", "微信、QQ、微博等第三方登录服务")
+System_Ext(cdnService, "CDN服务", "内容分发网络，加速图片视频访问")
+System_Ext(mlService, "机器学习平台", "提供内容推荐、图像识别等AI服务")
+
+Rel(user, socialMedia, "使用", "HTTPS/WebSocket")
+Rel(admin, socialMedia, "管理", "HTTPS")
+Rel(advertiser, socialMedia, "投放广告", "HTTPS")
+
+Rel(socialMedia, paymentSystem, "处理支付", "HTTPS/API")
+Rel(socialMedia, smsService, "发送短信", "HTTPS/API")
+Rel(socialMedia, emailService, "发送邮件", "SMTP/API")
+Rel(socialMedia, pushService, "推送通知", "HTTPS/API")
+Rel(socialMedia, oauthProviders, "第三方登录", "OAuth 2.0")
+Rel(socialMedia, cdnService, "内容分发", "HTTPS")
+Rel(socialMedia, mlService, "AI服务", "HTTPS/API")
+
+@enduml 

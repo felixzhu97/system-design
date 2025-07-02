@@ -1,0 +1,262 @@
+@startuml
+
+title 低代码平台 - 数据库设计图
+
+!define PRIMARY_COLOR #2E86AB
+!define SECONDARY_COLOR #A23B72  
+!define ACCENT_COLOR #F18F01
+
+package "租户管理" <<PRIMARY_COLOR>> {
+    entity "租户表" as tenant {
+        * tenant_id : bigint <<PK>>
+        --
+        * tenant_code : varchar(50) <<UK>>
+        * tenant_name : varchar(100)
+        * status : varchar(20)
+        * max_users : int
+        * expire_time : datetime
+        * created_time : datetime
+        * updated_time : datetime
+    }
+    
+    entity "用户表" as user {
+        * user_id : bigint <<PK>>
+        --
+        * tenant_id : bigint <<FK>>
+        * username : varchar(50) <<UK>>
+        * password : varchar(100)
+        * real_name : varchar(50)
+        * email : varchar(100)
+        * phone : varchar(20)
+        * status : varchar(20)
+        * last_login_time : datetime
+        * created_time : datetime
+    }
+    
+    entity "角色表" as role {
+        * role_id : bigint <<PK>>
+        --
+        * tenant_id : bigint <<FK>>
+        * role_code : varchar(50)
+        * role_name : varchar(100)
+        * description : text
+        * status : varchar(20)
+        * created_time : datetime
+    }
+    
+    entity "用户角色关联表" as user_role {
+        * user_id : bigint <<FK>>
+        * role_id : bigint <<FK>>
+        --
+        * created_time : datetime
+    }
+}
+
+package "应用管理" <<SECONDARY_COLOR>> {
+    entity "应用表" as application {
+        * app_id : bigint <<PK>>
+        --
+        * tenant_id : bigint <<FK>>
+        * app_code : varchar(50) <<UK>>
+        * app_name : varchar(100)
+        * app_type : varchar(20)
+        * description : text
+        * icon : varchar(200)
+        * status : varchar(20)
+        * version : varchar(20)
+        * created_by : bigint
+        * created_time : datetime
+        * updated_time : datetime
+    }
+    
+    entity "应用版本表" as app_version {
+        * version_id : bigint <<PK>>
+        --
+        * app_id : bigint <<FK>>
+        * version_number : varchar(20)
+        * version_name : varchar(100)
+        * config_data : json
+        * status : varchar(20)
+        * published_time : datetime
+        * created_time : datetime
+    }
+    
+    entity "页面表" as page {
+        * page_id : bigint <<PK>>
+        --
+        * app_id : bigint <<FK>>
+        * page_code : varchar(50)
+        * page_name : varchar(100)
+        * page_type : varchar(20)
+        * layout_config : json
+        * route_path : varchar(200)
+        * parent_id : bigint
+        * sort_order : int
+        * status : varchar(20)
+        * created_time : datetime
+    }
+    
+    entity "组件表" as component {
+        * component_id : bigint <<PK>>
+        --
+        * page_id : bigint <<FK>>
+        * component_type : varchar(50)
+        * component_name : varchar(100)
+        * config_data : json
+        * style_config : json
+        * event_config : json
+        * parent_id : bigint
+        * sort_order : int
+        * created_time : datetime
+    }
+}
+
+package "数据模型" <<ACCENT_COLOR>> {
+    entity "数据模型表" as data_model {
+        * model_id : bigint <<PK>>
+        --
+        * app_id : bigint <<FK>>
+        * model_code : varchar(50)
+        * model_name : varchar(100)
+        * table_name : varchar(100)
+        * description : text
+        * created_time : datetime
+    }
+    
+    entity "字段表" as field {
+        * field_id : bigint <<PK>>
+        --
+        * model_id : bigint <<FK>>
+        * field_code : varchar(50)
+        * field_name : varchar(100)
+        * field_type : varchar(30)
+        * field_length : int
+        * is_required : boolean
+        * is_unique : boolean
+        * default_value : varchar(200)
+        * validation_rule : text
+        * sort_order : int
+        * created_time : datetime
+    }
+    
+    entity "关联关系表" as relation {
+        * relation_id : bigint <<PK>>
+        --
+        * source_model_id : bigint <<FK>>
+        * target_model_id : bigint <<FK>>
+        * relation_type : varchar(20)
+        * source_field : varchar(50)
+        * target_field : varchar(50)
+        * created_time : datetime
+    }
+}
+
+package "工作流" <<NEUTRAL_COLOR>> {
+    entity "流程定义表" as workflow_definition {
+        * definition_id : bigint <<PK>>
+        --
+        * app_id : bigint <<FK>>
+        * process_key : varchar(50) <<UK>>
+        * process_name : varchar(100)
+        * bpmn_xml : text
+        * version : int
+        * status : varchar(20)
+        * created_time : datetime
+    }
+    
+    entity "流程实例表" as workflow_instance {
+        * instance_id : bigint <<PK>>
+        --
+        * definition_id : bigint <<FK>>
+        * business_key : varchar(100)
+        * initiator_id : bigint
+        * current_node : varchar(100)
+        * status : varchar(20)
+        * start_time : datetime
+        * end_time : datetime
+    }
+    
+    entity "任务表" as task {
+        * task_id : bigint <<PK>>
+        --
+        * instance_id : bigint <<FK>>
+        * task_key : varchar(50)
+        * task_name : varchar(100)
+        * assignee_id : bigint
+        * status : varchar(20)
+        * create_time : datetime
+        * complete_time : datetime
+    }
+}
+
+package "运行时数据" {
+    entity "表单数据表" as form_data {
+        * data_id : bigint <<PK>>
+        --
+        * app_id : bigint <<FK>>
+        * model_id : bigint <<FK>>
+        * form_data : json
+        * created_by : bigint
+        * created_time : datetime
+        * updated_time : datetime
+    }
+    
+    entity "文件表" as file {
+        * file_id : bigint <<PK>>
+        --
+        * app_id : bigint <<FK>>
+        * file_name : varchar(200)
+        * file_path : varchar(500)
+        * file_size : bigint
+        * file_type : varchar(50)
+        * uploaded_by : bigint
+        * uploaded_time : datetime
+    }
+    
+    entity "操作日志表" as operation_log {
+        * log_id : bigint <<PK>>
+        --
+        * app_id : bigint <<FK>>
+        * user_id : bigint <<FK>>
+        * operation_type : varchar(50)
+        * operation_desc : varchar(500)
+        * request_data : text
+        * response_data : text
+        * ip_address : varchar(50)
+        * created_time : datetime
+    }
+}
+
+' 关系定义
+tenant ||--o{ user : "拥有"
+tenant ||--o{ role : "拥有"
+tenant ||--o{ application : "拥有"
+user }o--o{ role : "分配"
+user ||--o{ application : "创建"
+
+application ||--o{ app_version : "版本"
+application ||--o{ page : "包含"
+application ||--o{ data_model : "包含"
+application ||--o{ workflow_definition : "包含"
+application ||--o{ form_data : "数据"
+application ||--o{ file : "文件"
+application ||--o{ operation_log : "日志"
+
+page ||--o{ component : "包含"
+page ||--o{ page : "子页面"
+
+data_model ||--o{ field : "字段"
+data_model ||--o{ relation : "源模型"
+data_model ||--o{ relation : "目标模型"
+data_model ||--o{ form_data : "数据"
+
+workflow_definition ||--o{ workflow_instance : "实例"
+workflow_instance ||--o{ task : "任务"
+
+user ||--o{ workflow_instance : "发起"
+user ||--o{ task : "分配"
+user ||--o{ form_data : "创建"
+user ||--o{ file : "上传"
+user ||--o{ operation_log : "操作"
+
+@enduml 

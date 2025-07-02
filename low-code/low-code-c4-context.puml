@@ -1,0 +1,48 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+title 低代码平台 - 系统上下文图 (C4 Level 1)
+
+LAYOUT_WITH_LEGEND()
+
+Person(businessUser, "业务用户", "使用拖拽方式创建应用的业务人员")
+Person(developer, "开发者", "进行高级配置和自定义开发的技术人员")
+Person(admin, "平台管理员", "负责平台管理、权限控制的管理人员")
+Person(endUser, "最终用户", "使用低代码平台生成应用的用户")
+Person(dataAnalyst, "数据分析师", "使用平台进行数据分析和报表制作")
+
+System_Boundary(c1, "低代码平台") {
+    System(lowCodePlatform, "低代码开发平台", "提供可视化应用构建、工作流设计、数据管理等功能的综合开发平台")
+}
+
+System_Ext(database, "企业数据库", "MySQL、PostgreSQL、Oracle等企业级数据库")
+System_Ext(apiGateway, "API网关", "企业API管理和路由服务")
+System_Ext(authService, "认证服务", "企业统一身份认证系统（SSO、LDAP等）")
+System_Ext(fileStorage, "文件存储", "阿里云OSS、AWS S3等云存储服务")
+System_Ext(emailService, "邮件服务", "企业邮件系统或第三方邮件服务")
+System_Ext(smsService, "短信服务", "短信通知和验证码服务")
+System_Ext(deployPlatform, "部署平台", "Kubernetes、Docker等容器化部署平台")
+System_Ext(codeRepository, "代码仓库", "Git仓库管理生成的应用代码")
+System_Ext(monitoringSystem, "监控系统", "应用性能监控和日志管理系统")
+System_Ext(thirdPartyApis, "第三方API", "微信、钉钉、企业微信等第三方服务API")
+System_Ext(dataWarehouse, "数据仓库", "企业数据仓库和BI系统")
+
+Rel(businessUser, lowCodePlatform, "创建应用", "Web浏览器")
+Rel(developer, lowCodePlatform, "高级开发", "Web浏览器/IDE")
+Rel(admin, lowCodePlatform, "平台管理", "Web管理后台")
+Rel(endUser, lowCodePlatform, "使用应用", "Web/移动端")
+Rel(dataAnalyst, lowCodePlatform, "数据分析", "Web浏览器")
+
+Rel(lowCodePlatform, database, "数据存储", "JDBC/SQL")
+Rel(lowCodePlatform, apiGateway, "API调用", "HTTPS/REST")
+Rel(lowCodePlatform, authService, "用户认证", "SAML/OAuth 2.0")
+Rel(lowCodePlatform, fileStorage, "文件上传", "HTTPS/API")
+Rel(lowCodePlatform, emailService, "发送邮件", "SMTP/API")
+Rel(lowCodePlatform, smsService, "发送短信", "HTTPS/API")
+Rel(lowCodePlatform, deployPlatform, "应用部署", "Docker/K8s API")
+Rel(lowCodePlatform, codeRepository, "代码管理", "Git/HTTPS")
+Rel(lowCodePlatform, monitoringSystem, "监控日志", "HTTPS/API")
+Rel(lowCodePlatform, thirdPartyApis, "第三方集成", "HTTPS/API")
+Rel(lowCodePlatform, dataWarehouse, "数据同步", "ETL/API")
+
+@enduml 
