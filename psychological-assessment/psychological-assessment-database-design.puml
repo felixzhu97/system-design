@@ -1,0 +1,157 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title 心理检测系统 - 数据库设计图
+
+LAYOUT_WITH_LEGEND()
+
+' 定义颜色
+!define SECURE_DB_COLOR #e74c3c
+!define USER_DB_COLOR #3498db
+!define SCALE_DB_COLOR #2ecc71
+!define RESULT_DB_COLOR #f39c12
+!define ANALYTICS_COLOR #9b59b6
+!define CACHE_COLOR #95a5a6
+
+' 用户管理数据库
+package "用户管理数据库 (PostgreSQL + 加密)" {
+    ContainerDb(userdb, "用户信息库", "PostgreSQL 15 + TDE", "用户身份、认证、权限管理") <<USER_DB_COLOR>>
+    ContainerDb(profiledb, "用户档案库", "PostgreSQL + 字段加密", "个人信息、联系方式、紧急联系人") <<SECURE_DB_COLOR>>
+    ContainerDb(consentdb, "知情同意库", "PostgreSQL + 数字签名", "测试同意书、隐私授权、数据使用权限") <<SECURE_DB_COLOR>>
+}
+
+' 心理量表数据库
+package "心理量表数据库 (PostgreSQL)" {
+    ContainerDb(scaledb, "量表管理库", "PostgreSQL 15", "心理量表、题目库、计分规则") <<SCALE_DB_COLOR>>
+    ContainerDb(normdb, "常模数据库", "PostgreSQL 15", "标准化样本、常模数据、统计参数") <<SCALE_DB_COLOR>>
+    ContainerDb(validationdb, "效度信度库", "PostgreSQL 15", "量表验证数据、心理测量学指标") <<SCALE_DB_COLOR>>
+}
+
+' 测试执行数据库
+package "测试执行数据库 (PostgreSQL + 高安全)" {
+    ContainerDb(sessiondb, "测试会话库", "PostgreSQL + 加密", "测试会话、进度状态、时间记录") <<SECURE_DB_COLOR>>
+    ContainerDb(responsedb, "答案存储库", "PostgreSQL + AES256", "原始答案、加密存储、访问控制") <<SECURE_DB_COLOR>>
+    ContainerDb(behaviordb, "行为数据库", "PostgreSQL + 时间戳", "答题行为、反应时间、操作轨迹") <<SECURE_DB_COLOR>>
+}
+
+' 评估结果数据库
+package "评估结果数据库 (PostgreSQL + 审计)" {
+    ContainerDb(resultdb, "结果存储库", "PostgreSQL + 审计", "计算结果、标准分、解释报告") <<RESULT_DB_COLOR>>
+    ContainerDb(reportdb, "报告生成库", "PostgreSQL 15", "评估报告、可视化数据、PDF文档") <<RESULT_DB_COLOR>>
+    ContainerDb(interpretdb, "解释知识库", "PostgreSQL 15", "结果解释、临床建议、参考资料") <<RESULT_DB_COLOR>>
+}
+
+' 危机干预数据库
+package "危机干预数据库 (PostgreSQL + 实时监控)" {
+    ContainerDb(riskdb, "风险评估库", "PostgreSQL + 触发器", "风险等级、预警记录、干预历史") <<SECURE_DB_COLOR>>
+    ContainerDb(alertdb, "预警通知库", "PostgreSQL 15", "预警事件、通知记录、响应状态") <<SECURE_DB_COLOR>>
+    ContainerDb(interventiondb, "干预记录库", "PostgreSQL + 审计", "干预措施、跟踪记录、效果评估") <<SECURE_DB_COLOR>>
+}
+
+' 专业人员数据库
+package "专业人员数据库 (PostgreSQL)" {
+    ContainerDb(psychologistdb, "心理师库", "PostgreSQL 15", "专业资质、执业信息、工作记录") <<USER_DB_COLOR>>
+    ContainerDb(supervisiondb, "督导记录库", "PostgreSQL 15", "督导关系、督导记录、专业发展") <<USER_DB_COLOR>>
+    ContainerDb(casedb, "案例管理库", "PostgreSQL + 脱敏", "案例记录、治疗计划、进展追踪") <<SECURE_DB_COLOR>>
+}
+
+' 系统审计数据库
+package "审计与合规数据库 (PostgreSQL + 不可变)" {
+    ContainerDb(auditdb, "审计日志库", "PostgreSQL + 只读", "操作日志、访问记录、安全事件") <<ANALYTICS_COLOR>>
+    ContainerDb(compliancedb, "合规管理库", "PostgreSQL 15", "法规要求、合规检查、认证记录") <<ANALYTICS_COLOR>>
+    ContainerDb(privacydb, "隐私保护库", "PostgreSQL + 加密", "数据处理记录、匿名化规则、删除策略") <<SECURE_DB_COLOR>>
+}
+
+' 分析与研究数据库
+package "分析研究数据库 (专用)" {
+    ContainerDb(analyticsdb, "统计分析库", "ClickHouse", "聚合统计、趋势分析、匿名化数据") <<ANALYTICS_COLOR>>
+    ContainerDb(researchdb, "研究数据库", "PostgreSQL + 匿名化", "去标识化研究数据、科研用途") <<ANALYTICS_COLOR>>
+    ContainerDb(mldb, "机器学习库", "PostgreSQL + 特征工程", "模型训练数据、预测模型、算法优化") <<ANALYTICS_COLOR>>
+}
+
+' 缓存与临时存储
+package "缓存存储 (Redis + 加密)" {
+    ContainerDb(rediscache, "会话缓存", "Redis 7.0 + 加密", "用户会话、临时数据、快速访问") <<CACHE_COLOR>>
+    ContainerDb(queuecache, "消息队列", "Redis Streams", "异步任务、通知队列、数据同步") <<CACHE_COLOR>>
+    ContainerDb(tempcache, "临时存储", "Redis + TTL", "验证码、临时文件、过期清理") <<CACHE_COLOR>>
+}
+
+' 文件存储系统
+package "文件存储 (加密文件系统)" {
+    ContainerDb(docstorage, "文档存储", "MinIO + 加密", "PDF报告、音频文件、图像资料") <<RESULT_DB_COLOR>>
+    ContainerDb(backupstorage, "备份存储", "AWS S3 + 加密", "数据备份、灾难恢复、长期归档") <<ANALYTICS_COLOR>>
+}
+
+' 外部数据源
+package "外部集成数据" {
+    ContainerDb_Ext(authprovider, "认证提供商", "LDAP/Active Directory", "企业用户认证、角色同步")
+    ContainerDb_Ext(regulatorydb, "法规数据库", "第三方法规平台", "最新法规要求、合规标准")
+    ContainerDb_Ext(referencedb, "参考数据库", "心理学数据库", "学术参考、标准量表、研究文献")
+}
+
+' 数据关系和流向
+' 用户数据流
+Rel(userdb, profiledb, "关联个人档案", "外键关联")
+Rel(userdb, consentdb, "知情同意关联", "法律要求")
+Rel(userdb, sessiondb, "测试会话", "用户测试")
+
+' 量表数据流
+Rel(scaledb, sessiondb, "量表选择", "测试配置")
+Rel(scaledb, normdb, "常模数据", "标准化参考")
+Rel(scaledb, validationdb, "效度验证", "质量保证")
+
+' 测试执行流
+Rel(sessiondb, responsedb, "答案记录", "加密存储")
+Rel(sessiondb, behaviordb, "行为追踪", "数据采集")
+Rel(responsedb, resultdb, "结果计算", "算法处理")
+
+' 结果生成流
+Rel(resultdb, reportdb, "报告生成", "格式化输出")
+Rel(resultdb, interpretdb, "结果解释", "专业建议")
+Rel(resultdb, riskdb, "风险评估", "安全检查")
+
+' 危机干预流
+Rel(riskdb, alertdb, "预警触发", "自动监控")
+Rel(alertdb, interventiondb, "干预执行", "专业响应")
+Rel(riskdb, psychologistdb, "专业人员", "危机通知")
+
+' 专业工作流
+Rel(psychologistdb, casedb, "案例管理", "专业记录")
+Rel(psychologistdb, supervisiondb, "督导关系", "专业发展")
+Rel(casedb, resultdb, "案例结果", "治疗效果")
+
+' 审计合规流
+Rel(userdb, auditdb, "操作审计", "安全监控")
+Rel(resultdb, auditdb, "数据访问", "合规审计")
+Rel(compliancedb, privacydb, "隐私合规", "法规遵循")
+
+' 分析研究流
+Rel(resultdb, analyticsdb, "统计分析", "去标识化")
+Rel(analyticsdb, researchdb, "研究数据", "匿名化处理")
+Rel(researchdb, mldb, "机器学习", "模型训练")
+
+' 缓存数据流
+Rel(userdb, rediscache, "会话缓存", "性能优化")
+Rel(sessiondb, queuecache, "异步处理", "任务队列")
+Rel(reportdb, docstorage, "文档存储", "文件管理")
+
+' 备份恢复流
+Rel(userdb, backupstorage, "数据备份", "灾难恢复")
+Rel(resultdb, backupstorage, "结果备份", "长期保存")
+
+' 外部集成
+Rel(userdb, authprovider, "身份同步", "企业集成")
+Rel(compliancedb, regulatorydb, "法规更新", "合规监控")
+Rel(scaledb, referencedb, "量表更新", "学术参考")
+
+note right of responsedb : **答案加密存储**\n• AES-256字段级加密\n• 密钥轮换机制\n• 访问权限严格控制\n• 数据完整性验证\n• 审计日志记录
+
+note right of riskdb : **风险评估机制**\n• 实时风险计算\n• 多维度风险因子\n• 阈值自动监控\n• 紧急预警机制\n• 专业人员通知
+
+note right of auditdb : **审计合规要求**\n• 完整操作日志\n• 数据访问追踪\n• 不可篡改记录\n• 定期合规检查\n• GDPR/HIPAA遵循
+
+note right of privacydb : **隐私保护策略**\n• 数据最小化原则\n• 匿名化处理\n• 同意管理\n• 数据保留策略\n• 删除权实现
+
+note right of mldb : **AI算法应用**\n• 风险预测模型\n• 个性化解释\n• 量表优化\n• 异常检测\n• 智能推荐
+
+@enduml 

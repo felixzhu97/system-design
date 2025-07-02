@@ -1,0 +1,135 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Dynamic.puml
+
+title 心理检测系统 - 数据流程图
+
+LAYOUT_WITH_LEGEND()
+
+' 参与者
+Person(client, "来访者", "接受心理评估的用户")
+Person(psychologist, "心理咨询师", "专业心理健康工作者")
+Person(admin, "系统管理员", "平台运营管理人员")
+
+' 系统组件
+Container(clientapp, "来访者APP", "React Native", "移动端测试应用")
+Container(webportal, "专业端门户", "React + TypeScript", "心理师工作台")
+Container(adminpanel, "管理后台", "Vue + Element UI", "系统管理界面")
+
+Container(apigateway, "API网关", "Kong", "统一接入点")
+Container(authservice, "认证服务", "OAuth 2.0", "身份认证")
+Container(assessmentservice, "评估服务", "Java Spring", "测试执行引擎")
+Container(analysisservice, "分析服务", "Python FastAPI", "AI数据分析")
+Container(crisisservice, "危机干预服务", "Node.js", "紧急响应系统")
+Container(reportservice, "报告服务", "Java Spring", "报告生成")
+
+ContainerDb(userdb, "用户数据库", "PostgreSQL", "用户信息存储")
+ContainerDb(testdb, "测试数据库", "PostgreSQL", "量表和题目")
+ContainerDb(resultdb, "结果数据库", "PostgreSQL", "评估结果")
+ContainerDb(encryptdb, "加密存储", "PostgreSQL + 加密", "敏感数据")
+
+' 1-10: 用户注册和身份验证流程
+Rel_D(client, clientapp, "1. 下载并启动APP", "移动端访问")
+Rel_D(clientapp, apigateway, "2. 发起注册请求", "HTTPS/POST")
+Rel_D(apigateway, authservice, "3. 身份验证处理", "JWT")
+Rel_D(authservice, userdb, "4. 创建用户记录", "SQL INSERT")
+Rel_U(userdb, authservice, "5. 返回用户ID", "数据库响应")
+Rel_U(authservice, apigateway, "6. 生成访问令牌", "JWT Token")
+Rel_U(apigateway, clientapp, "7. 返回认证结果", "JSON响应")
+Rel_U(clientapp, client, "8. 显示注册成功", "UI反馈")
+
+' 9-20: 测试量表选择和开始评估
+Rel_D(client, clientapp, "9. 选择心理测试", "用户操作")
+Rel_D(clientapp, apigateway, "10. 获取可用量表", "GET /scales")
+Rel_D(apigateway, assessmentservice, "11. 查询量表列表", "服务调用")
+Rel_D(assessmentservice, testdb, "12. 读取量表信息", "SQL SELECT")
+Rel_U(testdb, assessmentservice, "13. 返回量表数据", "量表元数据")
+Rel_U(assessmentservice, apigateway, "14. 量表选择列表", "JSON数据")
+Rel_U(apigateway, clientapp, "15. 显示可选测试", "界面展示")
+Rel_D(client, clientapp, "16. 确认测试选择", "用户确认")
+Rel_D(clientapp, apigateway, "17. 开始测试请求", "POST /assessment/start")
+Rel_D(apigateway, assessmentservice, "18. 初始化测试会话", "创建测试实例")
+Rel_D(assessmentservice, userdb, "19. 记录测试开始", "SQL INSERT")
+Rel_U(assessmentservice, apigateway, "20. 返回测试ID", "测试会话ID")
+
+' 21-35: 测试执行和题目呈现
+Rel_D(clientapp, apigateway, "21. 获取第一题", "GET /assessment/{id}/next")
+Rel_D(apigateway, assessmentservice, "22. 获取题目内容", "智能选题")
+Rel_D(assessmentservice, testdb, "23. 查询题目详情", "SQL查询")
+Rel_U(testdb, assessmentservice, "24. 返回题目数据", "题目内容")
+Rel_U(assessmentservice, apigateway, "25. 题目JSON数据", "结构化数据")
+Rel_U(apigateway, clientapp, "26. 呈现测试题目", "UI渲染")
+Rel_U(clientapp, client, "27. 显示测试界面", "用户界面")
+Rel_D(client, clientapp, "28. 提交答案", "用户作答")
+Rel_D(clientapp, apigateway, "29. 发送答案数据", "POST /assessment/answer")
+Rel_D(apigateway, assessmentservice, "30. 处理答案提交", "答案验证")
+Rel_D(assessmentservice, encryptdb, "31. 加密存储答案", "数据安全")
+Rel_D(assessmentservice, analysisservice, "32. 实时计分分析", "算法计算")
+Rel_U(analysisservice, assessmentservice, "33. 返回中间分数", "分析结果")
+Rel_U(assessmentservice, apigateway, "34. 答案接收确认", "状态更新")
+Rel_U(apigateway, clientapp, "35. 继续下一题", "流程控制")
+
+' 36-50: 测试完成和结果生成
+note over client, clientapp : **重复步骤21-35直到测试完成**
+
+Rel_D(clientapp, apigateway, "36. 测试完成提交", "POST /assessment/complete")
+Rel_D(apigateway, assessmentservice, "37. 标记测试完成", "状态更新")
+Rel_D(assessmentservice, analysisservice, "38. 触发最终分析", "完整数据分析")
+Rel_D(analysisservice, encryptdb, "39. 读取所有答案", "数据解密")
+Rel_D(analysisservice, resultdb, "40. 计算标准化分数", "统计分析")
+Rel_D(analysisservice, crisisservice, "41. 危机风险评估", "风险识别")
+
+' 危机干预流程 (41-45)
+alt 检测到高风险
+    Rel_D(crisisservice, psychologist, "42a. 自动预警通知", "紧急通知")
+    Rel_D(crisisservice, resultdb, "43a. 记录预警事件", "风险日志")
+    Rel_D(psychologist, webportal, "44a. 查看风险详情", "专业介入")
+    Rel_D(webportal, apigateway, "45a. 获取详细信息", "风险评估报告")
+else 正常风险水平
+    note over crisisservice : 45b. 常规流程继续
+end
+
+' 46-60: 报告生成和结果展示
+Rel_D(analysisservice, reportservice, "46. 生成评估报告", "报告模板")
+Rel_D(reportservice, resultdb, "47. 存储报告结果", "持久化存储")
+Rel_U(reportservice, analysisservice, "48. 确认报告生成", "生成状态")
+Rel_U(analysisservice, assessmentservice, "49. 完成分析通知", "流程完成")
+Rel_U(assessmentservice, apigateway, "50. 测试完成响应", "最终状态")
+Rel_U(apigateway, clientapp, "51. 通知结果就绪", "推送通知")
+Rel_U(clientapp, client, "52. 显示完成提示", "用户提醒")
+
+' 53-65: 结果查看和解读
+Rel_D(client, clientapp, "53. 查看测试结果", "用户操作")
+Rel_D(clientapp, apigateway, "54. 获取评估报告", "GET /reports/{id}")
+Rel_D(apigateway, reportservice, "55. 读取报告数据", "报告查询")
+Rel_D(reportservice, resultdb, "56. 查询报告详情", "数据库访问")
+Rel_U(resultdb, reportservice, "57. 返回报告内容", "完整报告")
+Rel_U(reportservice, apigateway, "58. 格式化报告", "可视化数据")
+Rel_U(apigateway, clientapp, "59. 报告JSON数据", "结构化结果")
+Rel_U(clientapp, client, "60. 展示可视化报告", "图表和解读")
+
+' 专业端查看流程 (61-68)
+Rel_D(psychologist, webportal, "61. 登录专业端", "专业用户")
+Rel_D(webportal, apigateway, "62. 专业认证", "角色验证")
+Rel_D(webportal, apigateway, "63. 查询来访者列表", "GET /clients")
+Rel_D(apigateway, assessmentservice, "64. 获取客户数据", "权限控制")
+Rel_U(assessmentservice, webportal, "65. 返回客户信息", "脱敏数据")
+Rel_D(webportal, apigateway, "66. 查看详细报告", "专业解读")
+Rel_D(apigateway, reportservice, "67. 专业版报告", "深度分析")
+Rel_U(reportservice, webportal, "68. 显示专业报告", "临床建议")
+
+' 系统管理流程 (69-75)
+Rel_D(admin, adminpanel, "69. 系统监控", "管理操作")
+Rel_D(adminpanel, apigateway, "70. 获取系统统计", "管理API")
+Rel_D(apigateway, assessmentservice, "71. 查询使用数据", "统计分析")
+Rel_U(assessmentservice, adminpanel, "72. 返回统计信息", "运营数据")
+Rel_D(adminpanel, apigateway, "73. 数据导出请求", "数据管理")
+Rel_D(apigateway, reportservice, "74. 生成统计报告", "批量处理")
+Rel_U(reportservice, adminpanel, "75. 系统运营报告", "管理决策")
+
+note right of encryptdb : **数据安全措施**\n• AES-256加密存储\n• 字段级别加密\n• 访问日志记录\n• 数据脱敏处理\n• 定期安全审计
+
+note right of crisisservice : **危机干预机制**\n• 实时风险评估\n• 自动预警系统\n• 专业人员通知\n• 紧急联系机制\n• 24/7监控服务
+
+note right of analysisservice : **AI分析算法**\n• 标准化计分\n• 常模比较\n• 趋势分析\n• 风险预测模型\n• 个性化解读
+
+@enduml 
