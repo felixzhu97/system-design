@@ -1,0 +1,276 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title 办公协作系统 - API设计图
+
+LAYOUT_TOP_DOWN()
+
+package "用户认证API" {
+    [POST /api/auth/login] as login
+    [POST /api/auth/logout] as logout
+    [POST /api/auth/refresh] as refresh
+    [GET /api/auth/profile] as getProfile
+    [PUT /api/auth/profile] as updateProfile
+    [POST /api/auth/change-password] as changePassword
+    [GET /api/auth/permissions] as getPermissions
+}
+
+package "文档管理API" {
+    [GET /api/documents] as getDocuments
+    [POST /api/documents] as createDocument
+    [GET /api/documents/:id] as getDocument
+    [PUT /api/documents/:id] as updateDocument
+    [DELETE /api/documents/:id] as deleteDocument
+    [POST /api/documents/:id/share] as shareDocument
+    [GET /api/documents/:id/versions] as getVersions
+    [POST /api/documents/:id/versions] as createVersion
+    [GET /api/documents/:id/comments] as getComments
+    [POST /api/documents/:id/comments] as addComment
+    [GET /api/documents/search] as searchDocuments
+}
+
+package "实时协作API" {
+    [WS /api/documents/:id/collaborate] as collaborateSocket
+    [POST /api/documents/:id/lock] as lockDocument
+    [DELETE /api/documents/:id/lock] as unlockDocument
+    [GET /api/documents/:id/collaborators] as getCollaborators
+    [POST /api/documents/:id/invite] as inviteCollaborator
+    [WS /api/documents/:id/cursor] as cursorSocket
+}
+
+package "项目管理API" {
+    [GET /api/projects] as getProjects
+    [POST /api/projects] as createProject
+    [GET /api/projects/:id] as getProject
+    [PUT /api/projects/:id] as updateProject
+    [DELETE /api/projects/:id] as deleteProject
+    [GET /api/projects/:id/members] as getMembers
+    [POST /api/projects/:id/members] as addMember
+    [DELETE /api/projects/:id/members/:userId] as removeMember
+    [GET /api/projects/:id/tasks] as getTasks
+    [POST /api/projects/:id/tasks] as createTask
+    [PUT /api/tasks/:id] as updateTask
+    [DELETE /api/tasks/:id] as deleteTask
+}
+
+package "会议管理API" {
+    [GET /api/meetings] as getMeetings
+    [POST /api/meetings] as createMeeting
+    [GET /api/meetings/:id] as getMeeting
+    [PUT /api/meetings/:id] as updateMeeting
+    [DELETE /api/meetings/:id] as deleteMeeting
+    [POST /api/meetings/:id/join] as joinMeeting
+    [POST /api/meetings/:id/leave] as leaveMeeting
+    [POST /api/meetings/:id/record] as recordMeeting
+    [GET /api/meetings/:id/recording] as getRecording
+    [POST /api/meetings/:id/share-screen] as shareScreen
+    [WS /api/meetings/:id/rtc] as meetingRTC
+}
+
+package "即时通讯API" {
+    [GET /api/messages] as getMessages
+    [POST /api/messages] as sendMessage
+    [PUT /api/messages/:id] as updateMessage
+    [DELETE /api/messages/:id] as deleteMessage
+    [GET /api/groups] as getGroups
+    [POST /api/groups] as createGroup
+    [PUT /api/groups/:id] as updateGroup
+    [POST /api/groups/:id/members] as addGroupMember
+    [DELETE /api/groups/:id/members/:userId] as removeGroupMember
+    [WS /api/messages/stream] as messageStream
+    [POST /api/messages/file] as sendFile
+}
+
+package "日历事件API" {
+    [GET /api/calendar/events] as getEvents
+    [POST /api/calendar/events] as createEvent
+    [GET /api/calendar/events/:id] as getEvent
+    [PUT /api/calendar/events/:id] as updateEvent
+    [DELETE /api/calendar/events/:id] as deleteEvent
+    [POST /api/calendar/events/:id/remind] as setReminder
+    [GET /api/calendar/schedules] as getSchedules
+    [POST /api/calendar/availability] as checkAvailability
+}
+
+package "工作流API" {
+    [GET /api/workflows] as getWorkflows
+    [POST /api/workflows] as createWorkflow
+    [GET /api/workflows/:id] as getWorkflow
+    [PUT /api/workflows/:id] as updateWorkflow
+    [DELETE /api/workflows/:id] as deleteWorkflow
+    [POST /api/workflows/:id/start] as startWorkflow
+    [GET /api/workflows/:id/instances] as getInstances
+    [POST /api/workflows/tasks/:id/approve] as approveTask
+    [POST /api/workflows/tasks/:id/reject] as rejectTask
+    [GET /api/workflows/tasks/pending] as getPendingTasks
+}
+
+package "文件管理API" {
+    [POST /api/files/upload] as uploadFile
+    [GET /api/files/:id] as getFile
+    [DELETE /api/files/:id] as deleteFile
+    [GET /api/files/:id/download] as downloadFile
+    [POST /api/files/:id/share] as shareFile
+    [GET /api/files/shared] as getSharedFiles
+    [POST /api/files/:id/preview] as previewFile
+    [GET /api/files/storage] as getStorageInfo
+}
+
+package "通知管理API" {
+    [GET /api/notifications] as getNotifications
+    [PUT /api/notifications/:id/read] as markAsRead
+    [PUT /api/notifications/read-all] as markAllAsRead
+    [DELETE /api/notifications/:id] as deleteNotification
+    [GET /api/notifications/settings] as getNotificationSettings
+    [PUT /api/notifications/settings] as updateNotificationSettings
+    [WS /api/notifications/stream] as notificationStream
+}
+
+package "搜索API" {
+    [GET /api/search] as globalSearch
+    [GET /api/search/documents] as searchDocs
+    [GET /api/search/users] as searchUsers
+    [GET /api/search/projects] as searchProjects
+    [GET /api/search/messages] as searchMessages
+    [GET /api/search/suggestions] as getSearchSuggestions
+}
+
+package "统计分析API" {
+    [GET /api/analytics/dashboard] as getDashboard
+    [GET /api/analytics/user-activity] as getUserActivity
+    [GET /api/analytics/document-stats] as getDocumentStats
+    [GET /api/analytics/project-progress] as getProjectProgress
+    [GET /api/analytics/meeting-stats] as getMeetingStats
+    [GET /api/analytics/export] as exportAnalytics
+}
+
+' API调用关系
+login --> getProfile : "登录后获取档案"
+getProfile --> getProjects : "获取用户项目"
+createProject --> addMember : "创建后添加成员"
+createDocument --> shareDocument : "创建后分享文档"
+getDocument --> collaborateSocket : "打开实时协作"
+
+createMeeting --> joinMeeting : "创建后加入会议"
+joinMeeting --> meetingRTC : "加入实时通讯"
+sendMessage --> messageStream : "发送实时消息"
+createEvent --> setReminder : "创建后设置提醒"
+
+startWorkflow --> getPendingTasks : "启动后获取待办"
+uploadFile --> shareFile : "上传后分享文件"
+getNotifications --> markAsRead : "查看后标记已读"
+globalSearch --> searchDocs : "全局搜索文档"
+
+' API响应格式说明
+note right of getDocuments
+  **GET /api/documents**
+  Query参数:
+  - project_id: 项目ID
+  - type: 文档类型
+  - status: 文档状态
+  - page: 页码
+  - limit: 每页数量
+  
+  响应格式:
+  {
+    "code": 200,
+    "data": {
+      "documents": [
+        {
+          "id": "doc123",
+          "title": "产品需求文档",
+          "type": "requirement",
+          "owner": {...},
+          "created_at": "2024-01-15T10:00:00Z",
+          "updated_at": "2024-01-15T15:30:00Z",
+          "collaborators": [...]
+        }
+      ],
+      "total": 25,
+      "page": 1,
+      "limit": 10
+    }
+  }
+end note
+
+note right of collaborateSocket
+  **WebSocket /api/documents/:id/collaborate**
+  连接消息:
+  {
+    "action": "join",
+    "document_id": "doc123",
+    "user_id": "user456"
+  }
+  
+  编辑操作:
+  {
+    "action": "edit",
+    "operation": "insert",
+    "position": 100,
+    "content": "新增内容",
+    "timestamp": "2024-01-15T15:30:00Z"
+  }
+  
+  广播消息:
+  {
+    "type": "edit",
+    "user": {...},
+    "operation": {...},
+    "document_version": 15
+  }
+end note
+
+note right of createMeeting
+  **POST /api/meetings**
+  请求格式:
+  {
+    "title": "产品评审会议",
+    "start_time": "2024-01-15T14:00:00Z",
+    "end_time": "2024-01-15T15:00:00Z",
+    "type": "video",
+    "participants": ["user123", "user456"],
+    "meeting_room": "room_001",
+    "agenda": "讨论产品功能..."
+  }
+  
+  响应格式:
+  {
+    "code": 200,
+    "data": {
+      "meeting_id": "meeting123",
+      "join_url": "https://meet.example.com/join/meeting123",
+      "dial_in": "+86-400-xxx-xxxx",
+      "passcode": "123456"
+    }
+  }
+end note
+
+note right of startWorkflow
+  **POST /api/workflows/:id/start**
+  请求格式:
+  {
+    "title": "年度预算审批",
+    "description": "2024年度预算申请",
+    "variables": {
+      "amount": 1000000,
+      "department": "研发部",
+      "priority": "high"
+    },
+    "attachments": ["file123", "file456"]
+  }
+  
+  响应格式:
+  {
+    "code": 200,
+    "data": {
+      "instance_id": "wf_inst_123",
+      "current_task": {
+        "task_id": "task_456",
+        "assignee": "manager001",
+        "due_date": "2024-01-20T18:00:00Z"
+      }
+    }
+  }
+end note
+
+@enduml 

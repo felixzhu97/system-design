@@ -1,1 +1,189 @@
- 
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title 语言学习系统 - 系统架构设计图
+
+LAYOUT_TOP_DOWN()
+
+' 前端层
+package "客户端层" {
+    package "移动端" {
+        [学习者APP] as LearnerApp <<React Native>>
+        [教师APP] as TeacherApp <<Flutter>>
+    }
+    package "Web端" {
+        [学习平台] as WebPlatform <<React>>
+        [教师管理端] as TeacherWeb <<Vue>>
+        [管理后台] as AdminWeb <<Angular>>
+    }
+    package "智能设备" {
+        [智能音箱] as SmartSpeaker <<小程序>>
+        [VR学习] as VRApp <<Unity>>
+    }
+}
+
+' 接入层
+package "接入层" {
+    [API网关] as APIGateway <<Kong>>
+    [负载均衡] as LoadBalancer <<Nginx>>
+    [CDN加速] as CDN <<Cloudflare>>
+    [WebSocket网关] as WSGateway <<Socket.io>>
+}
+
+' BFF层
+package "BFF层" {
+    [移动端BFF] as MobileBFF <<Node.js>>
+    [Web端BFF] as WebBFF <<Next.js>>
+    [教师端BFF] as TeacherBFF <<Nuxt.js>>
+}
+
+' 微服务层
+package "核心业务服务" {
+    [用户服务] as UserService <<Node.js>>
+    [课程服务] as CourseService <<Java>>
+    [学习服务] as LearningService <<Python>>
+    [词汇服务] as VocabService <<Go>>
+    [语音服务] as SpeechService <<Python>>
+    [练习服务] as ExerciseService <<Node.js>>
+    [进度服务] as ProgressService <<Java>>
+    [游戏化服务] as GameService <<Go>>
+}
+
+package "支撑服务" {
+    [认证服务] as AuthService <<Node.js>>
+    [通知服务] as NotificationService <<Java>>
+    [文件服务] as FileService <<Go>>
+    [搜索服务] as SearchService <<Java>>
+    [支付服务] as PaymentService <<Java>>
+}
+
+package "智能服务" {
+    [AI教学服务] as AIService <<Python>>
+    [语音识别服务] as ASRService <<Python>>
+    [语音合成服务] as TTSService <<Python>>
+    [自然语言处理] as NLPService <<Python>>
+    [个性化推荐] as RecommendService <<Python>>
+}
+
+' 中间件层
+package "中间件层" {
+    [消息队列] as MessageQueue <<Apache Kafka>>
+    [服务网格] as ServiceMesh <<Istio>>
+    [配置中心] as ConfigCenter <<Apollo>>
+    [服务注册] as ServiceRegistry <<Consul>>
+    [链路追踪] as Tracing <<Jaeger>>
+}
+
+' 数据存储层
+package "数据存储层" {
+    package "关系型数据库" {
+        [用户数据库] as UserDB <<PostgreSQL>>
+        [课程数据库] as CourseDB <<PostgreSQL>>
+        [进度数据库] as ProgressDB <<PostgreSQL>>
+        [订单数据库] as OrderDB <<PostgreSQL>>
+    }
+    package "非关系型数据库" {
+        [内容数据库] as ContentDB <<MongoDB>>
+        [练习数据库] as ExerciseDB <<MongoDB>>
+        [日志数据库] as LogDB <<MongoDB>>
+    }
+    package "缓存层" {
+        [Redis集群] as RedisCluster
+        [内存缓存] as MemCache
+    }
+    package "搜索引擎" {
+        [内容搜索] as Elasticsearch
+    }
+    package "分析数据库" {
+        [学习分析] as ClickHouse
+        [用户行为] as Analytics
+    }
+    package "文件存储" {
+        [媒体文件] as MinIO
+        [CDN存储] as CDNStorage
+    }
+}
+
+' 基础设施层
+package "基础设施层" {
+    package "容器编排" {
+        [Kubernetes集群] as K8s
+        [Docker仓库] as DockerRegistry
+    }
+    package "监控告警" {
+        [监控系统] as Prometheus
+        [日志系统] as ELK
+        [告警系统] as Alertmanager
+    }
+    package "CI/CD" {
+        [代码仓库] as GitLab
+        [构建系统] as Jenkins
+        [制品仓库] as Nexus
+    }
+}
+
+' 外部服务集成
+package "外部服务" {
+    [语音识别API] as SpeechAPI
+    [翻译服务API] as TranslateAPI
+    [支付网关] as PaymentGateway
+    [推送服务] as PushService
+    [短信服务] as SMSService
+    [邮件服务] as EmailService
+    [AI平台] as AIPlatform
+}
+
+' 连接关系
+' 客户端到接入层
+LearnerApp --> LoadBalancer
+TeacherApp --> LoadBalancer
+WebPlatform --> CDN
+TeacherWeb --> CDN
+AdminWeb --> CDN
+
+' 接入层到BFF层
+LoadBalancer --> APIGateway
+APIGateway --> MobileBFF
+APIGateway --> WebBFF
+APIGateway --> TeacherBFF
+
+' BFF层到微服务
+MobileBFF --> UserService
+MobileBFF --> LearningService
+WebBFF --> CourseService
+WebBFF --> SearchService
+TeacherBFF --> CourseService
+TeacherBFF --> ProgressService
+
+' 微服务间通信
+UserService --> AuthService
+CourseService --> FileService
+LearningService --> AIService
+SpeechService --> ASRService
+SpeechService --> TTSService
+LearningService --> RecommendService
+
+' 微服务到中间件
+UserService --> MessageQueue
+CourseService --> ServiceRegistry
+LearningService --> ConfigCenter
+
+' 微服务到数据存储
+UserService --> UserDB
+CourseService --> CourseDB
+LearningService --> ContentDB
+ProgressService --> ProgressDB
+VocabService --> RedisCluster
+SearchService --> Elasticsearch
+AIService --> ClickHouse
+FileService --> MinIO
+
+' 外部服务集成
+SpeechService --> SpeechAPI
+LearningService --> TranslateAPI
+PaymentService --> PaymentGateway
+NotificationService --> PushService
+NotificationService --> SMSService
+AIService --> AIPlatform
+
+@enduml 

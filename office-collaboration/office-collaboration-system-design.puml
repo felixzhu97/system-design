@@ -1,0 +1,251 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title 办公协作系统 - 系统架构设计图
+
+LAYOUT_TOP_DOWN()
+
+' 客户端层
+package "客户端层" {
+    package "Web应用" {
+        [办公门户] as WebPortal <<React>>
+        [项目管理] as ProjectWeb <<Vue>>
+        [文档编辑器] as DocEditor <<React/Monaco>>
+        [在线会议] as MeetingWeb <<WebRTC>>
+    }
+    package "移动应用" {
+        [移动办公APP] as MobileApp <<React Native>>
+        [移动会议APP] as MeetingApp <<Flutter>>
+        [企业微信小程序] as WeChatMini <<小程序>>
+    }
+    package "桌面应用" {
+        [桌面客户端] as DesktopApp <<Electron>>
+        [Office插件] as OfficePlugin <<VSTO>>
+        [屏幕共享客户端] as ScreenShare <<C++>>
+    }
+}
+
+' 接入层
+package "接入层" {
+    [API网关] as APIGateway <<Kong>>
+    [负载均衡] as LoadBalancer <<Nginx>>
+    [单点登录] as SSO <<CAS>>
+    [WebSocket网关] as WSGateway <<Socket.io>>
+    [WebRTC网关] as RTCGateway <<Kurento>>
+}
+
+' BFF层
+package "BFF层" {
+    [Web端BFF] as WebBFF <<Next.js>>
+    [移动端BFF] as MobileBFF <<Node.js>>
+    [桌面端BFF] as DesktopBFF <<Electron Main>>
+    [会议端BFF] as MeetingBFF <<Node.js>>
+}
+
+' 核心业务服务
+package "核心业务服务" {
+    [用户服务] as UserService <<Java/Spring>>
+    [文档服务] as DocumentService <<Node.js/Express>>
+    [会议服务] as MeetingService <<Go/Gin>>
+    [项目服务] as ProjectService <<Java/Spring>>
+    [即时通讯服务] as IMService <<Node.js/Socket.io>>
+    [日历服务] as CalendarService <<Python/FastAPI>>
+    [工作流服务] as WorkflowService <<Java/Activiti>>
+    [文件服务] as FileService <<Go/Minio>>
+}
+
+package "支撑服务" {
+    [认证授权服务] as AuthService <<Java/Spring Security>>
+    [通知服务] as NotificationService <<Java/Spring>>
+    [搜索服务] as SearchService <<Java/Elasticsearch>>
+    [邮件服务] as EmailService <<Java/Spring>>
+    [短信服务] as SMSService <<Go>>
+    [审计服务] as AuditService <<Java/Spring>>
+    [配置服务] as ConfigService <<Spring Cloud Config>>
+}
+
+package "AI增强服务" {
+    [智能助手服务] as AIAssistantService <<Python/FastAPI>>
+    [文档AI服务] as DocumentAIService <<Python/Transformers>>
+    [会议AI服务] as MeetingAIService <<Python/Speech>>
+    [推荐服务] as RecommendationService <<Python/ML>>
+}
+
+' 中间件层
+package "中间件层" {
+    [消息队列] as MessageQueue <<Apache Kafka>>
+    [服务网格] as ServiceMesh <<Istio>>
+    [配置中心] as ConfigCenter <<Nacos>>
+    [服务注册] as ServiceRegistry <<Eureka>>
+    [分布式锁] as DistributedLock <<Redisson>>
+}
+
+' 数据存储层
+package "数据存储层" {
+    package "关系型数据库" {
+        [用户数据库] as UserDB <<PostgreSQL>>
+        [项目数据库] as ProjectDB <<PostgreSQL>>
+        [工作流数据库] as WorkflowDB <<PostgreSQL>>
+        [审计数据库] as AuditDB <<PostgreSQL>>
+    }
+    package "非关系型数据库" {
+        [文档数据库] as DocumentDB <<MongoDB>>
+        [会议数据库] as MeetingDB <<MongoDB>>
+        [即时消息库] as IMDB <<MongoDB>>
+        [日历数据库] as CalendarDB <<MongoDB>>
+    }
+    package "缓存层" {
+        [Redis集群] as RedisCluster
+        [分布式缓存] as DistCache
+        [会话缓存] as SessionCache
+    }
+    package "搜索引擎" {
+        [文档搜索] as Elasticsearch
+        [用户搜索] as UserSearch
+    }
+    package "文件存储" {
+        [文档存储] as DocumentStorage <<MinIO>>
+        [会议录制存储] as MeetingStorage <<MinIO>>
+        [文件共享存储] as FileShareStorage <<NFS>>
+    }
+    package "时序数据库" {
+        [操作日志] as OperationLogs <<InfluxDB>>
+        [性能指标] as Metrics <<InfluxDB>>
+    }
+}
+
+' 外部服务集成
+package "外部服务" {
+    package "企业集成" {
+        [Active Directory] as AD
+        [LDAP服务] as LDAP
+        [企业邮箱] as ExchangeServer
+        [OA系统] as OASystem
+    }
+    package "第三方服务" {
+        [邮件服务商] as EmailProvider
+        [短信服务商] as SMSProvider
+        [云存储服务] as CloudStorage
+        [CDN服务] as CDN
+    }
+    package "办公软件集成" {
+        [Microsoft Office] as MSOffice
+        [Google Workspace] as GoogleWorkspace
+        [钉钉开放平台] as DingTalk
+        [企业微信API] as WeChatWork
+    }
+}
+
+' 基础设施层
+package "基础设施层" {
+    package "容器编排" {
+        [Kubernetes集群] as K8s
+        [Docker仓库] as DockerRegistry
+        [Helm Charts] as Helm
+    }
+    package "监控告警" {
+        [Prometheus监控] as Prometheus
+        [Grafana看板] as Grafana
+        [ELK日志栈] as ELK
+        [链路追踪] as Jaeger
+    }
+    package "CI/CD" {
+        [GitLab] as GitLab
+        [Jenkins] as Jenkins
+        [SonarQube] as SonarQube
+    }
+    package "安全防护" {
+        [防火墙] as Firewall
+        [VPN网关] as VPN
+        [SSL证书] as SSL
+        [堡垒机] as Bastion
+    }
+}
+
+' 连接关系
+' 客户端到接入层
+WebPortal --> LoadBalancer
+MobileApp --> LoadBalancer
+DesktopApp --> LoadBalancer
+DocEditor --> WSGateway
+MeetingWeb --> RTCGateway
+
+' 接入层到BFF层
+LoadBalancer --> APIGateway
+APIGateway --> WebBFF
+APIGateway --> MobileBFF
+APIGateway --> DesktopBFF
+APIGateway --> MeetingBFF
+SSO --> AuthService
+
+' BFF层到业务服务
+WebBFF --> DocumentService
+WebBFF --> ProjectService
+MobileBFF --> UserService
+MobileBFF --> IMService
+DesktopBFF --> FileService
+MeetingBFF --> MeetingService
+
+' 业务服务间通信
+UserService --> AuthService
+DocumentService --> SearchService
+MeetingService --> NotificationService
+ProjectService --> WorkflowService
+IMService --> NotificationService
+CalendarService --> EmailService
+WorkflowService --> NotificationService
+
+' AI服务集成
+DocumentService --> DocumentAIService
+MeetingService --> MeetingAIService
+UserService --> RecommendationService
+IMService --> AIAssistantService
+
+' 微服务到中间件
+DocumentService --> MessageQueue
+MeetingService --> ServiceRegistry
+ProjectService --> ConfigCenter
+IMService --> DistributedLock
+
+' 业务服务到数据存储
+UserService --> UserDB
+DocumentService --> DocumentDB
+MeetingService --> MeetingDB
+ProjectService --> ProjectDB
+IMService --> IMDB
+CalendarService --> CalendarDB
+WorkflowService --> WorkflowDB
+AuditService --> AuditDB
+
+' 缓存使用
+UserService --> SessionCache
+DocumentService --> RedisCluster
+MeetingService --> DistCache
+
+' 搜索服务
+SearchService --> Elasticsearch
+UserService --> UserSearch
+
+' 文件存储
+DocumentService --> DocumentStorage
+MeetingService --> MeetingStorage
+FileService --> FileShareStorage
+
+' 日志和监控
+AuditService --> OperationLogs
+NotificationService --> Metrics
+
+' 外部系统集成
+AuthService --> AD
+AuthService --> LDAP
+EmailService --> ExchangeServer
+UserService --> OASystem
+EmailService --> EmailProvider
+SMSService --> SMSProvider
+FileService --> CloudStorage
+DocumentService --> MSOffice
+MeetingService --> GoogleWorkspace
+NotificationService --> DingTalk
+NotificationService --> WeChatWork
+
+@enduml 

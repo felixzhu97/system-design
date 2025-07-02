@@ -1,0 +1,91 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Dynamic.puml
+
+title 办公协作系统 - 文档协作数据流
+
+LAYOUT_WITH_LEGEND()
+
+Person(user, "办公用户", "使用系统进行文档协作")
+Container(webPortal, "办公门户", "React", "Web办公平台")
+Container(docEditor, "文档编辑器", "React/Monaco", "在线文档编辑")
+Container(apiGateway, "API网关", "Kong", "请求路由和认证")
+Container(documentService, "文档服务", "Node.js", "文档管理")
+Container(userService, "用户服务", "Java", "用户管理")
+Container(projectService, "项目服务", "Java", "项目管理")
+Container(imService, "即时通讯服务", "Node.js", "实时消息")
+Container(notificationService, "通知服务", "Java", "消息通知")
+ContainerDb(documentDb, "文档数据库", "MongoDB", "文档存储")
+ContainerDb(userDb, "用户数据库", "PostgreSQL", "用户信息")
+ContainerDb(projectDb, "项目数据库", "PostgreSQL", "项目数据")
+ContainerDb(redisCache, "Redis缓存", "Redis", "实时缓存")
+ContainerDb(fileStorage, "文件存储", "MinIO", "文档文件")
+System_Ext(authService, "认证服务", "统一认证")
+System_Ext(searchService, "搜索服务", "全文搜索")
+
+' 用户登录和项目选择流程
+Rel_D(user, webPortal, "1. 访问办公门户", "浏览器访问")
+Rel_D(webPortal, apiGateway, "2. 请求用户认证", "HTTPS/REST")
+Rel_D(apiGateway, authService, "3. 验证用户身份", "JWT验证")
+Rel_U(authService, apiGateway, "4. 返回认证结果", "Token")
+Rel_D(apiGateway, userService, "5. 获取用户信息", "gRPC")
+Rel_D(userService, userDb, "6. 查询用户档案", "SQL")
+Rel_U(userDb, userService, "7. 返回用户数据", "用户信息")
+Rel_U(userService, apiGateway, "8. 返回用户档案", "JSON")
+Rel_U(apiGateway, webPortal, "9. 返回给用户", "JSON")
+Rel_U(webPortal, user, "10. 展示用户界面", "UI界面")
+
+' 创建文档流程
+Rel_D(user, docEditor, "11. 创建新文档", "编辑操作")
+Rel_D(docEditor, apiGateway, "12. 提交文档创建", "HTTPS/POST")
+Rel_D(apiGateway, documentService, "13. 创建文档记录", "gRPC")
+Rel_D(documentService, documentDb, "14. 保存文档元数据", "MongoDB写入")
+Rel_D(documentService, fileStorage, "15. 存储文档内容", "S3写入")
+Rel_D(documentService, redisCache, "16. 缓存文档信息", "Redis写入")
+Rel_D(documentService, searchService, "17. 建立搜索索引", "Elasticsearch索引")
+Rel_U(documentService, apiGateway, "18. 返回文档ID", "JSON")
+Rel_U(apiGateway, docEditor, "19. 返回给编辑器", "JSON")
+Rel_U(docEditor, user, "20. 显示文档界面", "编辑界面")
+
+' 实时协作编辑流程
+Rel_D(user, docEditor, "21. 编辑文档内容", "实时输入")
+Rel_D(docEditor, apiGateway, "22. 发送编辑操作", "WebSocket")
+Rel_D(apiGateway, documentService, "23. 处理协作编辑", "实时处理")
+Rel_D(documentService, redisCache, "24. 更新实时状态", "Redis更新")
+Rel_D(documentService, documentDb, "25. 保存版本快照", "MongoDB写入")
+Rel_D(documentService, imService, "26. 广播编辑事件", "消息队列")
+Rel_D(imService, redisCache, "27. 获取在线用户", "Redis查询")
+Rel_U(redisCache, imService, "28. 返回在线列表", "用户列表")
+Rel_U(imService, apiGateway, "29. 推送编辑更新", "WebSocket")
+Rel_U(apiGateway, docEditor, "30. 实时更新内容", "WebSocket")
+Rel_U(docEditor, user, "31. 显示协作变更", "实时渲染")
+
+' 项目关联和权限验证
+Rel_D(documentService, projectService, "32. 关联项目权限", "gRPC")
+Rel_D(projectService, projectDb, "33. 查询项目成员", "SQL")
+Rel_U(projectDb, projectService, "34. 返回成员列表", "权限信息")
+Rel_U(projectService, documentService, "35. 返回权限结果", "权限验证")
+
+' 通知推送流程
+Rel_D(documentService, notificationService, "36. 发送协作通知", "异步消息")
+Rel_D(notificationService, userDb, "37. 获取通知偏好", "SQL查询")
+Rel_U(userDb, notificationService, "38. 返回偏好设置", "通知配置")
+Rel_U(notificationService, apiGateway, "39. 推送即时通知", "WebSocket")
+Rel_U(apiGateway, webPortal, "40. 显示通知消息", "WebSocket")
+Rel_U(webPortal, user, "41. 弹出通知提醒", "桌面通知")
+
+' 文档搜索流程
+Rel_D(user, webPortal, "42. 搜索文档内容", "搜索输入")
+Rel_D(webPortal, apiGateway, "43. 提交搜索请求", "HTTPS/GET")
+Rel_D(apiGateway, searchService, "44. 执行全文搜索", "Elasticsearch查询")
+Rel_D(searchService, documentDb, "45. 获取文档详情", "MongoDB查询")
+Rel_U(documentDb, searchService, "46. 返回文档信息", "文档元数据")
+Rel_U(searchService, apiGateway, "47. 返回搜索结果", "JSON")
+Rel_U(apiGateway, webPortal, "48. 返回给用户", "JSON")
+Rel_U(webPortal, user, "49. 展示搜索结果", "搜索列表")
+
+' 文档版本管理流程
+Rel_D(documentService, documentDb, "50. 创建版本分支", "版本控制")
+Rel_D(documentService, fileStorage, "51. 保存版本文件", "版本存储")
+Rel_D(documentService, redisCache, "52. 缓存版本信息", "版本缓存")
+
+@enduml 

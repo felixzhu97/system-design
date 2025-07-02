@@ -1,0 +1,202 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title 健身运动系统 - API设计图
+
+LAYOUT_TOP_DOWN()
+
+package "用户认证API" {
+    [POST /api/auth/register] as register
+    [POST /api/auth/login] as login
+    [POST /api/auth/logout] as logout
+    [POST /api/auth/refresh] as refresh
+    [GET /api/auth/profile] as profile
+    [PUT /api/auth/profile] as updateProfile
+    [POST /api/auth/forgot-password] as forgotPassword
+    [POST /api/auth/reset-password] as resetPassword
+}
+
+package "运动计划API" {
+    [GET /api/plans] as getPlans
+    [POST /api/plans] as createPlan
+    [GET /api/plans/:id] as getPlan
+    [PUT /api/plans/:id] as updatePlan
+    [DELETE /api/plans/:id] as deletePlan
+    [GET /api/plans/templates] as getTemplates
+    [POST /api/plans/:id/start] as startWorkout
+    [POST /api/plans/:id/complete] as completeWorkout
+}
+
+package "运动记录API" {
+    [GET /api/exercises] as getExercises
+    [POST /api/exercises] as createExercise
+    [GET /api/exercises/:id] as getExercise
+    [PUT /api/exercises/:id] as updateExercise
+    [DELETE /api/exercises/:id] as deleteExercise
+    [GET /api/exercises/stats] as getStats
+    [GET /api/exercises/history] as getHistory
+    [POST /api/exercises/:id/share] as shareExercise
+}
+
+package "健康数据API" {
+    [GET /api/health/metrics] as getMetrics
+    [POST /api/health/metrics] as addMetrics
+    [GET /api/health/goals] as getGoals
+    [POST /api/health/goals] as setGoals
+    [PUT /api/health/goals/:id] as updateGoals
+    [GET /api/health/trends] as getTrends
+    [GET /api/health/reports] as getReports
+    [POST /api/health/sync] as syncHealth
+}
+
+package "AI教练API" {
+    [POST /api/ai/analyze] as analyzePerformance
+    [GET /api/ai/recommendations] as getRecommendations
+    [POST /api/ai/feedback] as getFeedback
+    [GET /api/ai/progress] as getProgress
+    [POST /api/ai/coach] as askCoach
+    [GET /api/ai/insights] as getInsights
+    [POST /api/ai/customize] as customizePlan
+}
+
+package "设备管理API" {
+    [GET /api/devices] as getDevices
+    [POST /api/devices] as addDevice
+    [PUT /api/devices/:id] as updateDevice
+    [DELETE /api/devices/:id] as removeDevice
+    [GET /api/devices/:id/status] as getDeviceStatus
+    [POST /api/devices/:id/sync] as syncDevice
+    [GET /api/devices/:id/data] as getDeviceData
+    [POST /api/devices/calibrate] as calibrateDevice
+}
+
+package "社交功能API" {
+    [GET /api/social/friends] as getFriends
+    [POST /api/social/friends] as addFriend
+    [DELETE /api/social/friends/:id] as removeFriend
+    [GET /api/social/feeds] as getFeeds
+    [POST /api/social/share] as shareActivity
+    [POST /api/social/like] as likePost
+    [POST /api/social/comment] as commentPost
+    [GET /api/social/leaderboard] as getLeaderboard
+}
+
+package "营养管理API" {
+    [GET /api/nutrition/foods] as getFoods
+    [POST /api/nutrition/logs] as logFood
+    [GET /api/nutrition/logs] as getFoodLogs
+    [PUT /api/nutrition/logs/:id] as updateFoodLog
+    [DELETE /api/nutrition/logs/:id] as deleteFoodLog
+    [GET /api/nutrition/analysis] as getNutritionAnalysis
+    [GET /api/nutrition/recommendations] as getNutritionRecs
+}
+
+package "挑战活动API" {
+    [GET /api/challenges] as getChallenges
+    [POST /api/challenges] as createChallenge
+    [POST /api/challenges/:id/join] as joinChallenge
+    [GET /api/challenges/:id] as getChallenge
+    [GET /api/challenges/:id/participants] as getParticipants
+    [GET /api/challenges/:id/ranking] as getChallengeRanking
+    [POST /api/challenges/:id/complete] as completeChallenge
+}
+
+package "实时数据API (WebSocket)" {
+    [WS /api/ws/workout] as workoutSocket
+    [WS /api/ws/heart-rate] as heartRateSocket
+    [WS /api/ws/device] as deviceSocket
+    [WS /api/ws/coaching] as coachingSocket
+    [WS /api/ws/social] as socialSocket
+}
+
+package "文件管理API" {
+    [POST /api/files/upload] as uploadFile
+    [GET /api/files/:id] as getFile
+    [DELETE /api/files/:id] as deleteFile
+    [POST /api/files/avatar] as uploadAvatar
+    [POST /api/files/video] as uploadVideo
+    [GET /api/files/videos] as getVideos
+}
+
+' API调用关系
+register --> profile : "注册后获取档案"
+login --> getPlans : "登录后获取计划"
+createPlan --> startWorkout : "创建后开始训练"
+startWorkout --> workoutSocket : "开始实时连接"
+completeWorkout --> createExercise : "完成后记录运动"
+createExercise --> analyzePerformance : "记录后AI分析"
+analyzePerformance --> getRecommendations : "分析后获取建议"
+
+addDevice --> syncDevice : "添加后同步设备"
+syncDevice --> getDeviceData : "同步后获取数据"
+getDeviceData --> heartRateSocket : "数据流实时推送"
+
+shareActivity --> getFeeds : "分享后更新动态"
+shareExercise --> socialSocket : "分享实时通知"
+joinChallenge --> getChallengeRanking : "加入后查看排名"
+
+' API响应格式说明
+note right of getPlans
+  **GET /api/plans**
+  响应格式:
+  {
+    "code": 200,
+    "data": {
+      "plans": [
+        {
+          "id": "plan123",
+          "name": "减脂训练计划",
+          "type": "weight_loss",
+          "duration": 30,
+          "difficulty": "medium",
+          "exercises": [...]
+        }
+      ],
+      "total": 10
+    }
+  }
+end note
+
+note right of analyzePerformance
+  **POST /api/ai/analyze**
+  请求格式:
+  {
+    "exercise_id": "ex123",
+    "heart_rate_data": [...],
+    "movement_data": [...],
+    "duration": 1800
+  }
+  
+  响应格式:
+  {
+    "code": 200,
+    "data": {
+      "performance_score": 85,
+      "suggestions": [...],
+      "next_workout": {...}
+    }
+  }
+end note
+
+note right of workoutSocket
+  **WebSocket /api/ws/workout**
+  实时消息格式:
+  {
+    "type": "heart_rate",
+    "data": {
+      "bpm": 120,
+      "zone": "aerobic",
+      "timestamp": "2024-01-15T10:30:00Z"
+    }
+  }
+  
+  {
+    "type": "coaching_tip",
+    "data": {
+      "message": "保持当前节奏",
+      "type": "encouragement"
+    }
+  }
+end note
+
+@enduml 

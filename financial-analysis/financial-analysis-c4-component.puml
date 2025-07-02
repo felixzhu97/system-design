@@ -1,0 +1,64 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title 金融分析系统 - 行情数据服务组件图 (Level 3)
+
+LAYOUT_WITH_LEGEND()
+
+Container_Boundary(marketDataService, "行情数据服务") {
+    Component(dataController, "数据控制器", "Spring MVC", "处理行情数据API请求")
+    Component(marketDataManager, "市场数据管理器", "Spring Service", "行情数据核心业务")
+    Component(realTimeProcessor, "实时数据处理器", "Spring Service", "实时行情处理")
+    Component(historicalDataManager, "历史数据管理器", "Spring Service", "历史数据管理")
+    Component(dataValidator, "数据验证器", "Spring Service", "数据质量验证")
+    Component(alertEngine, "告警引擎", "Spring Service", "价格告警处理")
+    Component(dataRepository, "数据仓储", "Spring Data JPA", "数据持久化访问")
+    Component(timeSeriesRepository, "时序数据仓储", "InfluxDB Client", "时序数据访问")
+    Component(marketCache, "市场缓存", "Redis Template", "高频数据缓存")
+    Component(streamProcessor, "流处理器", "Kafka Streams", "数据流处理")
+    Component(technicalAnalyzer, "技术分析器", "TA-Lib Java", "技术指标计算")
+    Component(riskCalculator, "风险计算器", "Quantlib Java", "风险指标计算")
+}
+
+ContainerDb_Ext(marketDb, "行情数据库", "PostgreSQL", "基础行情数据")
+ContainerDb_Ext(timeSeriesDb, "时序数据库", "InfluxDB", "高频时序数据")
+ContainerDb_Ext(redisCache, "Redis缓存", "Redis", "实时数据缓存")
+ContainerDb_Ext(analyticsDb, "分析数据库", "ClickHouse", "分析计算结果")
+Container_Ext(marketDataFeed, "行情数据源", "Bloomberg/Reuters", "外部行情供应商")
+Container_Ext(exchangeAPI, "交易所API", "REST/WebSocket", "交易所实时数据")
+Container_Ext(newsService, "新闻服务", "新闻API", "市场新闻资讯")
+
+' API层调用
+Rel(dataController, marketDataManager, "调用", "业务处理")
+Rel(dataController, realTimeProcessor, "调用", "实时处理")
+Rel(dataController, historicalDataManager, "调用", "历史查询")
+
+' 业务层调用
+Rel(marketDataManager, dataRepository, "使用", "数据访问")
+Rel(marketDataManager, marketCache, "使用", "缓存读写")
+Rel(marketDataManager, dataValidator, "调用", "数据验证")
+
+Rel(realTimeProcessor, streamProcessor, "使用", "流处理")
+Rel(realTimeProcessor, timeSeriesRepository, "使用", "时序存储")
+Rel(realTimeProcessor, alertEngine, "调用", "告警处理")
+Rel(realTimeProcessor, technicalAnalyzer, "调用", "技术分析")
+
+Rel(historicalDataManager, timeSeriesRepository, "使用", "历史查询")
+Rel(historicalDataManager, riskCalculator, "调用", "风险计算")
+
+Rel(alertEngine, marketCache, "使用", "价格监控")
+Rel(technicalAnalyzer, timeSeriesRepository, "使用", "指标计算")
+Rel(riskCalculator, analyticsDb, "使用", "风险分析")
+
+' 数据层调用
+Rel(dataRepository, marketDb, "查询", "SQL")
+Rel(timeSeriesRepository, timeSeriesDb, "读写", "InfluxQL")
+Rel(marketCache, redisCache, "读写", "Redis协议")
+Rel(streamProcessor, analyticsDb, "写入", "分析结果")
+
+' 外部数据源调用
+Rel(realTimeProcessor, marketDataFeed, "订阅", "FIX/Binary")
+Rel(realTimeProcessor, exchangeAPI, "连接", "WebSocket")
+Rel(marketDataManager, newsService, "获取", "REST API")
+
+@enduml 

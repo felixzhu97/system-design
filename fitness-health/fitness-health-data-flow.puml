@@ -1,0 +1,82 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Dynamic.puml
+
+title 健身运动系统 - 运动训练数据流
+
+LAYOUT_WITH_LEGEND()
+
+Person(user, "健身用户", "使用APP进行运动训练")
+Container(fitnessApp, "健身APP", "React Native", "运动客户端")
+Container(watchApp, "智能手表", "WatchOS", "运动数据采集")
+Container(apiGateway, "API网关", "Kong", "请求路由和认证")
+Container(exerciseService, "运动服务", "Go", "运动数据处理")
+Container(planService, "计划服务", "Python", "训练计划管理")
+Container(healthService, "健康服务", "Node.js", "健康数据分析")
+Container(aiCoachService, "AI教练服务", "Python", "智能指导")
+Container(deviceService, "设备服务", "Go", "设备数据处理")
+ContainerDb(exerciseDb, "运动数据库", "PostgreSQL", "运动记录")
+ContainerDb(metricsDb, "指标数据库", "InfluxDB", "实时指标")
+ContainerDb(deviceDb, "设备数据库", "MongoDB", "设备数据")
+ContainerDb(redisCache, "Redis缓存", "Redis", "实时缓存")
+ContainerDb(analyticsDb, "分析数据库", "ClickHouse", "数据分析")
+System_Ext(wearableAPI, "可穿戴设备API", "第三方设备接口")
+System_Ext(aiPlatform, "AI平台", "机器学习服务")
+
+' 运动计划获取流程
+Rel_D(user, fitnessApp, "1. 打开运动计划", "触摸操作")
+Rel_D(fitnessApp, apiGateway, "2. 请求个性化计划", "HTTPS/REST")
+Rel_D(apiGateway, planService, "3. 获取训练计划", "gRPC")
+Rel_D(planService, exerciseDb, "4. 查询历史记录", "SQL")
+Rel_D(planService, aiCoachService, "5. 请求AI推荐", "gRPC")
+Rel_D(aiCoachService, analyticsDb, "6. 分析用户数据", "ClickHouse查询")
+Rel_U(analyticsDb, aiCoachService, "7. 返回分析结果", "数据")
+Rel_U(aiCoachService, planService, "8. 返回AI建议", "JSON")
+Rel_U(exerciseDb, planService, "9. 返回历史数据", "数据")
+Rel_U(planService, apiGateway, "10. 返回训练计划", "JSON")
+Rel_U(apiGateway, fitnessApp, "11. 返回给用户", "JSON")
+Rel_U(fitnessApp, user, "12. 展示训练计划", "UI界面")
+
+' 运动数据采集流程
+Rel_D(user, watchApp, "13. 开始运动训练", "手表操作")
+Rel_D(watchApp, wearableAPI, "14. 采集运动数据", "蓝牙/WiFi")
+Rel_D(wearableAPI, deviceService, "15. 传输设备数据", "HTTPS/API")
+Rel_D(deviceService, metricsDb, "16. 存储实时指标", "InfluxDB写入")
+Rel_D(deviceService, redisCache, "17. 缓存实时数据", "Redis写入")
+Rel_D(deviceService, exerciseService, "18. 同步运动数据", "gRPC")
+
+' 实时分析流程
+Rel_D(exerciseService, healthService, "19. 发送健康数据", "异步消息")
+Rel_D(healthService, metricsDb, "20. 查询实时指标", "InfluxDB查询")
+Rel_U(metricsDb, healthService, "21. 返回指标数据", "时序数据")
+Rel_D(healthService, aiCoachService, "22. 请求实时分析", "gRPC")
+Rel_D(aiCoachService, aiPlatform, "23. AI模型分析", "HTTPS/API")
+Rel_U(aiPlatform, aiCoachService, "24. 返回分析结果", "JSON")
+Rel_U(aiCoachService, healthService, "25. 返回健康建议", "JSON")
+
+' 实时反馈流程
+Rel_U(healthService, apiGateway, "26. 推送实时反馈", "WebSocket")
+Rel_U(apiGateway, fitnessApp, "27. 实时通知", "WebSocket")
+Rel_U(fitnessApp, user, "28. 显示运动反馈", "推送通知")
+Rel_U(apiGateway, watchApp, "29. 手表提醒", "推送通知")
+Rel_U(watchApp, user, "30. 震动提醒", "触觉反馈")
+
+' 运动完成数据处理
+Rel_D(user, watchApp, "31. 结束运动", "手表操作")
+Rel_D(exerciseService, exerciseDb, "32. 保存运动记录", "SQL")
+Rel_D(exerciseService, deviceDb, "33. 存储设备数据", "MongoDB写入")
+Rel_D(exerciseService, analyticsDb, "34. 记录分析数据", "ClickHouse插入")
+
+' 运动报告生成
+Rel_D(exerciseService, aiCoachService, "35. 生成运动报告", "gRPC")
+Rel_D(aiCoachService, analyticsDb, "36. 综合数据分析", "ClickHouse查询")
+Rel_U(analyticsDb, aiCoachService, "37. 返回统计数据", "数据")
+Rel_U(aiCoachService, exerciseService, "38. 返回分析报告", "JSON")
+Rel_U(exerciseService, apiGateway, "39. 推送运动报告", "HTTPS")
+Rel_U(apiGateway, fitnessApp, "40. 返回给用户", "JSON")
+Rel_U(fitnessApp, user, "41. 展示运动报告", "UI界面")
+
+' 计划优化流程
+Rel_D(aiCoachService, planService, "42. 优化训练计划", "异步消息")
+Rel_D(planService, redisCache, "43. 更新计划缓存", "Redis更新")
+
+@enduml 

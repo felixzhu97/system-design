@@ -1,0 +1,124 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Dynamic.puml
+
+title 饮食健康系统 - 营养分析数据流程图
+
+LAYOUT_WITH_LEGEND()
+
+Person(user, "用户", "记录饮食信息")
+Container(mobileApp, "营养APP", "React Native", "移动端营养记录")
+Container(userBFF, "用户端BFF", "Node.js", "用户业务聚合")
+Container(apiGateway, "API网关", "Kong", "API路由管理")
+Container(dietService, "饮食记录服务", "Node.js", "饮食记录管理")
+Container(nutritionService, "营养分析服务", "Python", "营养成分分析")
+Container(foodService, "食物数据服务", "Java", "食物基础数据")
+Container(aiRecommendEngine, "AI推荐引擎", "Python", "个性化推荐")
+Container(healthService, "健康数据服务", "Python", "健康指标管理")
+Container(reminderService, "提醒服务", "Go", "健康提醒")
+
+ContainerDb(nutritionDB, "营养数据库", "MySQL", "营养成分数据")
+ContainerDb(userDB, "用户数据库", "PostgreSQL", "用户基础信息")
+ContainerDb(healthMetricsDB, "健康指标库", "InfluxDB", "健康时序数据")
+ContainerDb(redisCache, "缓存系统", "Redis", "热点数据缓存")
+Container(messageQueue, "消息队列", "Kafka", "异步事件处理")
+
+Container_Ext(foodImageAI, "食物识别AI", "OpenCV", "图像识别服务")
+Container_Ext(barcodeAPI, "条码识别API", "第三方服务", "食品条码扫描")
+Container_Ext(nutritionAPI, "营养数据API", "USDA", "权威营养数据")
+Container_Ext(wearableDevice, "可穿戴设备", "智能手环", "健康数据采集")
+Container_Ext(healthPlatform, "健康平台", "Apple Health", "健康数据同步")
+
+' 用户输入饮食信息阶段
+Rel_D(user, mobileApp, "1. 打开营养记录", "点击记录按钮")
+Rel_D(mobileApp, userBFF, "2. 请求食物搜索", "GET /api/foods/search")
+Rel_D(userBFF, apiGateway, "3. 转发搜索请求", "HTTP/REST")
+Rel_D(apiGateway, foodService, "4. 查询食物数据", "gRPC调用")
+Rel_D(foodService, nutritionDB, "5. 查询食物信息", "MySQL查询")
+Rel_U(nutritionDB, foodService, "6. 返回食物列表", "食物基础信息")
+Rel_U(foodService, redisCache, "7. 缓存热门食物", "Redis存储")
+Rel_U(foodService, apiGateway, "8. 响应食物数据", "gRPC响应")
+Rel_U(apiGateway, userBFF, "9. 返回聚合数据", "JSON格式")
+Rel_U(userBFF, mobileApp, "10. 渲染食物列表", "React Native渲染")
+Rel_U(mobileApp, user, "11. 显示可选食物", "界面展示")
+
+' 智能识别阶段
+Rel_D(user, mobileApp, "12. 拍照识别食物", "相机拍摄")
+Rel_D(mobileApp, userBFF, "13. 上传食物图片", "POST /api/foods/recognize")
+Rel_D(userBFF, apiGateway, "14. 图像识别请求", "HTTP/REST")
+Rel_D(apiGateway, foodService, "15. 调用AI识别", "gRPC调用")
+Rel_D(foodService, foodImageAI, "16. 食物图像识别", "AI API调用")
+Rel_U(foodImageAI, foodService, "17. 返回识别结果", "食物名称和置信度")
+Rel_D(foodService, nutritionDB, "18. 查询识别食物", "MySQL查询")
+Rel_U(nutritionDB, foodService, "19. 返回营养信息", "营养成分数据")
+Rel_U(foodService, apiGateway, "20. 响应识别结果", "gRPC响应")
+Rel_U(apiGateway, userBFF, "21. 返回食物信息", "JSON数据")
+Rel_U(userBFF, mobileApp, "22. 显示识别结果", "食物确认界面")
+
+' 条码扫描阶段
+Rel_D(user, mobileApp, "23. 扫描食品条码", "条码扫描")
+Rel_D(mobileApp, userBFF, "24. 条码识别请求", "POST /api/foods/barcode")
+Rel_D(userBFF, apiGateway, "25. 转发条码请求", "HTTP/REST")
+Rel_D(apiGateway, foodService, "26. 条码解析", "gRPC调用")
+Rel_D(foodService, barcodeAPI, "27. 第三方条码识别", "HTTPS/API")
+Rel_U(barcodeAPI, foodService, "28. 返回产品信息", "食品详细信息")
+Rel_D(foodService, nutritionAPI, "29. 查询营养数据", "USDA API")
+Rel_U(nutritionAPI, foodService, "30. 返回权威营养数据", "标准营养成分")
+Rel_U(foodService, apiGateway, "31. 响应条码结果", "gRPC响应")
+Rel_U(apiGateway, userBFF, "32. 返回产品数据", "完整食品信息")
+Rel_U(userBFF, mobileApp, "33. 显示产品信息", "营养标签展示")
+
+' 饮食记录保存阶段
+Rel_D(user, mobileApp, "34. 确认饮食记录", "选择份量并保存")
+Rel_D(mobileApp, userBFF, "35. 提交饮食记录", "POST /api/diet/records")
+Rel_D(userBFF, apiGateway, "36. 饮食记录请求", "HTTP/REST")
+Rel_D(apiGateway, dietService, "37. 处理饮食记录", "gRPC调用")
+Rel_D(dietService, userDB, "38. 验证用户信息", "PostgreSQL查询")
+Rel_D(dietService, nutritionDB, "39. 保存饮食记录", "MySQL写入")
+Rel_D(dietService, messageQueue, "40. 发布饮食事件", "Kafka消息")
+
+' 营养分析计算阶段
+Rel_D(messageQueue, nutritionService, "41. 消费饮食事件", "Kafka消费者")
+Rel_D(nutritionService, nutritionDB, "42. 读取用户饮食", "MySQL查询")
+Rel_D(nutritionService, userDB, "43. 获取用户资料", "PostgreSQL查询")
+Rel_D(nutritionService, redisCache, "44. 检查计算缓存", "Redis查询")
+Rel_D(nutritionService, aiRecommendEngine, "45. AI营养分析", "机器学习计算")
+Rel_U(aiRecommendEngine, nutritionService, "46. 返回分析结果", "营养评估和建议")
+Rel_D(nutritionService, healthMetricsDB, "47. 保存营养指标", "InfluxDB写入")
+Rel_D(nutritionService, redisCache, "48. 缓存分析结果", "Redis存储")
+
+' 健康数据集成阶段
+Rel_D(wearableDevice, healthService, "49. 同步设备数据", "蓝牙/WiFi传输")
+Rel_D(healthPlatform, healthService, "50. 健康平台同步", "HealthKit API")
+Rel_D(healthService, healthMetricsDB, "51. 存储健康数据", "InfluxDB写入")
+Rel_D(healthService, messageQueue, "52. 发布健康事件", "Kafka消息")
+Rel_D(messageQueue, nutritionService, "53. 健康数据更新", "事件消费")
+Rel_D(nutritionService, aiRecommendEngine, "54. 重新计算推荐", "综合健康状况")
+
+' 个性化推荐生成阶段
+Rel_D(aiRecommendEngine, userDB, "55. 分析用户偏好", "PostgreSQL查询")
+Rel_D(aiRecommendEngine, nutritionDB, "56. 搜索适合食物", "MySQL查询")
+Rel_D(aiRecommendEngine, healthMetricsDB, "57. 分析健康趋势", "InfluxDB查询")
+Rel_U(aiRecommendEngine, redisCache, "58. 缓存推荐结果", "Redis存储")
+Rel_D(aiRecommendEngine, messageQueue, "59. 发布推荐事件", "Kafka消息")
+
+' 智能提醒阶段
+Rel_D(messageQueue, reminderService, "60. 消费提醒事件", "Kafka消费者")
+Rel_D(reminderService, userDB, "61. 查询用户设置", "PostgreSQL查询")
+Rel_D(reminderService, redisCache, "62. 检查提醒缓存", "Redis查询")
+Rel_U(reminderService, mobileApp, "63. 推送营养提醒", "Push通知")
+Rel_U(reminderService, user, "64. 显示健康建议", "用餐提醒")
+
+' 用户反馈阶段
+Rel_U(nutritionService, apiGateway, "65. 营养分析完成", "分析结果")
+Rel_U(apiGateway, userBFF, "66. 返回分析报告", "营养评估数据")
+Rel_U(userBFF, mobileApp, "67. 更新用户界面", "营养仪表板")
+Rel_U(mobileApp, user, "68. 显示营养报告", "可视化图表")
+
+' 数据流程说明
+note over user, nutritionDB : "输入阶段：\n1. 手动搜索食物\n2. 拍照智能识别\n3. 条码扫描识别\n4. 语音输入识别"
+
+note over aiRecommendEngine, healthMetricsDB : "分析阶段：\n1. 营养成分计算\n2. 热量平衡分析\n3. 微量元素评估\n4. 健康风险预测"
+
+note over reminderService, user : "反馈阶段：\n1. 实时营养分析\n2. 个性化饮食建议\n3. 健康目标追踪\n4. 智能提醒推送"
+
+@enduml 

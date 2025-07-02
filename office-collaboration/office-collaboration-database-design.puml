@@ -1,0 +1,226 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title 办公协作系统 - 数据库设计图
+
+LAYOUT_TOP_DOWN()
+
+package "用户管理数据 (PostgreSQL)" {
+    [用户表 users] as users
+    [用户档案表 user_profiles] as profiles
+    [部门表 departments] as departments
+    [角色表 roles] as roles
+    [权限表 permissions] as permissions
+    [用户角色表 user_roles] as userRoles
+    [用户设置表 user_settings] as settings
+}
+
+package "项目管理数据 (PostgreSQL)" {
+    [项目表 projects] as projects
+    [项目成员表 project_members] as projectMembers
+    [任务表 tasks] as tasks
+    [任务分配表 task_assignments] as taskAssignments
+    [里程碑表 milestones] as milestones
+    [项目文件表 project_files] as projectFiles
+}
+
+package "工作流数据 (PostgreSQL)" {
+    [流程定义表 workflow_definitions] as workflowDefs
+    [流程实例表 workflow_instances] as workflowInstances
+    [任务节点表 workflow_tasks] as workflowTasks
+    [审批记录表 approval_records] as approvals
+    [流程变量表 workflow_variables] as workflowVars
+}
+
+package "审计日志数据 (PostgreSQL)" {
+    [操作日志表 audit_logs] as auditLogs
+    [登录日志表 login_logs] as loginLogs
+    [文件访问日志表 file_access_logs] as fileAccessLogs
+    [系统日志表 system_logs] as systemLogs
+}
+
+package "文档数据 (MongoDB)" {
+    [文档集合 documents] as documents
+    [文档版本集合 document_versions] as documentVersions
+    [文档权限集合 document_permissions] as documentPermissions
+    [文档评论集合 document_comments] as documentComments
+    [文档标签集合 document_tags] as documentTags
+}
+
+package "会议数据 (MongoDB)" {
+    [会议集合 meetings] as meetings
+    [会议参与者集合 meeting_participants] as meetingParticipants
+    [会议记录集合 meeting_records] as meetingRecords
+    [会议附件集合 meeting_attachments] as meetingAttachments
+    [会议纪要集合 meeting_minutes] as meetingMinutes
+}
+
+package "即时消息数据 (MongoDB)" {
+    [消息集合 messages] as messages
+    [群组集合 groups] as groups
+    [群组成员集合 group_members] as groupMembers
+    [消息状态集合 message_status] as messageStatus
+    [文件分享集合 file_shares] as fileShares
+}
+
+package "日历数据 (MongoDB)" {
+    [日历事件集合 calendar_events] as calendarEvents
+    [日程安排集合 schedules] as schedules
+    [提醒设置集合 reminders] as reminders
+    [循环事件集合 recurring_events] as recurringEvents
+}
+
+package "缓存数据 (Redis)" {
+    [用户会话 user_sessions] as sessions
+    [在线用户 online_users] as onlineUsers
+    [文档锁定 document_locks] as documentLocks
+    [实时协作 collaboration_state] as collabState
+    [权限缓存 permission_cache] as permCache
+    [通知队列 notification_queue] as notificationQueue
+}
+
+package "搜索索引 (Elasticsearch)" {
+    [文档索引 document_index] as documentIndex
+    [用户索引 user_index] as userIndex
+    [项目索引 project_index] as projectIndex
+    [消息索引 message_index] as messageIndex
+}
+
+package "文件存储 (MinIO)" {
+    [文档文件存储 document_files] as documentFiles
+    [会议录制存储 meeting_recordings] as meetingRecordings
+    [用户头像存储 user_avatars] as userAvatars
+    [附件存储 attachments] as attachments
+    [缩略图存储 thumbnails] as thumbnails
+}
+
+package "时序数据 (InfluxDB)" {
+    [用户活跃度 user_activity] as userActivity
+    [系统性能指标 system_metrics] as systemMetrics
+    [文档访问统计 document_access] as documentAccess
+    [会议使用统计 meeting_usage] as meetingUsage
+}
+
+' 关系定义
+users ||--o{ profiles : "1对1"
+users ||--o{ departments : "多对1"
+users ||--o{ userRoles : "1对多"
+roles ||--o{ permissions : "多对多"
+users ||--o{ settings : "1对1"
+
+users ||--o{ projects : "1对多"
+projects ||--o{ projectMembers : "1对多"
+projects ||--o{ tasks : "1对多"
+tasks ||--o{ taskAssignments : "1对多"
+projects ||--o{ milestones : "1对多"
+projects ||--o{ projectFiles : "1对多"
+
+workflowDefs ||--o{ workflowInstances : "1对多"
+workflowInstances ||--o{ workflowTasks : "1对多"
+workflowTasks ||--o{ approvals : "1对多"
+workflowInstances ||--o{ workflowVars : "1对多"
+
+users ||--o{ auditLogs : "1对多"
+users ||--o{ loginLogs : "1对多"
+documents ||--o{ fileAccessLogs : "1对多"
+
+users ||--o{ documents : "1对多"
+documents ||--o{ documentVersions : "1对多"
+documents ||--o{ documentPermissions : "1对多"
+documents ||--o{ documentComments : "1对多"
+documents ||--o{ documentTags : "多对多"
+
+users ||--o{ meetings : "1对多"
+meetings ||--o{ meetingParticipants : "1对多"
+meetings ||--o{ meetingRecords : "1对多"
+meetings ||--o{ meetingAttachments : "1对多"
+meetings ||--o{ meetingMinutes : "1对多"
+
+users ||--o{ messages : "1对多"
+users ||--o{ groups : "1对多"
+groups ||--o{ groupMembers : "1对多"
+messages ||--o{ messageStatus : "1对多"
+users ||--o{ fileShares : "1对多"
+
+users ||--o{ calendarEvents : "1对多"
+users ||--o{ schedules : "1对多"
+calendarEvents ||--o{ reminders : "1对多"
+calendarEvents ||--o{ recurringEvents : "1对多"
+
+' 数据流关系
+documents --> documentIndex : "文档全文索引"
+users --> userIndex : "用户信息索引"
+projects --> projectIndex : "项目信息索引"
+messages --> messageIndex : "消息内容索引"
+
+documents --> documentFiles : "文档文件存储"
+meetings --> meetingRecordings : "会议录制存储"
+users --> userAvatars : "用户头像存储"
+messages --> attachments : "消息附件存储"
+documents --> thumbnails : "文档缩略图"
+
+users --> sessions : "登录会话管理"
+users --> onlineUsers : "在线状态维护"
+documents --> documentLocks : "文档编辑锁定"
+documents --> collabState : "实时协作状态"
+userRoles --> permCache : "权限信息缓存"
+messages --> notificationQueue : "消息通知队列"
+
+auditLogs --> userActivity : "用户活动分析"
+systemLogs --> systemMetrics : "系统性能监控"
+documents --> documentAccess : "文档访问统计"
+meetings --> meetingUsage : "会议使用分析"
+
+' 表结构说明
+note right of users
+  **用户表结构:**
+  - id (主键)
+  - username (用户名)
+  - email (邮箱)
+  - phone (手机号)
+  - department_id (部门ID)
+  - status (状态)
+  - created_at (创建时间)
+  - last_login (最后登录)
+end note
+
+note right of documents
+  **文档集合结构:**
+  - _id (文档ID)
+  - title (文档标题)
+  - content (文档内容)
+  - owner_id (所有者ID)
+  - project_id (项目ID)
+  - type (文档类型)
+  - status (状态)
+  - created_at (创建时间)
+  - updated_at (更新时间)
+  - collaborators (协作者列表)
+end note
+
+note right of meetings
+  **会议集合结构:**
+  - _id (会议ID)
+  - title (会议主题)
+  - organizer_id (组织者ID)
+  - start_time (开始时间)
+  - end_time (结束时间)
+  - meeting_type (会议类型)
+  - meeting_room (会议室)
+  - recording_url (录制地址)
+  - status (会议状态)
+end note
+
+note right of workflowInstances
+  **工作流实例表结构:**
+  - id (主键)
+  - definition_id (流程定义ID)
+  - initiator_id (发起人ID)
+  - current_task_id (当前任务ID)
+  - status (流程状态)
+  - priority (优先级)
+  - started_at (开始时间)
+  - completed_at (完成时间)
+end note
+
+@enduml 

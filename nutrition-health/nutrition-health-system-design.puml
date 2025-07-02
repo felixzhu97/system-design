@@ -1,0 +1,313 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title 饮食健康系统 - 系统架构设计图
+
+LAYOUT_TOP_DOWN()
+
+!define FRONTEND_COLOR #61DAFB
+!define BACKEND_COLOR #339933
+!define AI_COLOR #FF6B6B
+!define DATABASE_COLOR #4ECDC4
+!define INFRASTRUCTURE_COLOR #9C27B0
+
+package "多端客户层" {
+    package "移动端应用" {
+        [营养记录APP] as NutritionApp <<FRONTEND_COLOR>>
+        [健康管理APP] as HealthApp <<FRONTEND_COLOR>>
+        [营养师端APP] as NutritionistApp <<FRONTEND_COLOR>>
+        [医生端APP] as DoctorApp <<FRONTEND_COLOR>>
+    }
+    
+    package "Web端应用" {
+        [用户Web端] as UserWeb <<FRONTEND_COLOR>>
+        [营养师工作台] as NutritionistPortal <<FRONTEND_COLOR>>
+        [医生工作站] as DoctorPortal <<FRONTEND_COLOR>>
+        [厨师创作平台] as ChefPortal <<FRONTEND_COLOR>>
+        [管理后台] as AdminPortal <<FRONTEND_COLOR>>
+    }
+    
+    package "小程序生态" {
+        [微信小程序] as WeChatMP <<FRONTEND_COLOR>>
+        [支付宝小程序] as AlipayMP <<FRONTEND_COLOR>>
+        [百度小程序] as BaiduMP <<FRONTEND_COLOR>>
+    }
+    
+    package "智能设备" {
+        [智能体重秤] as SmartScale <<IoT>>
+        [智能血糖仪] as GlucoseMeter <<IoT>>
+        [智能手环] as SmartBand <<IoT>>
+        [智能水杯] as SmartCup <<IoT>>
+    }
+}
+
+package "接入层" {
+    [负载均衡器] as LoadBalancer <<INFRASTRUCTURE_COLOR>>
+    [Web应用防火墙] as WAF <<INFRASTRUCTURE_COLOR>>
+    [DDoS防护] as DDoSProtection <<INFRASTRUCTURE_COLOR>>
+    [SSL终结] as SSLTermination <<INFRASTRUCTURE_COLOR>>
+}
+
+package "BFF聚合层（Backend for Frontend）" {
+    [用户端 BFF] as UserBFF <<BACKEND_COLOR>>
+    [专业端 BFF] as ProfessionalBFF <<BACKEND_COLOR>>
+    [管理端 BFF] as AdminBFF <<BACKEND_COLOR>>
+    [设备端 BFF] as DeviceBFF <<BACKEND_COLOR>>
+    [小程序 BFF] as MiniProgramBFF <<BACKEND_COLOR>>
+}
+
+package "API网关层" {
+    [主API网关] as MainGateway <<INFRASTRUCTURE_COLOR>>
+    [内部API网关] as InternalGateway <<INFRASTRUCTURE_COLOR>>
+    [设备API网关] as DeviceGateway <<INFRASTRUCTURE_COLOR>>
+    [AI服务网关] as AIGateway <<INFRASTRUCTURE_COLOR>>
+}
+
+package "核心业务域服务" {
+    package "用户域" {
+        [用户管理服务] as UserService <<BACKEND_COLOR>>
+        [认证授权服务] as AuthService <<BACKEND_COLOR>>
+        [个人资料服务] as ProfileService <<BACKEND_COLOR>>
+        [偏好设置服务] as PreferenceService <<BACKEND_COLOR>>
+    }
+    
+    package "营养域" {
+        [营养分析服务] as NutritionService <<BACKEND_COLOR>>
+        [食物数据服务] as FoodService <<BACKEND_COLOR>>
+        [热量计算服务] as CalorieService <<BACKEND_COLOR>>
+        [营养标签服务] as LabelService <<BACKEND_COLOR>>
+    }
+    
+    package "饮食域" {
+        [饮食记录服务] as DietService <<BACKEND_COLOR>>
+        [食谱管理服务] as RecipeService <<BACKEND_COLOR>>
+        [餐饮计划服务] as MealPlanService <<BACKEND_COLOR>>
+        [购物清单服务] as ShoppingService <<BACKEND_COLOR>>
+    }
+    
+    package "健康域" {
+        [健康数据服务] as HealthDataService <<BACKEND_COLOR>>
+        [体征监控服务] as VitalService <<BACKEND_COLOR>>
+        [健康评估服务] as AssessmentService <<BACKEND_COLOR>>
+        [慢病管理服务] as ChronicDiseaseService <<BACKEND_COLOR>>
+    }
+    
+    package "专业域" {
+        [营养咨询服务] as ConsultationService <<BACKEND_COLOR>>
+        [医疗建议服务] as MedicalAdviceService <<BACKEND_COLOR>>
+        [食谱创作服务] as RecipeCreationService <<BACKEND_COLOR>>
+        [营养教育服务] as EducationService <<BACKEND_COLOR>>
+    }
+    
+    package "社交域" {
+        [社区服务] as CommunityService <<BACKEND_COLOR>>
+        [分享服务] as ShareService <<BACKEND_COLOR>>
+        [挑战活动服务] as ChallengeService <<BACKEND_COLOR>>
+        [打卡服务] as CheckInService <<BACKEND_COLOR>>
+    }
+    
+    package "通知域" {
+        [提醒服务] as ReminderService <<BACKEND_COLOR>>
+        [推送服务] as PushService <<BACKEND_COLOR>>
+        [邮件服务] as EmailService <<BACKEND_COLOR>>
+        [短信服务] as SMSService <<BACKEND_COLOR>>
+    }
+}
+
+package "AI智能服务层" {
+    [个性化推荐引擎] as RecommendationEngine <<AI_COLOR>>
+    [营养AI助手] as NutritionAI <<AI_COLOR>>
+    [食物识别AI] as FoodRecognitionAI <<AI_COLOR>>
+    [健康预测AI] as HealthPredictionAI <<AI_COLOR>>
+    [智能营养师] as AInutritionist <<AI_COLOR>>
+    [饮食习惯分析AI] as HabitAnalysisAI <<AI_COLOR>>
+    [图像识别服务] as ImageRecognitionService <<AI_COLOR>>
+    [自然语言处理] as NLPService <<AI_COLOR>>
+}
+
+package "数据存储层" {
+    package "关系型数据库" {
+        database "用户数据库" as UserDB <<DATABASE_COLOR>>
+        database "营养数据库" as NutritionDB <<DATABASE_COLOR>>
+        database "食谱数据库" as RecipeDB <<DATABASE_COLOR>>
+        database "咨询数据库" as ConsultationDB <<DATABASE_COLOR>>
+    }
+    
+    package "文档数据库" {
+        database "食物数据库" as FoodDB <<DATABASE_COLOR>>
+        database "社交数据库" as SocialDB <<DATABASE_COLOR>>
+        database "日志数据库" as LogDB <<DATABASE_COLOR>>
+    }
+    
+    package "时序数据库" {
+        database "健康指标库" as HealthMetricsDB <<DATABASE_COLOR>>
+        database "饮食记录库" as DietRecordDB <<DATABASE_COLOR>>
+        database "体重变化库" as WeightTrendDB <<DATABASE_COLOR>>
+    }
+    
+    package "图数据库" {
+        database "用户关系图" as UserRelationDB <<DATABASE_COLOR>>
+        database "食物关联图" as FoodRelationDB <<DATABASE_COLOR>>
+        database "营养相互作用图" as NutrientInteractionDB <<DATABASE_COLOR>>
+    }
+    
+    package "缓存系统" {
+        database "Redis集群" as RedisCluster <<DATABASE_COLOR>>
+        database "Memcached" as MemCache <<DATABASE_COLOR>>
+        database "本地缓存" as LocalCache <<DATABASE_COLOR>>
+    }
+    
+    package "搜索引擎" {
+        database "Elasticsearch" as ESCluster <<DATABASE_COLOR>>
+        database "Solr" as SolrCluster <<DATABASE_COLOR>>
+    }
+    
+    package "消息队列" {
+        queue "Kafka集群" as KafkaCluster <<DATABASE_COLOR>>
+        queue "RabbitMQ" as RabbitMQQueue <<DATABASE_COLOR>>
+        queue "Redis队列" as RedisQueue <<DATABASE_COLOR>>
+    }
+    
+    package "文件存储" {
+        database "对象存储" as ObjectStorage <<DATABASE_COLOR>>
+        database "CDN存储" as CDNStorage <<DATABASE_COLOR>>
+        database "图片存储" as ImageStorage <<DATABASE_COLOR>>
+    }
+    
+    package "数据仓库" {
+        database "ClickHouse" as ClickHouseDB <<DATABASE_COLOR>>
+        database "Hive数仓" as HiveDB <<DATABASE_COLOR>>
+        database "实时数仓" as RealtimeDB <<DATABASE_COLOR>>
+    }
+}
+
+package "中间件层" {
+    [API网关] as APIGatewayMiddleware <<INFRASTRUCTURE_COLOR>>
+    [服务注册发现] as ServiceRegistry <<INFRASTRUCTURE_COLOR>>
+    [配置中心] as ConfigCenter <<INFRASTRUCTURE_COLOR>>
+    [链路追踪] as DistributedTracing <<INFRASTRUCTURE_COLOR>>
+    [分布式锁] as DistributedLock <<INFRASTRUCTURE_COLOR>>
+    [熔断器] as CircuitBreaker <<INFRASTRUCTURE_COLOR>>
+    [限流器] as RateLimiter <<INFRASTRUCTURE_COLOR>>
+}
+
+package "基础设施层" {
+    package "容器化平台" {
+        [Kubernetes集群] as K8sCluster <<INFRASTRUCTURE_COLOR>>
+        [Docker容器] as DockerContainer <<INFRASTRUCTURE_COLOR>>
+        [Helm图表] as HelmCharts <<INFRASTRUCTURE_COLOR>>
+        [Istio服务网格] as IstioMesh <<INFRASTRUCTURE_COLOR>>
+    }
+    
+    package "监控告警" {
+        [Prometheus监控] as PrometheusMonitor <<INFRASTRUCTURE_COLOR>>
+        [Grafana仪表板] as GrafanaDashboard <<INFRASTRUCTURE_COLOR>>
+        [ELK日志系统] as ELKSystem <<INFRASTRUCTURE_COLOR>>
+        [Jaeger链路追踪] as JaegerTracing <<INFRASTRUCTURE_COLOR>>
+        [AlertManager告警] as AlertManager <<INFRASTRUCTURE_COLOR>>
+    }
+    
+    package "CI/CD平台" {
+        [Jenkins流水线] as JenkinsPipeline <<INFRASTRUCTURE_COLOR>>
+        [GitLab CI] as GitLabCI <<INFRASTRUCTURE_COLOR>>
+        [Harbor镜像仓库] as HarborRegistry <<INFRASTRUCTURE_COLOR>>
+        [SonarQube代码质量] as SonarQube <<INFRASTRUCTURE_COLOR>>
+    }
+    
+    package "安全防护" {
+        [WAF防火墙] as WAFFirewall <<INFRASTRUCTURE_COLOR>>
+        [DDoS防护] as DDoSProtectionSys <<INFRASTRUCTURE_COLOR>>
+        [漏洞扫描] as VulnerabilityScanner <<INFRASTRUCTURE_COLOR>>
+        [安全审计] as SecurityAudit <<INFRASTRUCTURE_COLOR>>
+    }
+}
+
+package "外部服务集成" {
+    [第三方营养数据库] as ExternalNutritionDB
+    [条码识别服务] as BarcodeService
+    [食物图像识别] as FoodImageService
+    [可穿戴设备API] as WearableAPI
+    [健康平台API] as HealthPlatformAPI
+    [电商平台API] as ECommerceAPI
+    [支付平台] as PaymentPlatform
+    [地图服务] as MapService
+    [天气服务] as WeatherService
+    [第三方登录] as OAuthProviders
+    [推送服务] as PushNotificationService
+    [邮件服务] as EmailProvider
+    [短信服务] as SMSProvider
+}
+
+' 客户端到接入层
+NutritionApp --> LoadBalancer : "HTTPS"
+UserWeb --> LoadBalancer : "HTTPS"
+WeChatMP --> LoadBalancer : "HTTPS"
+SmartScale --> DeviceGateway : "MQTT/CoAP"
+
+' 接入层到BFF
+LoadBalancer --> UserBFF : "HTTP/2"
+LoadBalancer --> ProfessionalBFF : "HTTP/2"
+LoadBalancer --> AdminBFF : "HTTP/2"
+
+' BFF到网关
+UserBFF --> MainGateway : "gRPC"
+ProfessionalBFF --> InternalGateway : "gRPC"
+DeviceBFF --> DeviceGateway : "gRPC"
+
+' 网关到业务服务
+MainGateway --> UserService : "gRPC"
+MainGateway --> NutritionService : "gRPC"
+MainGateway --> DietService : "gRPC"
+MainGateway --> HealthDataService : "gRPC"
+InternalGateway --> ConsultationService : "gRPC"
+AIGateway --> RecommendationEngine : "HTTP/gRPC"
+
+' 业务服务到AI服务
+NutritionService --> NutritionAI : "HTTP/API"
+DietService --> FoodRecognitionAI : "HTTP/API"
+HealthDataService --> HealthPredictionAI : "HTTP/API"
+RecipeService --> RecommendationEngine : "HTTP/API"
+
+' 服务到数据存储
+UserService --> UserDB : "JDBC"
+NutritionService --> NutritionDB : "JDBC"
+DietService --> DietRecordDB : "InfluxDB"
+HealthDataService --> HealthMetricsDB : "InfluxDB"
+SocialService --> SocialDB : "MongoDB"
+ConsultationService --> ConsultationDB : "JDBC"
+
+' 缓存层连接
+UserService --> RedisCluster : "Redis"
+NutritionService --> RedisCluster : "Redis"
+FoodService --> LocalCache : "本地缓存"
+
+' 搜索引擎连接
+FoodService --> ESCluster : "Elasticsearch"
+RecipeService --> ESCluster : "Elasticsearch"
+
+' 消息队列连接
+DietService --> KafkaCluster : "事件发布"
+NutritionService --> KafkaCluster : "事件消费"
+ReminderService --> RedisQueue : "定时任务"
+
+' 外部服务集成
+NutritionService --> ExternalNutritionDB : "HTTPS/API"
+FoodService --> BarcodeService : "HTTPS/API"
+FoodRecognitionAI --> FoodImageService : "HTTPS/AI API"
+HealthDataService --> WearableAPI : "Bluetooth/WiFi"
+HealthDataService --> HealthPlatformAPI : "SDK/API"
+RecipeService --> ECommerceAPI : "HTTPS/API"
+UserService --> OAuthProviders : "OAuth 2.0"
+PushService --> PushNotificationService : "HTTPS/API"
+
+' 基础设施支撑
+UserService --> K8sCluster : "容器部署"
+NutritionService --> K8sCluster : "容器部署"
+RecommendationEngine --> K8sCluster : "容器部署"
+
+PrometheusMonitor --> UserService : "指标采集"
+PrometheusMonitor --> NutritionService : "指标采集"
+ELKSystem --> UserService : "日志收集"
+JaegerTracing --> MainGateway : "链路追踪"
+
+@enduml 

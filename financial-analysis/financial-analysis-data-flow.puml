@@ -1,0 +1,84 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Dynamic.puml
+
+title 金融分析系统 - 投资分析数据流
+
+LAYOUT_WITH_LEGEND()
+
+Person(analyst, "金融分析师", "使用系统进行投资分析")
+Container(workstation, "分析工作站", "React/Electron", "专业分析终端")
+Container(apiGateway, "API网关", "Kong", "请求路由和认证")
+Container(marketDataService, "行情数据服务", "Java/Spring", "市场数据处理")
+Container(portfolioService, "投资组合服务", "C#/.NET", "组合管理")
+Container(analyticsService, "分析服务", "Python/Django", "投资分析")
+Container(riskService, "风险服务", "Python/FastAPI", "风险计算")
+Container(mlService, "机器学习服务", "Python/TensorFlow", "AI分析")
+ContainerDb(marketDb, "行情数据库", "InfluxDB", "实时行情")
+ContainerDb(portfolioDb, "组合数据库", "MongoDB", "投资组合")
+ContainerDb(analyticsDb, "分析数据库", "ClickHouse", "分析结果")
+ContainerDb(riskDb, "风险数据库", "PostgreSQL", "风险指标")
+ContainerDb(redisCache, "Redis缓存", "Redis", "热点数据")
+System_Ext(bloomberg, "Bloomberg数据", "外部行情数据源")
+System_Ext(aiPlatform, "AI平台", "机器学习服务")
+
+' 市场数据获取流程
+Rel_D(analyst, workstation, "1. 查询市场数据", "操作界面")
+Rel_D(workstation, apiGateway, "2. 请求实时行情", "HTTPS/REST")
+Rel_D(apiGateway, marketDataService, "3. 获取行情数据", "gRPC")
+Rel_D(marketDataService, bloomberg, "4. 订阅数据源", "FIX/Binary")
+Rel_U(bloomberg, marketDataService, "5. 实时行情推送", "数据流")
+Rel_D(marketDataService, marketDb, "6. 存储时序数据", "InfluxDB写入")
+Rel_D(marketDataService, redisCache, "7. 缓存热点数据", "Redis写入")
+Rel_U(redisCache, marketDataService, "8. 返回缓存数据", "数据")
+Rel_U(marketDataService, apiGateway, "9. 返回行情数据", "JSON")
+Rel_U(apiGateway, workstation, "10. 返回给用户", "WebSocket")
+Rel_U(workstation, analyst, "11. 展示实时行情", "K线图表")
+
+' 投资组合分析流程
+Rel_D(analyst, workstation, "12. 创建投资组合", "配置操作")
+Rel_D(workstation, apiGateway, "13. 提交组合配置", "HTTPS/POST")
+Rel_D(apiGateway, portfolioService, "14. 创建投资组合", "gRPC")
+Rel_D(portfolioService, portfolioDb, "15. 保存组合信息", "MongoDB写入")
+Rel_D(portfolioService, analyticsService, "16. 触发组合分析", "异步消息")
+Rel_D(analyticsService, marketDb, "17. 获取历史数据", "InfluxDB查询")
+Rel_U(marketDb, analyticsService, "18. 返回历史行情", "时序数据")
+Rel_D(analyticsService, mlService, "19. 请求AI分析", "gRPC")
+Rel_D(mlService, aiPlatform, "20. 调用ML模型", "HTTPS/API")
+Rel_U(aiPlatform, mlService, "21. 返回预测结果", "JSON")
+Rel_U(mlService, analyticsService, "22. 返回分析结果", "JSON")
+
+' 风险评估流程
+Rel_D(analyticsService, riskService, "23. 请求风险评估", "gRPC")
+Rel_D(riskService, portfolioDb, "24. 获取组合持仓", "MongoDB查询")
+Rel_D(riskService, marketDb, "25. 获取价格数据", "InfluxDB查询")
+Rel_U(marketDb, riskService, "26. 返回价格序列", "时序数据")
+Rel_U(portfolioDb, riskService, "27. 返回持仓信息", "文档数据")
+Rel_D(riskService, riskDb, "28. 保存风险指标", "PostgreSQL写入")
+Rel_U(riskService, analyticsService, "29. 返回风险评估", "JSON")
+
+' 分析报告生成
+Rel_D(analyticsService, analyticsDb, "30. 保存分析结果", "ClickHouse插入")
+Rel_U(analyticsService, portfolioService, "31. 返回分析报告", "JSON")
+Rel_U(portfolioService, apiGateway, "32. 推送分析结果", "HTTPS")
+Rel_U(apiGateway, workstation, "33. 返回给用户", "JSON")
+Rel_U(workstation, analyst, "34. 展示分析报告", "图表报告")
+
+' 实时监控流程
+Rel_D(marketDataService, riskService, "35. 实时价格变动", "异步消息")
+Rel_D(riskService, portfolioDb, "36. 重新计算风险", "风险监控")
+Rel_D(riskService, redisCache, "37. 更新风险缓存", "Redis更新")
+Rel_U(riskService, apiGateway, "38. 推送风险告警", "WebSocket")
+Rel_U(apiGateway, workstation, "39. 实时告警通知", "WebSocket")
+Rel_U(workstation, analyst, "40. 显示风险提醒", "弹窗告警")
+
+' 策略回测流程
+Rel_D(analyst, workstation, "41. 启动策略回测", "回测配置")
+Rel_D(workstation, analyticsService, "42. 提交回测任务", "异步任务")
+Rel_D(analyticsService, marketDb, "43. 获取历史全量数据", "批量查询")
+Rel_U(marketDb, analyticsService, "44. 返回历史数据", "大数据集")
+Rel_D(analyticsService, mlService, "45. 执行策略回测", "批量计算")
+Rel_D(mlService, analyticsDb, "46. 保存回测结果", "ClickHouse批量插入")
+Rel_U(analyticsService, workstation, "47. 返回回测报告", "回测结果")
+Rel_U(workstation, analyst, "48. 展示回测分析", "绩效图表")
+
+@enduml 

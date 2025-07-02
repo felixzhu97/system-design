@@ -1,0 +1,155 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title 饮食健康系统 - 营养分析服务组件图 (C4 Level 3)
+
+LAYOUT_WITH_LEGEND()
+
+Person(user, "用户", "记录饮食信息")
+Person(nutritionist, "营养师", "提供专业营养分析")
+
+System_Ext(mobileBFF, "Mobile BFF", "移动端业务聚合")
+System_Ext(webBFF, "Web BFF", "Web端业务聚合")
+System_Ext(foodAPI, "食物数据库API", "USDA营养数据")
+System_Ext(imageAI, "食物识别AI", "图像识别服务")
+System_Ext(barcodeAPI, "条码识别API", "食品条码服务")
+
+Container_Boundary(nutritionService, "营养分析服务 (Python + FastAPI)") {
+    
+    ' API控制器层
+    Component(nutritionController, "营养分析控制器", "FastAPI Controller", "处理营养分析请求、参数验证")
+    Component(foodController, "食物管理控制器", "FastAPI Controller", "食物信息查询、管理")
+    Component(calculationController, "营养计算控制器", "FastAPI Controller", "营养成分计算、热量估算")
+    Component(analysisController, "分析报告控制器", "FastAPI Controller", "营养分析报告生成")
+    Component(recommendController, "推荐控制器", "FastAPI Controller", "营养推荐、饮食建议")
+    
+    ' 核心业务组件
+    Component(nutritionAnalyzer, "营养分析器", "Python Business Logic", "营养成分分析、缺乏检测")
+    Component(calorieCalculator, "热量计算器", "Python Calculator", "基础代谢率、热量需求计算")
+    Component(dietPlanGenerator, "饮食计划生成器", "Python Generator", "个性化饮食计划制定")
+    Component(nutritionValidator, "营养验证器", "Python Validator", "营养摄入合理性验证")
+    Component(healthAssessment, "健康评估器", "Python Assessor", "营养健康状况评估")
+    Component(deficiencyDetector, "缺乏检测器", "Python Detector", "营养缺乏症检测预警")
+    Component(allergyChecker, "过敏检查器", "Python Checker", "食物过敏原检查")
+    Component(interactionAnalyzer, "相互作用分析器", "Python Analyzer", "营养素相互作用分析")
+    
+    ' 推荐算法组件
+    Component(personalizedRecommender, "个性化推荐器", "Machine Learning", "基于用户偏好的食物推荐")
+    Component(nutritionOptimizer, "营养优化器", "Optimization Algorithm", "营养配比优化算法")
+    Component(mealPlanner, "膳食规划器", "AI Planning", "智能膳食搭配规划")
+    Component(substituteRecommender, "替代推荐器", "Recommendation Engine", "食物替代品推荐")
+    Component(seasonalRecommender, "季节推荐器", "Seasonal Algorithm", "季节性食物推荐")
+    
+    ' 数据处理组件
+    Component(foodDataProcessor, "食物数据处理器", "Data Processor", "食物数据清洗、标准化")
+    Component(nutritionDataAggregator, "营养数据聚合器", "Data Aggregator", "营养数据聚合计算")
+    Component(portionEstimator, "份量估算器", "Computer Vision", "食物份量智能估算")
+    Component(recipeAnalyzer, "食谱分析器", "Recipe Processor", "食谱营养成分分析")
+    Component(ingredientParser, "食材解析器", "NLP Parser", "食材文本解析识别")
+    Component(nutritionLabeler, "营养标签器", "Label Generator", "营养标签自动生成")
+    
+    ' AI增强组件
+    Component(foodImageRecognizer, "食物图像识别器", "Computer Vision", "基于图像的食物识别")
+    Component(nutritionChatbot, "营养聊天机器人", "NLP Chatbot", "营养问答、建议咨询")
+    Component(trendAnalyzer, "趋势分析器", "Time Series Analysis", "营养摄入趋势分析")
+    Component(predictiveModeler, "预测建模器", "Predictive Analytics", "健康风险预测建模")
+    Component(behaviorAnalyzer, "行为分析器", "Behavior Analytics", "饮食行为模式分析")
+    
+    ' 集成适配器组件
+    Component(foodDatabaseAdapter, "食物数据库适配器", "Database Adapter", "外部食物数据库集成")
+    Component(barcodeAdapter, "条码适配器", "API Adapter", "条码识别服务集成")
+    Component(imageAdapter, "图像适配器", "AI Adapter", "图像识别服务集成")
+    Component(deviceAdapter, "设备适配器", "IoT Adapter", "智能设备数据集成")
+    Component(healthPlatformAdapter, "健康平台适配器", "Platform Adapter", "健康平台数据同步")
+    
+    ' 缓存组件
+    Component(nutritionCache, "营养缓存", "Redis Cache", "营养计算结果缓存")
+    Component(foodInfoCache, "食物信息缓存", "Memory Cache", "食物基础信息缓存")
+    Component(userPreferenceCache, "用户偏好缓存", "Redis Cache", "用户饮食偏好缓存")
+    Component(calculationCache, "计算缓存", "Memory Cache", "复杂计算结果缓存")
+    
+    ' 工具组件
+    Component(nutritionLogger, "营养日志器", "Logging Component", "营养分析过程日志记录")
+    Component(dataValidator, "数据验证器", "Validation Component", "输入数据格式验证")
+    Component(errorHandler, "错误处理器", "Error Handler", "异常处理和错误恢复")
+    Component(performanceMonitor, "性能监控器", "Performance Monitor", "分析性能监控统计")
+    Component(auditTrail, "审计追踪器", "Audit Component", "营养分析操作审计")
+    
+    ' 数据访问组件
+    ComponentDb(nutritionRepository, "营养数据仓库", "Repository Pattern", "营养数据CRUD操作")
+    ComponentDb(foodRepository, "食物数据仓库", "Repository Pattern", "食物信息数据访问")
+    ComponentDb(userRepository, "用户数据仓库", "Repository Pattern", "用户信息数据访问")
+    ComponentDb(calculationRepository, "计算数据仓库", "Repository Pattern", "计算结果数据访问")
+}
+
+' 外部交互关系
+Rel(user, nutritionController, "营养分析请求", "HTTPS/REST API")
+Rel(nutritionist, analysisController, "专业分析", "HTTPS/REST API")
+Rel(mobileBFF, nutritionController, "移动端请求", "HTTP/API")
+Rel(webBFF, foodController, "Web端请求", "HTTP/API")
+
+' 控制器到业务组件关系
+Rel(nutritionController, nutritionAnalyzer, "营养分析", "方法调用")
+Rel(nutritionController, dataValidator, "数据验证", "验证调用")
+Rel(foodController, foodDataProcessor, "食物数据处理", "处理调用")
+Rel(calculationController, calorieCalculator, "热量计算", "计算调用")
+Rel(analysisController, healthAssessment, "健康评估", "评估调用")
+Rel(recommendController, personalizedRecommender, "个性化推荐", "推荐调用")
+
+' 核心业务组件关系
+Rel(nutritionAnalyzer, deficiencyDetector, "缺乏检测", "检测调用")
+Rel(nutritionAnalyzer, allergyChecker, "过敏检查", "检查调用")
+Rel(calorieCalculator, nutritionDataAggregator, "数据聚合", "聚合调用")
+Rel(dietPlanGenerator, nutritionOptimizer, "营养优化", "优化调用")
+Rel(healthAssessment, interactionAnalyzer, "相互作用分析", "分析调用")
+Rel(nutritionValidator, nutritionAnalyzer, "营养验证", "验证调用")
+
+' 推荐组件关系
+Rel(personalizedRecommender, mealPlanner, "膳食规划", "规划调用")
+Rel(nutritionOptimizer, substituteRecommender, "替代推荐", "推荐调用")
+Rel(mealPlanner, seasonalRecommender, "季节推荐", "推荐调用")
+Rel(dietPlanGenerator, personalizedRecommender, "个性化计划", "推荐调用")
+
+' 数据处理组件关系
+Rel(foodDataProcessor, ingredientParser, "食材解析", "解析调用")
+Rel(nutritionDataAggregator, recipeAnalyzer, "食谱分析", "分析调用")
+Rel(portionEstimator, foodImageRecognizer, "图像识别", "识别调用")
+Rel(nutritionLabeler, nutritionDataAggregator, "标签生成", "数据调用")
+
+' AI组件关系
+Rel(foodImageRecognizer, portionEstimator, "份量估算", "估算调用")
+Rel(nutritionChatbot, nutritionAnalyzer, "营养分析", "分析调用")
+Rel(trendAnalyzer, behaviorAnalyzer, "行为分析", "分析调用")
+Rel(predictiveModeler, trendAnalyzer, "趋势分析", "分析调用")
+
+' 适配器组件关系
+Rel(nutritionAnalyzer, foodDatabaseAdapter, "食物数据", "查询调用")
+Rel(foodImageRecognizer, imageAdapter, "图像识别", "API调用")
+Rel(foodDataProcessor, barcodeAdapter, "条码识别", "识别调用")
+Rel(healthAssessment, deviceAdapter, "设备数据", "数据获取")
+Rel(trendAnalyzer, healthPlatformAdapter, "健康数据", "同步调用")
+
+' 缓存组件关系
+Rel(nutritionAnalyzer, nutritionCache, "营养缓存", "缓存读写")
+Rel(foodDataProcessor, foodInfoCache, "食物缓存", "缓存读写")
+Rel(personalizedRecommender, userPreferenceCache, "偏好缓存", "缓存读写")
+Rel(calorieCalculator, calculationCache, "计算缓存", "缓存读写")
+
+' 工具组件关系
+Rel(nutritionAnalyzer, nutritionLogger, "日志记录", "日志调用")
+Rel(nutritionController, errorHandler, "错误处理", "异常处理")
+Rel(calorieCalculator, performanceMonitor, "性能监控", "监控调用")
+Rel(healthAssessment, auditTrail, "审计记录", "审计调用")
+
+' 数据访问关系
+Rel(nutritionAnalyzer, nutritionRepository, "营养数据", "数据访问")
+Rel(foodDataProcessor, foodRepository, "食物数据", "数据访问")
+Rel(personalizedRecommender, userRepository, "用户数据", "数据访问")
+Rel(calorieCalculator, calculationRepository, "计算数据", "数据访问")
+
+' 外部服务集成
+Rel(foodDatabaseAdapter, foodAPI, "食物数据查询", "HTTPS/REST API")
+Rel(imageAdapter, imageAI, "图像识别服务", "HTTPS/AI API")
+Rel(barcodeAdapter, barcodeAPI, "条码识别服务", "HTTPS/REST API")
+
+@enduml 

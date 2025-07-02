@@ -1,0 +1,222 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title 金融分析系统 - 系统架构设计图
+
+LAYOUT_TOP_DOWN()
+
+' 客户端层
+package "客户端层" {
+    package "专业终端" {
+        [交易终端] as TradingTerminal <<WPF/.NET>>
+        [分析工作站] as AnalyticsWorkstation <<React/Electron>>
+        [风控看板] as RiskDashboard <<Angular>>
+        [移动客户端] as MobileApp <<React Native>>
+    }
+    package "Web平台" {
+        [投资门户] as InvestmentPortal <<React>>
+        [管理后台] as AdminPortal <<Vue>>
+        [研报系统] as ResearchPortal <<Angular>>
+        [监管报送] as RegulatoryPortal <<React>>
+    }
+}
+
+' 接入层
+package "接入层" {
+    [API网关] as APIGateway <<Kong>>
+    [负载均衡] as LoadBalancer <<Nginx>>
+    [数据网关] as DataGateway <<Apache Camel>>
+    [WebSocket网关] as WSGateway <<Socket.io>>
+    [FIX网关] as FIXGateway <<QuickFIX>>
+}
+
+' BFF层
+package "BFF层" {
+    [交易端BFF] as TradingBFF <<C#/.NET>>
+    [分析端BFF] as AnalyticsBFF <<Node.js>>
+    [移动端BFF] as MobileBFF <<Java>>
+    [Web端BFF] as WebBFF <<Spring Boot>>
+}
+
+' 核心业务服务
+package "核心业务服务" {
+    [用户服务] as UserService <<Java/Spring>>
+    [行情数据服务] as MarketDataService <<Java/Spring>>
+    [投资组合服务] as PortfolioService <<C#/.NET>>
+    [风险管理服务] as RiskService <<Python/FastAPI>>
+    [交易执行服务] as TradingService <<Java/Spring>>
+    [分析服务] as AnalyticsService <<Python/Django>>
+    [报告服务] as ReportService <<Java/Spring>>
+    [合规服务] as ComplianceService <<C#/.NET>>
+}
+
+package "数据处理服务" {
+    [实时数据流] as StreamProcessor <<Apache Kafka>>
+    [批量数据处理] as BatchProcessor <<Apache Spark>>
+    [机器学习服务] as MLService <<Python/TensorFlow>>
+    [量化引擎] as QuantEngine <<C++/Python>>
+    [风险计算引擎] as RiskEngine <<C++>>
+    [回测引擎] as BacktestEngine <<Python/C++>>
+}
+
+package "基础服务" {
+    [认证服务] as AuthService <<Java/Spring Security>>
+    [配置中心] as ConfigService <<Spring Cloud Config>>
+    [服务注册] as RegistryService <<Eureka>>
+    [监控服务] as MonitorService <<Prometheus>>
+    [日志服务] as LogService <<ELK Stack>>
+    [消息服务] as MessageService <<RabbitMQ>>
+}
+
+' 数据存储层
+package "数据存储层" {
+    package "关系型数据库" {
+        [用户数据库] as UserDB <<PostgreSQL>>
+        [交易数据库] as TradingDB <<PostgreSQL>>
+        [风控数据库] as RiskDB <<PostgreSQL>>
+        [合规数据库] as ComplianceDB <<PostgreSQL>>
+    }
+    package "时序数据库" {
+        [行情数据库] as MarketDB <<InfluxDB>>
+        [指标数据库] as MetricsDB <<InfluxDB>>
+        [风险指标库] as RiskMetricsDB <<InfluxDB>>
+    }
+    package "分析数据库" {
+        [历史数据仓库] as DataWarehouse <<ClickHouse>>
+        [分析结果库] as AnalyticsDB <<Apache Druid>>
+        [机器学习库] as MLDataDB <<TensorFlow Extended>>
+    }
+    package "NoSQL数据库" {
+        [投资组合库] as PortfolioDB <<MongoDB>>
+        [配置数据库] as ConfigDB <<MongoDB>>
+        [日志数据库] as LogDB <<Elasticsearch>>
+    }
+    package "缓存层" {
+        [Redis集群] as RedisCluster
+        [分布式缓存] as DistCache
+        [会话缓存] as SessionCache
+    }
+    package "文件存储" {
+        [报告存储] as ReportStorage <<MinIO>>
+        [历史数据存储] as HistoryStorage <<HDFS>>
+    }
+}
+
+' 外部系统集成
+package "外部系统" {
+    package "市场数据源" {
+        [Bloomberg终端] as Bloomberg
+        [路透数据] as Reuters
+        [Wind数据] as Wind
+        [交易所接口] as ExchangeAPI
+    }
+    package "交易系统" {
+        [经纪商接口] as BrokerAPI
+        [银行接口] as BankAPI
+        [清算系统] as ClearingSystem
+    }
+    package "监管系统" {
+        [监管报送] as RegulatorySystem
+        [风控监管] as RiskRegulation
+        [反洗钱系统] as AMLSystem
+    }
+    package "第三方服务" {
+        [基本面数据] as FundamentalData
+        [新闻资讯] as NewsService
+        [ESG数据] as ESGData
+        [替代数据] as AlternativeData
+    }
+}
+
+' 基础设施层
+package "基础设施层" {
+    package "容器编排" {
+        [Kubernetes集群] as K8s
+        [Docker仓库] as DockerRegistry
+        [Helm Charts] as Helm
+    }
+    package "监控告警" {
+        [Prometheus监控] as Prometheus
+        [Grafana看板] as Grafana
+        [ELK日志栈] as ELK
+        [Jaeger链路] as Jaeger
+    }
+    package "CI/CD" {
+        [GitLab代码库] as GitLab
+        [Jenkins流水线] as Jenkins
+        [SonarQube质量] as SonarQube
+    }
+    package "安全防护" {
+        [WAF防火墙] as WAF
+        [VPN网关] as VPN
+        [HSM加密] as HSM
+        [堡垒机] as BastionHost
+    }
+}
+
+' 连接关系定义
+' 客户端到接入层
+TradingTerminal --> FIXGateway
+AnalyticsWorkstation --> WSGateway
+RiskDashboard --> LoadBalancer
+InvestmentPortal --> APIGateway
+
+' 接入层到BFF层
+LoadBalancer --> APIGateway
+APIGateway --> TradingBFF
+APIGateway --> AnalyticsBFF
+APIGateway --> MobileBFF
+APIGateway --> WebBFF
+DataGateway --> StreamProcessor
+
+' BFF层到业务服务
+TradingBFF --> TradingService
+TradingBFF --> PortfolioService
+AnalyticsBFF --> AnalyticsService
+AnalyticsBFF --> MarketDataService
+MobileBFF --> UserService
+WebBFF --> ReportService
+
+' 业务服务间通信
+UserService --> AuthService
+TradingService --> RiskService
+PortfolioService --> AnalyticsService
+MarketDataService --> StreamProcessor
+RiskService --> RiskEngine
+AnalyticsService --> MLService
+
+' 数据处理流
+StreamProcessor --> MarketDB
+BatchProcessor --> DataWarehouse
+MLService --> MLDataDB
+QuantEngine --> AnalyticsDB
+RiskEngine --> RiskMetricsDB
+BacktestEngine --> HistoryStorage
+
+' 业务服务到数据存储
+UserService --> UserDB
+TradingService --> TradingDB
+PortfolioService --> PortfolioDB
+RiskService --> RiskDB
+MarketDataService --> MarketDB
+AnalyticsService --> AnalyticsDB
+ReportService --> ReportStorage
+ComplianceService --> ComplianceDB
+
+' 缓存使用
+MarketDataService --> RedisCluster
+PortfolioService --> DistCache
+UserService --> SessionCache
+
+' 外部系统集成
+MarketDataService --> Bloomberg
+MarketDataService --> Reuters
+MarketDataService --> Wind
+TradingService --> BrokerAPI
+TradingService --> BankAPI
+ComplianceService --> RegulatorySystem
+RiskService --> RiskRegulation
+AnalyticsService --> FundamentalData
+AnalyticsService --> NewsService
+
+@enduml 

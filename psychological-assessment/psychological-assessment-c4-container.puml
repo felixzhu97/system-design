@@ -1,0 +1,120 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title 心理检测系统 - 容器图 (Level 2)
+
+LAYOUT_WITH_LEGEND()
+
+Person(client, "来访者", "需要心理评估和咨询的个人")
+Person(psychologist, "心理医生", "进行心理诊断和治疗的专业人员")
+Person(counselor, "心理咨询师", "提供心理咨询服务的专业人员")
+
+System_Boundary(psychSystem, "心理检测系统") {
+    Container(clientApp, "来访者APP", "React Native", "移动端心理健康应用")
+    Container(webPortal, "专业端门户", "React", "心理医生工作平台")
+    Container(adminPortal, "管理后台", "Vue", "系统管理平台")
+    
+    Container(apiGateway, "API网关", "Kong", "统一接入和路由")
+    Container(authService, "认证服务", "Java/Spring Security", "用户认证和授权")
+    
+    Container(userService, "用户服务", "Java/Spring Boot", "用户信息管理")
+    Container(assessmentService, "评估服务", "Python/Django", "心理评估核心业务")
+    Container(scaleService, "量表服务", "Java/Spring Boot", "量表管理和计分")
+    Container(aiAnalysisService, "AI分析服务", "Python/TensorFlow", "智能分析和诊断辅助")
+    Container(reportService, "报告服务", "Java/Spring Boot", "评估报告生成")
+    Container(counselingService, "咨询服务", "Node.js/Express", "在线咨询管理")
+    Container(crisisService, "危机干预服务", "Go/Gin", "紧急情况处理")
+    Container(dataService, "数据服务", "Python/FastAPI", "数据分析和统计")
+    
+    ContainerDb(userDb, "用户数据库", "PostgreSQL", "用户基础信息")
+    ContainerDb(assessmentDb, "评估数据库", "PostgreSQL", "评估记录和结果")
+    ContainerDb(scaleDb, "量表数据库", "MongoDB", "量表题目和计分规则")
+    ContainerDb(counselingDb, "咨询数据库", "MongoDB", "咨询记录和对话")
+    ContainerDb(reportStorage, "报告存储", "MinIO", "评估报告文件")
+    ContainerDb(redisCache, "缓存数据库", "Redis", "会话和临时数据")
+    ContainerDb(analyticsDb, "分析数据库", "ClickHouse", "数据分析和统计")
+}
+
+System_Ext(scaleLibrary, "专业量表库", "标准化心理量表数据源")
+System_Ext(aiPlatform, "AI平台", "机器学习和自然语言处理服务")
+System_Ext(medicalSystem, "医疗系统", "电子病历和医疗信息系统")
+System_Ext(emergencyService, "应急服务", "紧急医疗和心理危机干预")
+System_Ext(drugDatabase, "药物数据库", "心理药物信息和交互数据")
+System_Ext(videoService, "音视频服务", "在线咨询音视频通讯")
+System_Ext(wearableDevice, "可穿戴设备", "生理指标监测设备")
+System_Ext(voiceAnalysis, "语音分析服务", "语音情感和状态分析")
+
+' 用户到系统的关系
+Rel(client, clientApp, "使用", "进行心理评估和咨询")
+Rel(psychologist, webPortal, "使用", "诊断和治疗管理")
+Rel(counselor, webPortal, "使用", "咨询服务管理")
+
+' 容器间的关系
+Rel(clientApp, apiGateway, "调用", "HTTPS/REST API")
+Rel(webPortal, apiGateway, "调用", "HTTPS/REST API")
+Rel(adminPortal, apiGateway, "调用", "HTTPS/REST API")
+
+Rel(apiGateway, authService, "认证", "JWT验证")
+Rel(apiGateway, userService, "路由", "用户相关请求")
+Rel(apiGateway, assessmentService, "路由", "评估相关请求")
+Rel(apiGateway, counselingService, "路由", "咨询相关请求")
+
+Rel(userService, userDb, "读写", "用户数据存储")
+Rel(userService, redisCache, "缓存", "用户会话信息")
+
+Rel(assessmentService, assessmentDb, "读写", "评估数据存储")
+Rel(assessmentService, scaleService, "调用", "量表管理")
+Rel(assessmentService, aiAnalysisService, "调用", "AI分析")
+Rel(assessmentService, reportService, "调用", "报告生成")
+
+Rel(scaleService, scaleDb, "读写", "量表数据管理")
+Rel(scaleService, redisCache, "缓存", "量表缓存")
+
+Rel(aiAnalysisService, analyticsDb, "查询", "历史数据分析")
+Rel(aiAnalysisService, aiPlatform, "调用", "机器学习服务")
+
+Rel(reportService, reportStorage, "存储", "报告文件管理")
+Rel(reportService, assessmentDb, "查询", "评估结果数据")
+
+Rel(counselingService, counselingDb, "读写", "咨询数据存储")
+Rel(counselingService, videoService, "集成", "音视频通讯")
+
+Rel(crisisService, emergencyService, "对接", "紧急情况处理")
+Rel(crisisService, assessmentDb, "查询", "风险评估数据")
+
+Rel(dataService, analyticsDb, "读写", "数据分析处理")
+Rel(dataService, assessmentDb, "读取", "评估数据统计")
+
+' 外部系统集成
+Rel(scaleService, scaleLibrary, "同步", "标准量表数据")
+Rel(aiAnalysisService, voiceAnalysis, "调用", "语音情感分析")
+Rel(userService, medicalSystem, "集成", "医疗信息对接")
+Rel(assessmentService, drugDatabase, "查询", "药物相互作用")
+Rel(userService, wearableDevice, "数据", "生理指标采集")
+
+' 技术特性标注
+note right of assessmentService
+  **评估服务特性:**
+  - 支持多种心理量表
+  - 自适应测试算法
+  - 实时风险评估
+  - 数据加密存储
+end note
+
+note right of aiAnalysisService
+  **AI分析特性:**
+  - 自然语言处理
+  - 情感状态识别
+  - 行为模式分析
+  - 诊断辅助建议
+end note
+
+note right of crisisService
+  **危机干预特性:**
+  - 24/7风险监控
+  - 自动告警机制
+  - 紧急联系人通知
+  - 专业干预流程
+end note
+
+@enduml 

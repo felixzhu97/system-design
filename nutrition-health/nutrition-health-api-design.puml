@@ -1,0 +1,335 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title 饮食健康系统 - API设计图
+
+LAYOUT_WITH_LEGEND()
+
+!define API_COLOR #45B7D1
+!define GRAPHQL_COLOR #E535AB
+!define WEBSOCKET_COLOR #FF6B6B
+!define REST_COLOR #4ECDC4
+!define GRPC_COLOR #9C27B0
+
+' API网关层
+Container(apiGateway, "API网关", "Kong/Nginx Plus", "请求路由、认证授权、限流、监控") <<API_COLOR>>
+Container(graphqlGateway, "GraphQL网关", "Apollo Server", "GraphQL查询聚合、缓存、订阅") <<GRAPHQL_COLOR>>
+Container(websocketGateway, "WebSocket网关", "Socket.io", "实时推送、在线状态、咨询") <<WEBSOCKET_COLOR>>
+Container(grpcGateway, "gRPC网关", "Envoy Proxy", "内部服务通信、负载均衡") <<GRPC_COLOR>>
+
+System_Boundary(apiServices, "API服务域") {
+
+    ' 用户域API
+    Container(userAPI, "用户域API", "Node.js/Express", "用户注册、登录、资料、偏好管理") <<REST_COLOR>>
+    note right of userAPI
+        **用户域API端点：**
+        POST /api/users/register - 用户注册
+        POST /api/users/login - 用户登录
+        GET /api/users/profile - 获取用户信息
+        PUT /api/users/profile - 更新用户信息
+        POST /api/users/preferences - 设置饮食偏好
+        GET /api/users/goals - 获取健康目标
+        PUT /api/users/goals - 更新健康目标
+        POST /api/users/avatar - 上传头像
+        GET /api/users/achievements - 获取成就
+        DELETE /api/users/account - 删除账户
+        POST /api/users/reset-password - 重置密码
+        GET /api/users/privacy-settings - 隐私设置
+    end note
+
+    ' 营养域API
+    Container(nutritionAPI, "营养域API", "Python/FastAPI", "营养分析、计算、食物数据") <<REST_COLOR>>
+    note right of nutritionAPI
+        **营养域API端点：**
+        GET /api/nutrition/foods - 搜索食物
+        GET /api/nutrition/foods/{id} - 获取食物详情
+        POST /api/nutrition/analyze - 营养成分分析
+        POST /api/nutrition/calculate - 热量计算
+        GET /api/nutrition/standards - 营养摄入标准
+        POST /api/nutrition/barcode - 条码识别
+        POST /api/nutrition/image - 图像识别
+        GET /api/nutrition/allergens - 过敏原检查
+        POST /api/nutrition/interactions - 营养相互作用
+        GET /api/nutrition/deficiency - 缺乏检测
+        POST /api/nutrition/optimize - 营养优化建议
+        GET /api/nutrition/labels - 营养标签生成
+    end note
+
+    ' 饮食域API
+    Container(dietAPI, "饮食域API", "Node.js/TypeScript", "饮食记录、食谱、膳食计划") <<REST_COLOR>>
+    note left of dietAPI
+        **饮食域API端点：**
+        GET /api/diet/records - 获取饮食记录
+        POST /api/diet/records - 创建饮食记录
+        PUT /api/diet/records/{id} - 更新饮食记录
+        DELETE /api/diet/records/{id} - 删除饮食记录
+        GET /api/diet/daily-summary - 每日饮食汇总
+        GET /api/diet/weekly-report - 周报统计
+        POST /api/diet/meal-plans - 创建膳食计划
+        GET /api/diet/meal-plans - 获取膳食计划
+        POST /api/diet/quick-add - 快速添加食物
+        GET /api/diet/favorites - 获取收藏食物
+        POST /api/diet/copy-day - 复制某天饮食
+        GET /api/diet/trends - 饮食趋势分析
+    end note
+
+    ' 食谱域API
+    Container(recipeAPI, "食谱API", "Node.js/Express", "食谱管理、搜索、评价") <<REST_COLOR>>
+    note left of recipeAPI
+        **食谱API端点：**
+        GET /api/recipes - 获取食谱列表
+        GET /api/recipes/{id} - 获取食谱详情
+        POST /api/recipes - 创建食谱
+        PUT /api/recipes/{id} - 更新食谱
+        DELETE /api/recipes/{id} - 删除食谱
+        POST /api/recipes/{id}/rate - 评价食谱
+        GET /api/recipes/search - 搜索食谱
+        GET /api/recipes/categories - 获取食谱分类
+        POST /api/recipes/{id}/favorite - 收藏食谱
+        GET /api/recipes/my-recipes - 我的食谱
+        POST /api/recipes/nutrition-analysis - 食谱营养分析
+        GET /api/recipes/trending - 热门食谱
+    end note
+
+    ' 健康域API
+    Container(healthAPI, "健康域API", "Python/Django", "健康指标、设备同步、评估") <<REST_COLOR>>
+    note right of healthAPI
+        **健康域API端点：**
+        GET /api/health/metrics - 获取健康指标
+        POST /api/health/metrics - 记录健康指标
+        GET /api/health/devices - 获取设备列表
+        POST /api/health/devices/sync - 同步设备数据
+        GET /api/health/trends - 健康趋势分析
+        POST /api/health/assessment - 健康评估
+        GET /api/health/reports - 健康报告
+        POST /api/health/goals - 设置健康目标
+        GET /api/health/alerts - 健康提醒
+        POST /api/health/vitals - 记录生命体征
+        GET /api/health/progress - 进度追踪
+        POST /api/health/chronic-conditions - 慢病管理
+    end note
+
+    ' 推荐域API
+    Container(recommendAPI, "推荐API", "Python/FastAPI", "个性化推荐、AI建议") <<REST_COLOR>>
+    note left of recommendAPI
+        **推荐API端点：**
+        GET /api/recommend/foods - 推荐食物
+        GET /api/recommend/recipes - 推荐食谱
+        GET /api/recommend/meal-plans - 推荐膳食计划
+        POST /api/recommend/personalized - 个性化推荐
+        GET /api/recommend/substitutes - 食物替代品
+        GET /api/recommend/seasonal - 季节性推荐
+        POST /api/recommend/feedback - 推荐反馈
+        GET /api/recommend/trending - 趋势推荐
+        GET /api/recommend/similar-users - 相似用户
+        POST /api/recommend/optimize - 营养优化推荐
+        GET /api/recommend/goals-based - 基于目标推荐
+        POST /api/recommend/ai-assistant - AI营养助手
+    end note
+
+    ' 咨询域API
+    Container(consultationAPI, "咨询API", "Java/Spring Boot", "营养咨询、预约、会话") <<REST_COLOR>>
+    note right of consultationAPI
+        **咨询API端点：**
+        GET /api/consultations/nutritionists - 获取营养师列表
+        POST /api/consultations/appointments - 预约咨询
+        GET /api/consultations/appointments - 获取预约列表
+        PUT /api/consultations/appointments/{id} - 修改预约
+        DELETE /api/consultations/appointments/{id} - 取消预约
+        POST /api/consultations/sessions - 开始咨询会话
+        GET /api/consultations/history - 咨询历史
+        POST /api/consultations/notes - 添加咨询笔记
+        POST /api/consultations/prescriptions - 营养处方
+        POST /api/consultations/ratings - 咨询评价
+        GET /api/consultations/schedules - 营养师日程
+        POST /api/consultations/follow-ups - 跟进计划
+    end note
+
+    ' 社交域API
+    Container(socialAPI, "社交API", "Node.js/Koa", "社区、分享、挑战、打卡") <<REST_COLOR>>
+    note left of socialAPI
+        **社交API端点：**
+        GET /api/social/posts - 获取动态列表
+        POST /api/social/posts - 发布动态
+        POST /api/social/posts/{id}/like - 点赞动态
+        POST /api/social/posts/{id}/comment - 评论动态
+        GET /api/social/followers - 获取关注者
+        POST /api/social/follow - 关注用户
+        DELETE /api/social/unfollow - 取消关注
+        GET /api/social/challenges - 获取挑战活动
+        POST /api/social/challenges/join - 参加挑战
+        POST /api/social/check-in - 打卡记录
+        GET /api/social/groups - 获取群组
+        POST /api/social/groups/join - 加入群组
+        GET /api/social/achievements - 获取成就
+    end note
+
+    ' 通知域API
+    Container(notificationAPI, "通知API", "Go/Gin", "推送、提醒、邮件、短信") <<REST_COLOR>>
+    note right of notificationAPI
+        **通知API端点：**
+        GET /api/notifications - 获取通知列表
+        PUT /api/notifications/{id}/read - 标记已读
+        PUT /api/notifications/read-all - 全部标记已读
+        POST /api/notifications/settings - 通知设置
+        GET /api/notifications/settings - 获取通知设置
+        POST /api/notifications/push - 推送通知
+        POST /api/notifications/reminders - 设置提醒
+        GET /api/notifications/reminders - 获取提醒列表
+        DELETE /api/notifications/reminders/{id} - 删除提醒
+        POST /api/notifications/email - 发送邮件
+        POST /api/notifications/sms - 发送短信
+        GET /api/notifications/unread-count - 未读数量
+    end note
+
+    ' 分析域API
+    Container(analyticsAPI, "分析API", "Python/FastAPI", "数据分析、报告、统计") <<REST_COLOR>>
+    note left of analyticsAPI
+        **分析API端点：**
+        GET /api/analytics/nutrition-summary - 营养汇总
+        GET /api/analytics/health-trends - 健康趋势
+        GET /api/analytics/goal-progress - 目标进度
+        POST /api/analytics/custom-report - 自定义报告
+        GET /api/analytics/insights - 健康洞察
+        GET /api/analytics/comparisons - 对比分析
+        GET /api/analytics/predictions - 趋势预测
+        POST /api/analytics/export - 数据导出
+        GET /api/analytics/dashboard - 仪表板数据
+        GET /api/analytics/period-comparison - 周期对比
+        GET /api/analytics/nutrient-balance - 营养平衡分析
+        GET /api/analytics/calorie-breakdown - 热量分解
+    end note
+
+    ' 管理域API
+    Container(adminAPI, "管理API", "Java/Spring Boot", "系统管理、内容审核、用户管理") <<REST_COLOR>>
+    note right of adminAPI
+        **管理API端点：**
+        GET /api/admin/users - 用户管理
+        PUT /api/admin/users/{id}/status - 用户状态管理
+        GET /api/admin/content/reviews - 内容审核队列
+        PUT /api/admin/content/{id}/approve - 内容审核
+        GET /api/admin/reports - 系统报告
+        GET /api/admin/analytics - 管理分析
+        POST /api/admin/announcements - 发布公告
+        GET /api/admin/feedback - 用户反馈
+        POST /api/admin/system/maintenance - 系统维护
+        GET /api/admin/logs - 系统日志
+        POST /api/admin/configs - 系统配置
+        GET /api/admin/statistics - 统计数据
+    end note
+}
+
+' GraphQL API层
+System_Boundary(graphqlAPI, "GraphQL API层") {
+    Container(nutritionQuery, "营养查询", "GraphQL Schema", "营养、食物、用户统一查询") <<GRAPHQL_COLOR>>
+    Container(healthQuery, "健康查询", "GraphQL Schema", "健康指标、趋势、分析查询") <<GRAPHQL_COLOR>>
+    Container(socialQuery, "社交查询", "GraphQL Schema", "社交动态、关系、群组查询") <<GRAPHQL_COLOR>>
+    Container(realTimeSubscription, "实时订阅", "GraphQL Subscription", "实时通知、咨询、健康数据") <<GRAPHQL_COLOR>>
+    
+    note top of nutritionQuery
+        **GraphQL营养查询示例：**
+        query {
+          user(id: "123") {
+            profile { name, age, goals }
+            todayIntake {
+              calories, protein, carbs, fat
+              meals { name, foods { name, nutrients } }
+            }
+            recommendations { foods, recipes }
+          }
+        }
+    end note
+}
+
+' WebSocket API层
+System_Boundary(realtimeAPI, "实时API层") {
+    Container(consultationSocket, "实时咨询", "WebSocket", "营养师-用户实时咨询") <<WEBSOCKET_COLOR>>
+    Container(healthMonitoring, "健康监控", "WebSocket", "实时健康数据推送") <<WEBSOCKET_COLOR>>
+    Container(socialActivity, "社交活动", "WebSocket", "实时社交互动通知") <<WEBSOCKET_COLOR>>
+    Container(systemNotifications, "系统通知", "WebSocket", "实时系统消息推送") <<WEBSOCKET_COLOR>>
+    
+    note top of consultationSocket
+        **WebSocket事件类型：**
+        - consultation_started: 咨询开始
+        - message_received: 消息接收
+        - health_alert: 健康警报
+        - goal_achieved: 目标达成
+        - friend_activity: 好友动态
+        - system_notification: 系统通知
+        - data_sync: 数据同步
+    end note
+}
+
+' 外部API集成
+System_Boundary(externalAPI, "外部API集成") {
+    Container_Ext(nutritionDataAPI, "营养数据API", "USDA/中国食物成分表", "权威营养数据") <<API_COLOR>>
+    Container_Ext(barcodeAPI, "条码识别API", "第三方条码服务", "食品条码扫描") <<API_COLOR>>
+    Container_Ext(imageRecognitionAPI, "图像识别API", "Google Vision/百度AI", "食物图像识别") <<API_COLOR>>
+    Container_Ext(wearableAPI, "可穿戴设备API", "Apple Health/Google Fit", "健康设备数据") <<API_COLOR>>
+    Container_Ext(paymentAPI, "支付API", "Stripe/支付宝", "订阅支付处理") <<API_COLOR>>
+    Container_Ext(mapAPI, "地图API", "高德/Google Maps", "餐厅位置服务") <<API_COLOR>>
+    Container_Ext(weatherAPI, "天气API", "OpenWeatherMap", "天气数据集成") <<API_COLOR>>
+    Container_Ext(smsAPI, "短信API", "阿里云/腾讯云", "短信通知服务") <<API_COLOR>>
+    Container_Ext(emailAPI, "邮件API", "SendGrid/阿里云", "邮件发送服务") <<API_COLOR>>
+}
+
+' API认证和安全
+System_Boundary(authSecurity, "认证与安全") {
+    Container(oauthServer, "OAuth服务器", "Spring Security OAuth2", "第三方登录认证") <<API_COLOR>>
+    Container(jwtService, "JWT服务", "Node.js JWT", "令牌生成验证") <<API_COLOR>>
+    Container(rateLimiter, "限流服务", "Redis + Lua", "API限流保护") <<API_COLOR>>
+    Container(encryptionService, "加密服务", "AES/RSA", "敏感数据加密") <<API_COLOR>>
+    
+    note bottom of oauthServer
+        **支持的OAuth提供商：**
+        - 微信登录
+        - QQ登录
+        - 支付宝登录
+        - Apple ID登录
+        - Google登录
+        - Facebook登录
+    end note
+}
+
+' API网关路由配置
+apiGateway --> userAPI : "/api/users/*"
+apiGateway --> nutritionAPI : "/api/nutrition/*"
+apiGateway --> dietAPI : "/api/diet/*"
+apiGateway --> recipeAPI : "/api/recipes/*"
+apiGateway --> healthAPI : "/api/health/*"
+apiGateway --> recommendAPI : "/api/recommend/*"
+apiGateway --> consultationAPI : "/api/consultations/*"
+apiGateway --> socialAPI : "/api/social/*"
+apiGateway --> notificationAPI : "/api/notifications/*"
+apiGateway --> analyticsAPI : "/api/analytics/*"
+apiGateway --> adminAPI : "/api/admin/*"
+
+' GraphQL网关集成
+graphqlGateway --> nutritionQuery : "营养数据聚合"
+graphqlGateway --> healthQuery : "健康数据聚合"
+graphqlGateway --> socialQuery : "社交数据聚合"
+graphqlGateway --> realTimeSubscription : "实时订阅"
+
+' WebSocket网关集成
+websocketGateway --> consultationSocket : "咨询WebSocket"
+websocketGateway --> healthMonitoring : "健康监控WebSocket"
+websocketGateway --> socialActivity : "社交WebSocket"
+websocketGateway --> systemNotifications : "通知WebSocket"
+
+' 认证安全集成
+apiGateway --> oauthServer : "OAuth认证"
+apiGateway --> jwtService : "JWT验证"
+apiGateway --> rateLimiter : "限流检查"
+userAPI --> encryptionService : "数据加密"
+
+' 外部API集成
+nutritionAPI --> nutritionDataAPI : "营养数据查询"
+nutritionAPI --> barcodeAPI : "条码识别"
+nutritionAPI --> imageRecognitionAPI : "图像识别"
+healthAPI --> wearableAPI : "设备数据同步"
+consultationAPI --> paymentAPI : "支付处理"
+recipeAPI --> mapAPI : "餐厅定位"
+notificationAPI --> smsAPI : "短信发送"
+notificationAPI --> emailAPI : "邮件发送"
+
+@enduml 

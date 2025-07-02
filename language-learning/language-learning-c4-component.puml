@@ -1,0 +1,56 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title 语言学习系统 - 课程服务组件图 (Level 3)
+
+LAYOUT_WITH_LEGEND()
+
+Container_Boundary(courseService, "课程服务") {
+    Component(courseController, "课程控制器", "Spring MVC", "处理课程相关API请求")
+    Component(courseManager, "课程管理组件", "Spring Service", "课程业务逻辑处理")
+    Component(contentManager, "内容管理组件", "Spring Service", "课程内容管理")
+    Component(progressTracker, "进度跟踪组件", "Spring Service", "学习进度计算")
+    Component(adaptiveEngine, "自适应引擎", "Spring Service", "个性化学习路径")
+    Component(courseRepository, "课程仓储", "Spring Data JPA", "课程数据访问")
+    Component(contentRepository, "内容仓储", "Spring Data MongoDB", "内容数据访问")
+    Component(courseCache, "课程缓存", "Redis Template", "课程数据缓存")
+    Component(searchEngine, "搜索引擎", "Elasticsearch Client", "课程内容搜索")
+    Component(mediaProcessor, "媒体处理器", "FFmpeg Wrapper", "音视频处理")
+    Component(aiAnalyzer, "AI分析器", "TensorFlow Java", "学习效果分析")
+}
+
+ContainerDb_Ext(courseDb, "课程数据库", "PostgreSQL", "课程基础信息存储")
+ContainerDb_Ext(contentDb, "内容数据库", "MongoDB", "课程内容存储")
+ContainerDb_Ext(redisCache, "Redis缓存", "Redis", "热点数据缓存")
+ContainerDb_Ext(elasticsearch, "搜索引擎", "Elasticsearch", "全文搜索")
+Container_Ext(aiService, "AI服务", "Python/TensorFlow", "机器学习分析")
+Container_Ext(mediaService, "媒体服务", "CDN", "音视频资源")
+
+' API层调用
+Rel(courseController, courseManager, "调用", "业务处理")
+Rel(courseController, contentManager, "调用", "内容管理")
+Rel(courseController, progressTracker, "调用", "进度计算")
+
+' 业务层调用
+Rel(courseManager, courseRepository, "使用", "数据访问")
+Rel(courseManager, courseCache, "使用", "缓存读写")
+Rel(courseManager, adaptiveEngine, "调用", "路径推荐")
+
+Rel(contentManager, contentRepository, "使用", "内容存储")
+Rel(contentManager, searchEngine, "使用", "内容搜索")
+Rel(contentManager, mediaProcessor, "调用", "媒体处理")
+
+Rel(progressTracker, aiAnalyzer, "调用", "效果分析")
+Rel(adaptiveEngine, aiAnalyzer, "调用", "智能推荐")
+
+' 数据层调用
+Rel(courseRepository, courseDb, "查询", "SQL")
+Rel(contentRepository, contentDb, "查询", "NoSQL")
+Rel(courseCache, redisCache, "读写", "Redis协议")
+Rel(searchEngine, elasticsearch, "搜索", "REST API")
+
+' 外部服务调用
+Rel(aiAnalyzer, aiService, "分析", "REST API")
+Rel(mediaProcessor, mediaService, "处理", "HTTP")
+
+@enduml 

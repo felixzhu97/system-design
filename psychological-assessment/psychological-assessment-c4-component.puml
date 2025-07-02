@@ -1,0 +1,77 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title 心理检测系统 - 评估服务组件图 (Level 3)
+
+LAYOUT_WITH_LEGEND()
+
+Container_Boundary(assessmentService, "评估服务") {
+    Component(assessmentController, "评估控制器", "Django REST API", "处理评估相关API请求")
+    Component(assessmentManager, "评估管理器", "Django Service", "评估流程核心逻辑")
+    Component(testEngine, "测试引擎", "Python Engine", "心理测试执行引擎")
+    Component(scoringEngine, "计分引擎", "Python Calculator", "量表计分和结果计算")
+    Component(riskAssessment, "风险评估器", "ML Model", "自杀风险和危机评估")
+    Component(adaptiveTest, "自适应测试", "IRT Algorithm", "项目反应理论测试")
+    Component(assessmentRepository, "评估仓储", "Django ORM", "评估数据访问层")
+    Component(resultRepository, "结果仓储", "Django ORM", "评估结果数据访问")
+    Component(cacheManager, "缓存管理器", "Redis Client", "评估过程缓存管理")
+    Component(encryptionService, "加密服务", "Cryptography", "敏感数据加密保护")
+    Component(auditLogger, "审计日志", "Python Logger", "评估操作审计记录")
+    Component(notificationSender, "通知发送器", "Celery Task", "风险告警通知")
+    Component(dataValidator, "数据验证器", "Marshmallow", "评估数据验证")
+}
+
+ContainerDb_Ext(assessmentDb, "评估数据库", "PostgreSQL", "评估记录和结果存储")
+ContainerDb_Ext(redisCache, "Redis缓存", "Redis", "评估过程状态缓存")
+ContainerDb_Ext(analyticsDb, "分析数据库", "ClickHouse", "评估数据分析")
+Container_Ext(scaleService, "量表服务", "Java", "量表管理和题目获取")
+Container_Ext(aiAnalysisService, "AI分析服务", "Python", "智能分析和诊断")
+Container_Ext(reportService, "报告服务", "Java", "评估报告生成")
+Container_Ext(crisisService, "危机干预服务", "Go", "紧急情况处理")
+Container_Ext(userService, "用户服务", "Java", "用户信息管理")
+
+' API层调用
+Rel(assessmentController, assessmentManager, "调用", "业务处理")
+Rel(assessmentController, testEngine, "调用", "测试执行")
+Rel(assessmentController, dataValidator, "调用", "数据验证")
+
+' 核心业务层调用
+Rel(assessmentManager, assessmentRepository, "使用", "数据访问")
+Rel(assessmentManager, cacheManager, "使用", "缓存管理")
+Rel(assessmentManager, encryptionService, "调用", "数据加密")
+Rel(assessmentManager, auditLogger, "调用", "操作审计")
+
+Rel(testEngine, scoringEngine, "调用", "结果计分")
+Rel(testEngine, adaptiveTest, "调用", "自适应算法")
+Rel(testEngine, riskAssessment, "调用", "风险评估")
+Rel(testEngine, resultRepository, "使用", "结果存储")
+
+Rel(scoringEngine, scaleService, "调用", "量表规则")
+Rel(scoringEngine, cacheManager, "使用", "计分缓存")
+
+Rel(riskAssessment, notificationSender, "触发", "危机告警")
+Rel(riskAssessment, crisisService, "调用", "危机处理")
+Rel(riskAssessment, analyticsDb, "写入", "风险数据")
+
+Rel(adaptiveTest, scaleService, "调用", "题目选择")
+Rel(adaptiveTest, cacheManager, "使用", "测试状态")
+
+' 数据访问层调用
+Rel(assessmentRepository, assessmentDb, "读写", "SQL查询")
+Rel(resultRepository, assessmentDb, "读写", "SQL查询")
+Rel(cacheManager, redisCache, "读写", "Redis协议")
+
+' 外部服务调用
+Rel(testEngine, aiAnalysisService, "调用", "AI辅助分析")
+Rel(scoringEngine, reportService, "触发", "报告生成")
+Rel(assessmentManager, userService, "查询", "用户信息")
+
+' 审计和通知
+Rel(auditLogger, analyticsDb, "记录", "审计日志")
+Rel(notificationSender, userService, "查询", "联系信息")
+
+' 数据安全保护
+Rel(encryptionService, assessmentDb, "保护", "敏感数据加密")
+Rel(dataValidator, encryptionService, "协作", "验证后加密")
+
+@enduml 

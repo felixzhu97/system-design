@@ -1,0 +1,62 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title 健身运动系统 - 运动服务组件图 (Level 3)
+
+LAYOUT_WITH_LEGEND()
+
+Container_Boundary(exerciseService, "运动服务") {
+    Component(exerciseController, "运动控制器", "Gin HTTP", "处理运动相关API请求")
+    Component(workoutManager, "训练管理组件", "Go Service", "训练计划管理")
+    Component(motionTracker, "动作跟踪组件", "Go Service", "运动动作识别")
+    Component(performanceAnalyzer, "表现分析组件", "Go Service", "运动表现分析")
+    Component(calorieCalculator, "卡路里计算器", "Go Service", "热量消耗计算")
+    Component(exerciseRepository, "运动仓储", "GORM", "运动数据访问")
+    Component(motionRepository, "动作仓储", "MongoDB Driver", "动作数据访问")
+    Component(exerciseCache, "运动缓存", "Redis Client", "运动数据缓存")
+    Component(aiMotionEngine, "AI动作引擎", "TensorFlow Go", "动作识别AI")
+    Component(deviceConnector, "设备连接器", "IoT SDK", "智能设备连接")
+    Component(videoProcessor, "视频处理器", "FFmpeg Go", "运动视频处理")
+    Component(dataCollector, "数据收集器", "Go Routine", "实时数据收集")
+}
+
+ContainerDb_Ext(exerciseDb, "运动数据库", "PostgreSQL", "运动记录存储")
+ContainerDb_Ext(motionDb, "动作数据库", "MongoDB", "动作模板存储")
+ContainerDb_Ext(redisCache, "Redis缓存", "Redis", "实时数据缓存")
+ContainerDb_Ext(timeSeriesDb, "时序数据库", "InfluxDB", "运动指标存储")
+Container_Ext(aiService, "AI服务", "Python/PyTorch", "机器学习分析")
+Container_Ext(deviceHub, "设备中心", "IoT Platform", "智能设备管理")
+Container_Ext(videoService, "视频服务", "CDN", "运动视频存储")
+
+' API层调用
+Rel(exerciseController, workoutManager, "调用", "训练管理")
+Rel(exerciseController, motionTracker, "调用", "动作跟踪")
+Rel(exerciseController, performanceAnalyzer, "调用", "表现分析")
+
+' 业务层调用
+Rel(workoutManager, exerciseRepository, "使用", "数据访问")
+Rel(workoutManager, exerciseCache, "使用", "缓存读写")
+Rel(workoutManager, calorieCalculator, "调用", "热量计算")
+
+Rel(motionTracker, motionRepository, "使用", "动作查询")
+Rel(motionTracker, aiMotionEngine, "调用", "AI识别")
+Rel(motionTracker, deviceConnector, "调用", "设备数据")
+Rel(motionTracker, videoProcessor, "调用", "视频分析")
+
+Rel(performanceAnalyzer, dataCollector, "使用", "数据收集")
+Rel(performanceAnalyzer, exerciseCache, "使用", "实时数据")
+
+Rel(dataCollector, deviceConnector, "获取", "传感器数据")
+
+' 数据层调用
+Rel(exerciseRepository, exerciseDb, "查询", "SQL")
+Rel(motionRepository, motionDb, "查询", "NoSQL")
+Rel(exerciseCache, redisCache, "读写", "Redis协议")
+Rel(dataCollector, timeSeriesDb, "写入", "时序数据")
+
+' 外部服务调用
+Rel(aiMotionEngine, aiService, "分析", "gRPC")
+Rel(deviceConnector, deviceHub, "连接", "IoT协议")
+Rel(videoProcessor, videoService, "存储", "HTTP")
+
+@enduml 

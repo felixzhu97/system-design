@@ -1,0 +1,218 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title 金融分析系统 - 数据库设计图
+
+LAYOUT_TOP_DOWN()
+
+package "用户管理数据 (PostgreSQL)" {
+    [用户表 users] as users
+    [用户档案表 user_profiles] as profiles
+    [角色表 roles] as roles
+    [权限表 permissions] as permissions
+    [用户角色表 user_roles] as userRoles
+    [登录日志表 login_logs] as loginLogs
+}
+
+package "交易数据 (PostgreSQL)" {
+    [交易订单表 orders] as orders
+    [交易记录表 trades] as trades
+    [持仓表 positions] as positions
+    [账户表 accounts] as accounts
+    [资金流水表 fund_flows] as fundFlows
+    [交易策略表 strategies] as strategies
+}
+
+package "风险管理数据 (PostgreSQL)" {
+    [风险参数表 risk_parameters] as riskParams
+    [风险限额表 risk_limits] as riskLimits
+    [风险事件表 risk_events] as riskEvents
+    [压力测试表 stress_tests] as stressTests
+    [VaR计算表 var_calculations] as varCalcs
+}
+
+package "合规数据 (PostgreSQL)" {
+    [监管规则表 compliance_rules] as complianceRules
+    [违规记录表 violations] as violations
+    [审计日志表 audit_logs] as auditLogs
+    [报告模板表 report_templates] as reportTemplates
+}
+
+package "投资组合数据 (MongoDB)" {
+    [组合信息集合 portfolios] as portfolios
+    [持仓明细集合 holdings] as holdings
+    [组合历史集合 portfolio_history] as portfolioHistory
+    [基准数据集合 benchmarks] as benchmarks
+    [组合配置集合 portfolio_configs] as portfolioConfigs
+}
+
+package "分析配置数据 (MongoDB)" {
+    [分析模型集合 analysis_models] as models
+    [指标定义集合 indicators] as indicators
+    [策略配置集合 strategy_configs] as strategyConfigs
+    [回测配置集合 backtest_configs] as backtestConfigs
+}
+
+package "市场行情数据 (InfluxDB)" {
+    [股票行情 stock_quotes] as stockQuotes
+    [债券行情 bond_quotes] as bondQuotes
+    [期货行情 futures_quotes] as futuresQuotes
+    [外汇行情 forex_quotes] as forexQuotes
+    [指数行情 index_quotes] as indexQuotes
+    [技术指标 technical_indicators] as techIndicators
+}
+
+package "风险指标数据 (InfluxDB)" {
+    [VaR指标 var_metrics] as varMetrics
+    [波动率指标 volatility_metrics] as volatilityMetrics
+    [相关性指标 correlation_metrics] as correlationMetrics
+    [流动性指标 liquidity_metrics] as liquidityMetrics
+    [信用风险指标 credit_risk_metrics] as creditRiskMetrics
+}
+
+package "分析结果数据 (ClickHouse)" {
+    [投资绩效分析 performance_analysis] as perfAnalysis
+    [归因分析结果 attribution_analysis] as attribution
+    [回测结果 backtest_results] as backtestResults
+    [风险分析结果 risk_analysis] as riskAnalysis
+    [市场预测结果 forecast_results] as forecastResults
+}
+
+package "用户行为数据 (ClickHouse)" {
+    [操作日志 user_operations] as operations
+    [页面访问 page_visits] as pageVisits
+    [查询统计 query_statistics] as queryStats
+    [报告生成记录 report_generation] as reportGen
+}
+
+package "缓存数据 (Redis)" {
+    [用户会话 user_sessions] as sessions
+    [实时行情缓存 quote_cache] as quoteCache
+    [计算结果缓存 calculation_cache] as calcCache
+    [热点数据缓存 hot_data_cache] as hotDataCache
+    [权限缓存 permission_cache] as permCache
+}
+
+package "分布式缓存 (Redis Cluster)" {
+    [分布式锁 distributed_locks] as distLocks
+    [任务队列 task_queues] as taskQueues
+    [实时计算缓存 realtime_cache] as realtimeCache
+    [分布式会话 distributed_sessions] as distSessions
+}
+
+package "文件存储 (MinIO)" {
+    [报告文件存储 report_files] as reportFiles
+    [历史数据存储 historical_data] as historicalData
+    [模型文件存储 model_files] as modelFiles
+    [配置文件存储 config_files] as configFiles
+}
+
+package "大数据存储 (HDFS)" {
+    [历史行情数据 historical_quotes] as historicalQuotes
+    [日志数据 log_data] as logData
+    [备份数据 backup_data] as backupData
+    [数据湖存储 data_lake] as dataLake
+}
+
+' 关系定义
+users ||--o{ profiles : "1对1"
+users ||--o{ userRoles : "1对多"
+roles ||--o{ userRoles : "多对多"
+users ||--o{ accounts : "1对多"
+users ||--o{ portfolios : "1对多"
+users ||--o{ loginLogs : "1对多"
+
+accounts ||--o{ orders : "1对多"
+orders ||--o{ trades : "1对多"
+accounts ||--o{ positions : "1对多"
+accounts ||--o{ fundFlows : "1对多"
+
+portfolios ||--o{ holdings : "1对多"
+portfolios ||--o{ portfolioHistory : "1对多"
+portfolios ||--o{ portfolioConfigs : "1对1"
+
+users ||--o{ strategies : "1对多"
+strategies ||--o{ orders : "1对多"
+strategies ||--o{ backtestConfigs : "1对多"
+
+riskParams ||--o{ riskLimits : "1对多"
+users ||--o{ riskEvents : "1对多"
+portfolios ||--o{ stressTests : "1对多"
+
+complianceRules ||--o{ violations : "1对多"
+users ||--o{ auditLogs : "1对多"
+
+' 数据流关系
+trades --> perfAnalysis : "交易数据分析"
+positions --> riskAnalysis : "持仓风险分析"
+orders --> operations : "操作行为记录"
+portfolios --> attribution : "组合归因分析"
+
+stockQuotes --> quoteCache : "实时行情缓存"
+perfAnalysis --> calcCache : "计算结果缓存"
+users --> sessions : "用户会话管理"
+roles --> permCache : "权限信息缓存"
+
+backtestResults --> reportFiles : "回测报告存储"
+riskAnalysis --> reportFiles : "风险报告存储"
+models --> modelFiles : "AI模型存储"
+auditLogs --> logData : "审计日志存储"
+
+stockQuotes --> historicalQuotes : "历史行情归档"
+operations --> logData : "操作日志归档"
+portfolioHistory --> dataLake : "历史数据湖"
+
+' 实时数据流
+stockQuotes --> techIndicators : "技术指标计算"
+positions --> varMetrics : "VaR实时计算"
+trades --> volatilityMetrics : "波动率计算"
+portfolios --> correlationMetrics : "相关性分析"
+
+' 表结构说明
+note right of users
+  **用户表结构:**
+  - id (主键)
+  - username (用户名)
+  - email (邮箱)
+  - phone (手机号)
+  - department (部门)
+  - level (用户级别)
+  - created_at (创建时间)
+  - last_login (最后登录)
+end note
+
+note right of portfolios
+  **投资组合结构:**
+  - portfolio_id (组合ID)
+  - user_id (用户ID)
+  - name (组合名称)
+  - type (组合类型)
+  - benchmark (基准)
+  - created_date (创建日期)
+  - total_value (总价值)
+  - risk_level (风险等级)
+end note
+
+note right of stockQuotes
+  **股票行情时序数据:**
+  - time (时间戳)
+  - symbol (股票代码)
+  - open (开盘价)
+  - high (最高价)
+  - low (最低价)
+  - close (收盘价)
+  - volume (成交量)
+  - amount (成交额)
+end note
+
+note right of varMetrics
+  **VaR风险指标:**
+  - time (时间戳)
+  - portfolio_id (组合ID)
+  - var_1d (1日VaR)
+  - var_10d (10日VaR)
+  - confidence_level (置信水平)
+  - method (计算方法)
+end note
+
+@enduml 

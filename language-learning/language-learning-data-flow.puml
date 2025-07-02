@@ -1,0 +1,82 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Dynamic.puml
+
+title 语言学习系统 - 学习过程数据流
+
+LAYOUT_WITH_LEGEND()
+
+Person(learner, "学习者", "使用应用进行语言学习")
+Container(mobileApp, "移动应用", "React Native", "学习客户端")
+Container(apiGateway, "API网关", "Kong", "请求路由和认证")
+Container(learningService, "学习服务", "Python", "学习逻辑处理")
+Container(courseService, "课程服务", "Java", "课程内容管理")
+Container(vocabService, "词汇服务", "Go", "词汇管理")
+Container(speechService, "语音服务", "Python", "语音处理")
+Container(progressService, "进度服务", "Java", "学习进度跟踪")
+Container(aiService, "AI服务", "Python", "智能分析推荐")
+ContainerDb(courseDb, "课程数据库", "PostgreSQL", "课程信息")
+ContainerDb(contentDb, "内容数据库", "MongoDB", "学习内容")
+ContainerDb(progressDb, "进度数据库", "PostgreSQL", "学习记录")
+ContainerDb(redisCache, "Redis缓存", "Redis", "热点数据")
+ContainerDb(analyticsDb, "分析数据库", "ClickHouse", "学习分析")
+System_Ext(speechAPI, "语音识别API", "第三方语音服务")
+System_Ext(aiPlatform, "AI平台", "机器学习服务")
+
+' 学习会话开始流程
+Rel_D(learner, mobileApp, "1. 打开学习模块", "触摸操作")
+Rel_D(mobileApp, apiGateway, "2. 请求课程列表", "HTTPS/REST")
+Rel_D(apiGateway, courseService, "3. 获取个性化课程", "gRPC")
+Rel_D(courseService, courseDb, "4. 查询课程信息", "SQL")
+Rel_D(courseService, redisCache, "5. 查询缓存数据", "Redis协议")
+Rel_U(redisCache, courseService, "6. 返回缓存结果", "数据")
+Rel_U(courseDb, courseService, "7. 返回课程数据", "数据")
+Rel_U(courseService, apiGateway, "8. 返回课程列表", "JSON")
+Rel_U(apiGateway, mobileApp, "9. 返回给用户", "JSON")
+Rel_U(mobileApp, learner, "10. 展示课程列表", "UI界面")
+
+' 学习内容获取流程
+Rel_D(learner, mobileApp, "11. 选择课程开始学习", "点击操作")
+Rel_D(mobileApp, apiGateway, "12. 请求学习内容", "HTTPS/REST")
+Rel_D(apiGateway, learningService, "13. 获取学习内容", "gRPC")
+Rel_D(learningService, contentDb, "14. 查询内容详情", "MongoDB查询")
+Rel_D(learningService, vocabService, "15. 获取词汇信息", "gRPC")
+Rel_D(vocabService, contentDb, "16. 查询词汇数据", "MongoDB查询")
+Rel_U(contentDb, vocabService, "17. 返回词汇信息", "数据")
+Rel_U(vocabService, learningService, "18. 返回词汇数据", "JSON")
+Rel_U(contentDb, learningService, "19. 返回内容数据", "数据")
+Rel_U(learningService, apiGateway, "20. 返回学习内容", "JSON")
+Rel_U(apiGateway, mobileApp, "21. 返回给用户", "JSON")
+Rel_U(mobileApp, learner, "22. 展示学习内容", "UI界面")
+
+' 语音练习流程
+Rel_D(learner, mobileApp, "23. 进行语音练习", "语音输入")
+Rel_D(mobileApp, apiGateway, "24. 上传语音数据", "HTTPS/Multipart")
+Rel_D(apiGateway, speechService, "25. 处理语音识别", "gRPC")
+Rel_D(speechService, speechAPI, "26. 调用语音识别", "HTTPS/API")
+Rel_U(speechAPI, speechService, "27. 返回识别结果", "JSON")
+Rel_D(speechService, aiService, "28. 语音质量分析", "gRPC")
+Rel_D(aiService, aiPlatform, "29. AI模型分析", "HTTPS/API")
+Rel_U(aiPlatform, aiService, "30. 返回分析结果", "JSON")
+Rel_U(aiService, speechService, "31. 返回分析数据", "JSON")
+Rel_U(speechService, apiGateway, "32. 返回练习结果", "JSON")
+Rel_U(apiGateway, mobileApp, "33. 返回给用户", "JSON")
+Rel_U(mobileApp, learner, "34. 展示练习反馈", "UI界面")
+
+' 学习进度更新流程
+Rel_D(speechService, progressService, "35. 更新学习进度", "异步消息")
+Rel_D(progressService, progressDb, "36. 保存进度记录", "SQL")
+Rel_D(progressService, analyticsDb, "37. 记录学习数据", "ClickHouse插入")
+Rel_D(progressService, aiService, "38. 更新学习模型", "gRPC")
+Rel_D(aiService, analyticsDb, "39. 分析学习效果", "ClickHouse查询")
+Rel_U(analyticsDb, aiService, "40. 返回分析数据", "数据")
+Rel_U(aiService, progressService, "41. 返回优化建议", "JSON")
+
+' 个性化推荐流程
+Rel_D(progressService, learningService, "42. 触发推荐更新", "异步消息")
+Rel_D(learningService, aiService, "43. 请求个性化推荐", "gRPC")
+Rel_D(aiService, analyticsDb, "44. 分析学习历史", "ClickHouse查询")
+Rel_U(analyticsDb, aiService, "45. 返回历史数据", "数据")
+Rel_U(aiService, learningService, "46. 返回推荐内容", "JSON")
+Rel_D(learningService, redisCache, "47. 缓存推荐结果", "Redis写入")
+
+@enduml 

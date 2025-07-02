@@ -1,1 +1,414 @@
- 
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title 饮食健康系统 - 数据库设计图
+
+LAYOUT_WITH_LEGEND()
+
+!define RELATIONAL_COLOR #45B7D1
+!define DOCUMENT_COLOR #4ECDC4
+!define CACHE_COLOR #FF6B6B
+!define TIMESERIES_COLOR #9C27B0
+!define GRAPH_COLOR #FFA726
+!define SEARCH_COLOR #96CEB4
+
+System_Boundary(relationDB, "关系型数据库层 (PostgreSQL)") {
+    ContainerDb(userDB, "用户数据库", "PostgreSQL 15", "用户账户、认证、基础信息") <<RELATIONAL_COLOR>>
+    note right of userDB
+        **用户核心表结构：**
+        - users: 用户基础信息
+        - user_profiles: 用户详细资料
+        - user_preferences: 饮食偏好设置
+        - user_goals: 健康目标设定
+        - user_achievements: 成就徽章
+        - oauth_tokens: 第三方登录凭证
+        - user_devices: 用户设备信息
+        - user_sessions: 用户会话管理
+        - user_privacy_settings: 隐私设置
+    end note
+    
+    ContainerDb(nutritionDB, "营养数据库", "MySQL 8.0", "食物营养成分、饮食记录") <<RELATIONAL_COLOR>>
+    note left of nutritionDB
+        **营养核心表结构：**
+        - foods: 食物基础信息表
+        - food_nutrients: 食物营养成分表
+        - nutrition_standards: 营养摄入标准
+        - diet_records: 用户饮食记录
+        - meal_plans: 膳食计划
+        - recipes: 食谱信息
+        - recipe_ingredients: 食谱配料
+        - nutritional_analysis: 营养分析结果
+        - food_categories: 食物分类
+        - allergens: 过敏原信息
+    end note
+    
+    ContainerDb(consultationDB, "咨询数据库", "PostgreSQL 15", "营养咨询、医疗建议记录") <<RELATIONAL_COLOR>>
+    note right of consultationDB
+        **咨询表结构：**
+        - consultations: 咨询会话记录
+        - consultation_notes: 咨询笔记
+        - consultation_files: 咨询相关文件
+        - nutrition_prescriptions: 营养处方
+        - medical_advice: 医疗建议
+        - follow_up_plans: 跟进计划
+        - consultation_ratings: 咨询评价
+        - professional_profiles: 专业人员档案
+    end note
+    
+    ContainerDb(subscriptionDB, "订阅数据库", "PostgreSQL 15", "会员订阅、支付、权益管理") <<RELATIONAL_COLOR>>
+    note left of subscriptionDB
+        **订阅表结构：**
+        - subscription_plans: 订阅计划
+        - user_subscriptions: 用户订阅
+        - payments: 支付记录
+        - invoices: 发票信息
+        - subscription_benefits: 会员权益
+        - usage_limits: 使用限制
+        - referral_codes: 推荐码
+        - discount_coupons: 优惠券
+    end note
+}
+
+System_Boundary(documentDB, "文档数据库层 (MongoDB)") {
+    ContainerDb(foodDB, "食物数据库", "MongoDB 7.0", "食物详细信息、来源、品牌") <<DOCUMENT_COLOR>>
+    note right of foodDB
+        **食物文档结构：**
+        - food_items: 食物详细信息
+        - food_brands: 食物品牌信息
+        - food_sources: 食物来源追踪
+        - barcode_mapping: 条码映射关系
+        - food_images: 食物图片信息
+        - regional_foods: 地域特色食物
+        - seasonal_foods: 季节性食物
+        - food_preparation: 食物制作方式
+        - nutritional_claims: 营养声明
+    end note
+    
+    ContainerDb(socialDB, "社交数据库", "MongoDB 7.0", "社区互动、分享、评论") <<DOCUMENT_COLOR>>
+    note left of socialDB
+        **社交文档结构：**
+        - user_posts: 用户发布内容
+        - comments: 评论数据
+        - likes_reactions: 点赞和反应
+        - user_follows: 关注关系
+        - groups: 群组信息
+        - challenges: 挑战活动
+        - check_ins: 打卡记录
+        - achievements: 成就记录
+        - social_feeds: 社交动态
+        - community_guidelines: 社区规则
+    end note
+    
+    ContainerDb(recipeDB, "食谱数据库", "MongoDB 7.0", "食谱内容、制作步骤、评价") <<DOCUMENT_COLOR>>
+    note right of recipeDB
+        **食谱文档结构：**
+        - recipes: 食谱详细信息
+        - recipe_steps: 制作步骤
+        - recipe_videos: 制作视频
+        - recipe_reviews: 食谱评价
+        - recipe_variations: 食谱变化
+        - cooking_tips: 烹饪技巧
+        - recipe_collections: 食谱合集
+        - chef_profiles: 厨师档案
+        - recipe_nutrition: 食谱营养分析
+    end note
+    
+    ContainerDb(logDB, "日志数据库", "MongoDB 7.0", "系统日志、用户行为、错误记录") <<DOCUMENT_COLOR>>
+    note left of logDB
+        **日志文档结构：**
+        - access_logs: 访问日志
+        - error_logs: 错误日志
+        - user_behavior_logs: 用户行为日志
+        - api_usage_logs: API使用日志
+        - security_logs: 安全日志
+        - performance_logs: 性能日志
+        - audit_logs: 审计日志
+        - nutrition_calculation_logs: 营养计算日志
+    end note
+}
+
+System_Boundary(timeseriesDB, "时序数据库层") {
+    ContainerDb(healthMetricsDB, "健康指标库", "InfluxDB 2.0", "健康指标时序数据") <<TIMESERIES_COLOR>>
+    note right of healthMetricsDB
+        **健康指标数据类型：**
+        - weight_measurements: 体重测量
+        - blood_pressure: 血压记录
+        - blood_glucose: 血糖记录
+        - heart_rate: 心率数据
+        - body_composition: 身体成分
+        - sleep_data: 睡眠数据
+        - exercise_data: 运动数据
+        - mood_tracking: 心情跟踪
+        - energy_levels: 能量水平
+        - hydration_tracking: 饮水记录
+    end note
+    
+    ContainerDb(dietRecordDB, "饮食记录库", "InfluxDB 2.0", "饮食摄入时序数据") <<TIMESERIES_COLOR>>
+    note left of dietRecordDB
+        **饮食记录数据类型：**
+        - daily_intake: 每日摄入量
+        - meal_timing: 用餐时间
+        - nutrient_intake: 营养素摄入
+        - calorie_tracking: 热量追踪
+        - water_intake: 饮水量
+        - supplement_intake: 补剂摄入
+        - meal_satisfaction: 用餐满意度
+        - hunger_levels: 饥饿感水平
+        - eating_location: 用餐地点
+    end note
+    
+    ContainerDb(analyticsDB, "分析指标库", "InfluxDB 2.0", "系统分析指标数据") <<TIMESERIES_COLOR>>
+    note right of analyticsDB
+        **分析指标数据类型：**
+        - app_usage_metrics: 应用使用指标
+        - feature_usage: 功能使用统计
+        - user_engagement: 用户参与度
+        - api_performance: API性能指标
+        - recommendation_effectiveness: 推荐效果
+        - consultation_metrics: 咨询效果指标
+        - system_performance: 系统性能指标
+        - error_rates: 错误率统计
+    end note
+}
+
+System_Boundary(graphDB, "图数据库层") {
+    ContainerDb(userRelationDB, "用户关系图", "Neo4j 5.0", "用户社交关系网络") <<GRAPH_COLOR>>
+    note right of userRelationDB
+        **用户关系图谱：**
+        - USER节点: 用户基础信息
+        - FOLLOWS关系: 关注关系
+        - FRIEND关系: 好友关系
+        - NUTRITIONIST节点: 营养师节点
+        - CONSULTS关系: 咨询关系
+        - GROUP节点: 群组节点
+        - MEMBER_OF关系: 群组成员
+        - SHARES关系: 分享关系
+        - RECOMMENDS关系: 推荐关系
+    end note
+    
+    ContainerDb(foodRelationDB, "食物关联图", "Neo4j 5.0", "食物关系网络") <<GRAPH_COLOR>>
+    note left of foodRelationDB
+        **食物关系图谱：**
+        - FOOD节点: 食物基础节点
+        - CATEGORY节点: 食物分类节点
+        - NUTRIENT节点: 营养素节点
+        - CONTAINS关系: 包含营养素
+        - BELONGS_TO关系: 属于分类
+        - SUBSTITUTES关系: 替代关系
+        - COMPLEMENTS关系: 互补关系
+        - CONFLICTS关系: 冲突关系
+        - RECIPE节点: 食谱节点
+        - INGREDIENT关系: 配料关系
+    end note
+    
+    ContainerDb(nutritionInteractionDB, "营养相互作用图", "Neo4j 5.0", "营养素相互作用") <<GRAPH_COLOR>>
+    note right of nutritionInteractionDB
+        **营养相互作用图谱：**
+        - NUTRIENT节点: 营养素节点
+        - ENHANCES关系: 促进吸收
+        - INHIBITS关系: 抑制吸收
+        - COMPETES关系: 竞争关系
+        - SYNERGY关系: 协同作用
+        - CONDITION节点: 健康状况节点
+        - AFFECTS关系: 影响关系
+        - MEDICATION节点: 药物节点
+        - INTERACTS关系: 药物相互作用
+    end note
+}
+
+System_Boundary(cacheLayer, "缓存层 (Redis)") {
+    ContainerDb(sessionCache, "会话缓存", "Redis 7.0 Cluster", "用户会话、认证缓存") <<CACHE_COLOR>>
+    note right of sessionCache
+        **会话缓存数据类型：**
+        - user_sessions: 用户会话信息
+        - jwt_tokens: JWT令牌缓存
+        - login_attempts: 登录尝试计数
+        - password_reset_tokens: 密码重置令牌
+        - oauth_states: OAuth状态缓存
+        - api_rate_limits: API限流计数器
+        - device_tokens: 设备推送令牌
+        - temporary_preferences: 临时偏好设置
+    end note
+    
+    ContainerDb(dataCache, "数据缓存", "Redis 7.0 Cluster", "热点数据、计算结果缓存") <<CACHE_COLOR>>
+    note left of dataCache
+        **数据缓存类型：**
+        - popular_foods: 热门食物数据
+        - nutrition_calculations: 营养计算结果
+        - recommendation_results: 推荐结果缓存
+        - user_preferences: 用户偏好缓存
+        - food_search_results: 食物搜索结果
+        - daily_summaries: 每日汇总缓存
+        - trending_recipes: 热门食谱
+        - consultation_schedules: 咨询日程缓存
+        - health_alerts: 健康提醒缓存
+    end note
+    
+    ContainerDb(realtimeCache, "实时缓存", "Redis 7.0 Cluster", "实时数据、消息队列") <<CACHE_COLOR>>
+    note right of realtimeCache
+        **实时数据类型：**
+        - online_users: 在线用户列表
+        - real_time_notifications: 实时通知
+        - chat_messages: 聊天消息缓存
+        - live_consultation_data: 实时咨询数据
+        - device_sync_queue: 设备同步队列
+        - image_processing_queue: 图像处理队列
+        - nutrition_calc_queue: 营养计算队列
+        - reminder_queue: 提醒队列
+    end note
+}
+
+System_Boundary(searchEngine, "搜索引擎层") {
+    ContainerDb(foodSearchDB, "食物搜索", "Elasticsearch 8.0", "食物全文搜索、智能推荐") <<SEARCH_COLOR>>
+    note right of foodSearchDB
+        **食物搜索索引：**
+        - food_index: 食物搜索索引
+        - recipe_index: 食谱搜索索引
+        - nutrient_index: 营养素搜索索引
+        - brand_index: 品牌搜索索引
+        - category_index: 分类搜索索引
+        - auto_complete: 自动完成建议
+        - synonyms: 同义词索引
+        - nutritional_search: 营养搜索索引
+    end note
+    
+    ContainerDb(knowledgeSearchDB, "知识搜索", "Elasticsearch 8.0", "营养知识、健康信息搜索") <<SEARCH_COLOR>>
+    note left of knowledgeSearchDB
+        **知识搜索索引：**
+        - nutrition_articles: 营养文章索引
+        - health_tips: 健康建议索引
+        - faq_index: 常见问题索引
+        - consultation_notes: 咨询记录搜索
+        - research_papers: 研究论文索引
+        - guidelines: 指南文档索引
+        - symptoms_index: 症状索引
+        - treatment_index: 治疗方案索引
+    end note
+}
+
+System_Boundary(queueLayer, "消息队列层") {
+    ContainerDb(eventQueue, "事件队列", "Apache Kafka 3.0", "异步事件处理") <<CACHE_COLOR>>
+    note right of eventQueue
+        **事件主题：**
+        - user-events: 用户行为事件
+        - diet-events: 饮食记录事件
+        - health-events: 健康数据事件
+        - consultation-events: 咨询事件
+        - notification-events: 通知事件
+        - recommendation-events: 推荐事件
+        - system-events: 系统事件
+        - analytics-events: 分析事件
+        - device-events: 设备数据事件
+    end note
+    
+    ContainerDb(taskQueue, "任务队列", "Redis Queue", "后台任务处理") <<CACHE_COLOR>>
+    note left of taskQueue
+        **任务队列类型：**
+        - image_processing: 图像处理任务
+        - nutrition_calculation: 营养计算任务
+        - report_generation: 报告生成任务
+        - data_sync: 数据同步任务
+        - email_sending: 邮件发送任务
+        - push_notifications: 推送通知任务
+        - data_export: 数据导出任务
+        - cleanup_tasks: 清理任务
+    end note
+}
+
+System_Boundary(dataWarehouse, "数据仓库层") {
+    ContainerDb(clickhouseDB, "实时数据仓库", "ClickHouse 23.0", "用户行为分析、营养统计") <<TIMESERIES_COLOR>>
+    note right of clickhouseDB
+        **分析表结构：**
+        - user_behavior_facts: 用户行为事实表
+        - nutrition_intake_facts: 营养摄入事实表
+        - health_metrics_facts: 健康指标事实表
+        - consultation_facts: 咨询事实表
+        - app_usage_facts: 应用使用事实表
+        - recommendation_facts: 推荐效果事实表
+        - time_dimension: 时间维度表
+        - user_dimension: 用户维度表
+        - food_dimension: 食物维度表
+    end note
+    
+    ContainerDb(dataLake, "数据湖", "Hadoop + HDFS", "原始数据存储、机器学习") <<TIMESERIES_COLOR>>
+    note left of dataLake
+        **数据湖存储：**
+        - 用户行为原始数据
+        - 营养摄入历史数据
+        - 健康设备原始数据
+        - 图像识别训练数据
+        - 推荐算法训练数据
+        - 营养研究数据
+        - 医学文献数据
+        - 食物数据库备份
+        - 系统日志归档
+    end note
+}
+
+System_Boundary(fileStorage, "文件存储层") {
+    ContainerDb(objectStorage, "对象存储", "MinIO/AWS S3", "文件和媒体存储") <<DOCUMENT_COLOR>>
+    note right of objectStorage
+        **存储桶分类：**
+        - user-avatars: 用户头像
+        - food-images: 食物图片
+        - recipe-videos: 食谱视频
+        - meal-photos: 用餐照片
+        - consultation-files: 咨询文件
+        - health-reports: 健康报告
+        - app-resources: 应用资源
+        - backup-files: 备份文件
+        - temp-uploads: 临时上传
+    end note
+    
+    ContainerDb(cdnStorage, "CDN存储", "Cloudflare", "静态资源分发") <<DOCUMENT_COLOR>>
+    note left of cdnStorage
+        **CDN资源类型：**
+        - 应用静态资源
+        - 食物标准图片
+        - 营养图表模板
+        - 用户界面素材
+        - 教育视频内容
+        - 食谱制作视频
+        - 健康知识图片
+        - 应用更新包
+    end note
+}
+
+' 数据库间关系连接
+userDB --> socialDB : "用户社交数据同步"
+nutritionDB --> dietRecordDB : "饮食记录写入"
+consultationDB --> userDB : "用户咨询关联"
+foodDB --> nutritionDB : "食物营养数据"
+recipeDB --> nutritionDB : "食谱营养计算"
+
+' 缓存层连接
+userDB --> sessionCache : "会话数据缓存"
+nutritionDB --> dataCache : "营养数据缓存"
+foodDB --> dataCache : "食物数据缓存"
+
+' 搜索引擎连接
+foodDB --> foodSearchDB : "食物索引构建"
+recipeDB --> foodSearchDB : "食谱索引构建"
+consultationDB --> knowledgeSearchDB : "知识索引构建"
+
+' 时序数据库连接
+userDB --> healthMetricsDB : "健康指标记录"
+nutritionDB --> dietRecordDB : "饮食记录写入"
+
+' 图数据库连接
+userDB --> userRelationDB : "用户关系构建"
+foodDB --> foodRelationDB : "食物关系构建"
+nutritionDB --> nutritionInteractionDB : "营养关系构建"
+
+' 数据仓库连接
+healthMetricsDB --> clickhouseDB : "健康数据分析"
+dietRecordDB --> clickhouseDB : "饮食数据分析"
+socialDB --> clickhouseDB : "社交数据分析"
+logDB --> dataLake : "日志数据归档"
+
+' 消息队列连接
+nutritionDB --> eventQueue : "营养事件发布"
+healthMetricsDB --> eventQueue : "健康事件发布"
+consultationDB --> eventQueue : "咨询事件发布"
+
+@enduml 

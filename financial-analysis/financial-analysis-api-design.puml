@@ -1,0 +1,247 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title 金融分析系统 - API设计图
+
+LAYOUT_TOP_DOWN()
+
+package "用户认证API" {
+    [POST /api/auth/login] as login
+    [POST /api/auth/logout] as logout
+    [POST /api/auth/refresh] as refresh
+    [GET /api/auth/profile] as getProfile
+    [PUT /api/auth/profile] as updateProfile
+    [GET /api/auth/permissions] as getPermissions
+    [POST /api/auth/change-password] as changePassword
+}
+
+package "市场行情API" {
+    [GET /api/market/quotes] as getQuotes
+    [GET /api/market/quotes/:symbol] as getQuote
+    [GET /api/market/history/:symbol] as getHistory
+    [GET /api/market/intraday/:symbol] as getIntraday
+    [WS /api/market/stream] as streamQuotes
+    [GET /api/market/search] as searchSymbols
+    [GET /api/market/sectors] as getSectors
+    [GET /api/market/indices] as getIndices
+}
+
+package "投资组合API" {
+    [GET /api/portfolios] as getPortfolios
+    [POST /api/portfolios] as createPortfolio
+    [GET /api/portfolios/:id] as getPortfolio
+    [PUT /api/portfolios/:id] as updatePortfolio
+    [DELETE /api/portfolios/:id] as deletePortfolio
+    [GET /api/portfolios/:id/holdings] as getHoldings
+    [POST /api/portfolios/:id/holdings] as addHolding
+    [PUT /api/portfolios/:id/holdings/:holdingId] as updateHolding
+    [DELETE /api/portfolios/:id/holdings/:holdingId] as removeHolding
+    [GET /api/portfolios/:id/performance] as getPerformance
+    [GET /api/portfolios/:id/risk] as getRisk
+}
+
+package "交易执行API" {
+    [GET /api/trading/accounts] as getAccounts
+    [GET /api/trading/orders] as getOrders
+    [POST /api/trading/orders] as createOrder
+    [PUT /api/trading/orders/:id] as updateOrder
+    [DELETE /api/trading/orders/:id] as cancelOrder
+    [GET /api/trading/trades] as getTrades
+    [GET /api/trading/positions] as getPositions
+    [POST /api/trading/simulate] as simulateOrder
+    [GET /api/trading/strategies] as getStrategies
+}
+
+package "风险管理API" {
+    [GET /api/risk/metrics] as getRiskMetrics
+    [POST /api/risk/calculate] as calculateRisk
+    [GET /api/risk/var] as getVaR
+    [GET /api/risk/stress-test] as getStressTest
+    [POST /api/risk/stress-test] as runStressTest
+    [GET /api/risk/limits] as getRiskLimits
+    [PUT /api/risk/limits] as updateRiskLimits
+    [GET /api/risk/alerts] as getRiskAlerts
+    [POST /api/risk/alerts] as createRiskAlert
+}
+
+package "分析服务API" {
+    [GET /api/analytics/performance] as getAnalytics
+    [POST /api/analytics/attribution] as runAttribution
+    [GET /api/analytics/indicators] as getIndicators
+    [POST /api/analytics/indicators] as calculateIndicators
+    [GET /api/analytics/correlations] as getCorrelations
+    [POST /api/analytics/forecast] as runForecast
+    [GET /api/analytics/scenarios] as getScenarios
+    [POST /api/analytics/optimize] as optimizePortfolio
+}
+
+package "回测服务API" {
+    [GET /api/backtest/configs] as getBacktestConfigs
+    [POST /api/backtest/configs] as createBacktestConfig
+    [POST /api/backtest/run] as runBacktest
+    [GET /api/backtest/results] as getBacktestResults
+    [GET /api/backtest/results/:id] as getBacktestResult
+    [DELETE /api/backtest/results/:id] as deleteBacktestResult
+    [GET /api/backtest/status/:jobId] as getBacktestStatus
+}
+
+package "报告服务API" {
+    [GET /api/reports/templates] as getReportTemplates
+    [POST /api/reports/generate] as generateReport
+    [GET /api/reports] as getReports
+    [GET /api/reports/:id] as getReport
+    [DELETE /api/reports/:id] as deleteReport
+    [GET /api/reports/:id/download] as downloadReport
+    [POST /api/reports/schedule] as scheduleReport
+    [GET /api/reports/scheduled] as getScheduledReports
+}
+
+package "配置管理API" {
+    [GET /api/config/models] as getModels
+    [POST /api/config/models] as createModel
+    [PUT /api/config/models/:id] as updateModel
+    [DELETE /api/config/models/:id] as deleteModel
+    [GET /api/config/parameters] as getParameters
+    [PUT /api/config/parameters] as updateParameters
+    [GET /api/config/benchmarks] as getBenchmarks
+    [POST /api/config/benchmarks] as createBenchmark
+}
+
+package "监控告警API" {
+    [GET /api/monitoring/health] as getHealth
+    [GET /api/monitoring/metrics] as getMetrics
+    [GET /api/monitoring/alerts] as getAlerts
+    [POST /api/monitoring/alerts] as createAlert
+    [PUT /api/monitoring/alerts/:id] as updateAlert
+    [DELETE /api/monitoring/alerts/:id] as deleteAlert
+    [GET /api/monitoring/logs] as getLogs
+}
+
+package "数据管理API" {
+    [GET /api/data/sources] as getDataSources
+    [POST /api/data/import] as importData
+    [GET /api/data/quality] as getDataQuality
+    [POST /api/data/cleanse] as cleanseData
+    [GET /api/data/lineage] as getDataLineage
+    [POST /api/data/export] as exportData
+    [GET /api/data/metadata] as getMetadata
+}
+
+' API调用关系
+login --> getPermissions : "登录后获取权限"
+getPortfolios --> getPortfolio : "选择特定组合"
+getPortfolio --> getHoldings : "查看组合持仓"
+getHoldings --> getQuote : "获取持仓行情"
+createPortfolio --> addHolding : "创建后添加持仓"
+
+calculateRisk --> getRiskMetrics : "计算后获取指标"
+runAttribution --> getAnalytics : "归因后查看分析"
+runBacktest --> getBacktestStatus : "回测后查看状态"
+getBacktestStatus --> getBacktestResult : "完成后获取结果"
+
+generateReport --> getReport : "生成后查看报告"
+createOrder --> getTrades : "下单后查看成交"
+runStressTest --> getRiskAlerts : "压测后查看告警"
+
+' WebSocket实时数据流
+streamQuotes --> getRiskMetrics : "实时行情触发风险计算"
+streamQuotes --> getPortfolio : "实时更新组合价值"
+
+' API响应格式说明
+note right of getQuotes
+  **GET /api/market/quotes**
+  Query参数:
+  - symbols: 股票代码列表
+  - market: 市场代码
+  - fields: 字段列表
+  
+  响应格式:
+  {
+    "code": 200,
+    "data": [
+      {
+        "symbol": "000001.SZ",
+        "name": "平安银行",
+        "price": 12.35,
+        "change": 0.15,
+        "change_pct": 1.23,
+        "volume": 1234567,
+        "timestamp": "2024-01-15T15:00:00Z"
+      }
+    ]
+  }
+end note
+
+note right of createPortfolio
+  **POST /api/portfolios**
+  请求格式:
+  {
+    "name": "稳健成长组合",
+    "type": "equity",
+    "benchmark": "000300.SH",
+    "initial_value": 1000000,
+    "risk_level": "medium",
+    "holdings": [
+      {
+        "symbol": "000001.SZ",
+        "weight": 0.1,
+        "shares": 1000
+      }
+    ]
+  }
+  
+  响应格式:
+  {
+    "code": 200,
+    "data": {
+      "portfolio_id": "portfolio_123",
+      "created_at": "2024-01-15T10:00:00Z"
+    }
+  }
+end note
+
+note right of streamQuotes
+  **WebSocket /api/market/stream**
+  订阅消息:
+  {
+    "action": "subscribe",
+    "symbols": ["000001.SZ", "000002.SZ"],
+    "fields": ["price", "volume"]
+  }
+  
+  实时推送:
+  {
+    "type": "quote",
+    "data": {
+      "symbol": "000001.SZ",
+      "price": 12.36,
+      "volume": 1234567,
+      "timestamp": "2024-01-15T15:00:01Z"
+    }
+  }
+end note
+
+note right of calculateRisk
+  **POST /api/risk/calculate**
+  请求格式:
+  {
+    "portfolio_id": "portfolio_123",
+    "risk_type": "var",
+    "confidence_level": 0.95,
+    "holding_period": 1,
+    "method": "historical_simulation"
+  }
+  
+  响应格式:
+  {
+    "code": 200,
+    "data": {
+      "var_1d": -25000,
+      "var_10d": -79000,
+      "expected_shortfall": -35000,
+      "calculated_at": "2024-01-15T15:00:00Z"
+    }
+  }
+end note
+
+@enduml 

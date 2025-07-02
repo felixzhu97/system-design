@@ -1,0 +1,211 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title 健身运动系统 - 系统架构设计图
+
+LAYOUT_TOP_DOWN()
+
+' 客户端层
+package "客户端层" {
+    package "移动应用" {
+        [健身APP] as FitnessApp <<React Native>>
+        [教练APP] as TrainerApp <<Flutter>>
+        [Apple Watch] as WatchApp <<WatchOS>>
+        [Android Wear] as WearApp <<WearOS>>
+    }
+    package "Web平台" {
+        [健身平台] as WebPlatform <<React>>
+        [教练管理端] as TrainerWeb <<Vue>>
+        [营养师端] as NutritionWeb <<Angular>>
+        [管理后台] as AdminWeb <<React>>
+    }
+    package "智能设备" {
+        [智能跑步机] as Treadmill <<IoT>>
+        [智能哑铃] as SmartDumbbell <<IoT>>
+        [体脂秤] as BodyScale <<IoT>>
+        [心率带] as HeartRateMonitor <<IoT>>
+    }
+}
+
+' 接入层
+package "接入层" {
+    [API网关] as APIGateway <<Kong>>
+    [负载均衡] as LoadBalancer <<Nginx>>
+    [CDN加速] as CDN <<CloudFlare>>
+    [WebSocket网关] as WSGateway <<Socket.io>>
+    [IoT网关] as IoTGateway <<MQTT Broker>>
+}
+
+' BFF层
+package "BFF层" {
+    [移动端BFF] as MobileBFF <<Node.js>>
+    [Web端BFF] as WebBFF <<Next.js>>
+    [教练端BFF] as TrainerBFF <<Nuxt.js>>
+    [设备数据BFF] as DeviceBFF <<Go>>
+}
+
+' 微服务层
+package "核心业务服务" {
+    [用户服务] as UserService <<Java>>
+    [运动服务] as ExerciseService <<Go>>
+    [计划服务] as PlanService <<Python>>
+    [健康服务] as HealthService <<Node.js>>
+    [社交服务] as SocialService <<Java>>
+    [AI教练服务] as AICoachService <<Python>>
+    [营养服务] as NutritionService <<Go>>
+    [设备服务] as DeviceService <<Go>>
+}
+
+package "支撑服务" {
+    [认证服务] as AuthService <<Java>>
+    [通知服务] as NotificationService <<Node.js>>
+    [文件服务] as FileService <<Go>>
+    [支付服务] as PaymentService <<Java>>
+    [搜索服务] as SearchService <<Elasticsearch>>
+    [日志服务] as LogService <<Go>>
+}
+
+package "数据处理服务" {
+    [实时数据处理] as StreamProcessor <<Kafka Streams>>
+    [批量数据处理] as BatchProcessor <<Spark>>
+    [AI模型服务] as ModelService <<TensorFlow Serving>>
+    [数据同步服务] as DataSyncService <<Go>>
+}
+
+' 中间件层
+package "中间件层" {
+    [消息队列] as MessageQueue <<Apache Kafka>>
+    [服务网格] as ServiceMesh <<Istio>>
+    [配置中心] as ConfigCenter <<Nacos>>
+    [服务注册] as ServiceRegistry <<Eureka>>
+    [API网关缓存] as GatewayCache <<Redis>>
+}
+
+' 数据存储层
+package "数据存储层" {
+    package "关系型数据库" {
+        [用户数据库] as UserDB <<PostgreSQL>>
+        [运动数据库] as ExerciseDB <<PostgreSQL>>
+        [健康数据库] as HealthDB <<PostgreSQL>>
+        [订单数据库] as OrderDB <<PostgreSQL>>
+    }
+    package "非关系型数据库" {
+        [运动计划库] as PlanDB <<MongoDB>>
+        [设备数据库] as DeviceDB <<MongoDB>>
+        [内容数据库] as ContentDB <<MongoDB>>
+    }
+    package "时序数据库" {
+        [运动指标库] as MetricsDB <<InfluxDB>>
+        [健康指标库] as VitalsDB <<InfluxDB>>
+    }
+    package "缓存层" {
+        [Redis集群] as RedisCluster
+        [分布式缓存] as DistCache
+    }
+    package "搜索引擎" {
+        [内容搜索] as Elasticsearch
+    }
+    package "分析数据库" {
+        [用户行为分析] as ClickHouse
+        [运动数据分析] as AnalyticsDB
+    }
+    package "文件存储" {
+        [运动视频] as VideoStorage <<MinIO>>
+        [图片资源] as ImageStorage <<OSS>>
+    }
+}
+
+' 基础设施层
+package "基础设施层" {
+    package "容器编排" {
+        [Kubernetes集群] as K8s
+        [Helm Charts] as Helm
+        [Docker仓库] as DockerRegistry
+    }
+    package "监控告警" {
+        [监控系统] as Prometheus
+        [日志系统] as ELK
+        [APM系统] as APM
+        [告警系统] as AlertManager
+    }
+    package "CI/CD" {
+        [代码仓库] as GitLab
+        [构建流水线] as Jenkins
+        [制品仓库] as Harbor
+    }
+}
+
+' 外部服务集成
+package "外部服务" {
+    [健康数据平台] as HealthPlatform
+    [智能穿戴API] as WearableAPI
+    [运动设备API] as EquipmentAPI
+    [营养数据库] as NutritionAPI
+    [地图定位服务] as MapService
+    [音乐服务] as MusicAPI
+    [支付网关] as PaymentGateway
+    [推送服务] as PushService
+}
+
+' 连接关系
+' 客户端到接入层
+FitnessApp --> LoadBalancer
+TrainerApp --> LoadBalancer
+WebPlatform --> CDN
+WatchApp --> IoTGateway
+SmartDumbbell --> IoTGateway
+
+' 接入层到BFF层
+LoadBalancer --> APIGateway
+APIGateway --> MobileBFF
+APIGateway --> WebBFF
+APIGateway --> TrainerBFF
+IoTGateway --> DeviceBFF
+
+' BFF层到微服务
+MobileBFF --> UserService
+MobileBFF --> ExerciseService
+WebBFF --> PlanService
+WebBFF --> HealthService
+TrainerBFF --> AICoachService
+DeviceBFF --> DeviceService
+
+' 微服务间通信
+UserService --> AuthService
+ExerciseService --> AICoachService
+PlanService --> NutritionService
+HealthService --> DeviceService
+SocialService --> NotificationService
+
+' 微服务到中间件
+ExerciseService --> MessageQueue
+HealthService --> ServiceRegistry
+AICoachService --> ConfigCenter
+
+' 数据处理流
+DeviceService --> StreamProcessor
+StreamProcessor --> MetricsDB
+BatchProcessor --> AnalyticsDB
+
+' 微服务到数据存储
+UserService --> UserDB
+ExerciseService --> ExerciseDB
+PlanService --> PlanDB
+HealthService --> HealthDB
+DeviceService --> DeviceDB
+AICoachService --> RedisCluster
+SearchService --> Elasticsearch
+ModelService --> AnalyticsDB
+FileService --> VideoStorage
+
+' 外部服务集成
+HealthService --> HealthPlatform
+DeviceService --> WearableAPI
+ExerciseService --> EquipmentAPI
+NutritionService --> NutritionAPI
+PlanService --> MapService
+SocialService --> MusicAPI
+PaymentService --> PaymentGateway
+NotificationService --> PushService
+
+@enduml 

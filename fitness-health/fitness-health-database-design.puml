@@ -1,0 +1,174 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title 健身运动系统 - 数据库设计图
+
+LAYOUT_TOP_DOWN()
+
+package "用户管理数据 (PostgreSQL)" {
+    [用户表 users] as users
+    [用户档案表 user_profiles] as profiles  
+    [用户设置表 user_settings] as settings
+    [认证信息表 user_auths] as auths
+}
+
+package "运动数据 (PostgreSQL)" {
+    [运动记录表 exercise_records] as records
+    [训练计划表 workout_plans] as plans
+    [运动类型表 exercise_types] as types
+    [动作库表 exercise_movements] as movements
+    [训练模板表 workout_templates] as templates
+}
+
+package "健康数据 (PostgreSQL)" {
+    [身体指标表 body_metrics] as metrics
+    [健康目标表 health_goals] as goals
+    [营养记录表 nutrition_logs] as nutrition
+    [睡眠记录表 sleep_logs] as sleep
+}
+
+package "社交数据 (PostgreSQL)" {
+    [好友关系表 friendships] as friends
+    [运动分享表 exercise_shares] as shares
+    [评论表 comments] as comments
+    [点赞表 likes] as likes
+    [挑战表 challenges] as challenges
+}
+
+package "设备数据 (MongoDB)" {
+    [设备信息集合 devices] as devices
+    [传感器数据集合 sensor_data] as sensor
+    [设备配置集合 device_configs] as configs
+    [设备状态集合 device_status] as status
+}
+
+package "训练内容 (MongoDB)" {
+    [视频教程集合 video_tutorials] as videos
+    [训练课程集合 training_courses] as courses
+    [教练信息集合 trainers] as trainers
+    [训练标签集合 training_tags] as tags
+}
+
+package "实时指标 (InfluxDB)" {
+    [心率数据 heart_rate] as heartRate
+    [步数数据 steps] as steps
+    [卡路里数据 calories] as calories
+    [运动强度数据 intensity] as intensity
+    [GPS轨迹数据 gps_tracks] as gps
+}
+
+package "缓存数据 (Redis)" {
+    [用户会话 user_sessions] as sessions
+    [实时排行榜 leaderboards] as leaderboards
+    [热门训练 popular_workouts] as popular
+    [推荐缓存 recommendations] as recommend
+    [设备状态缓存 device_cache] as deviceCache
+}
+
+package "分析数据 (ClickHouse)" {
+    [用户行为分析 user_behaviors] as behaviors
+    [运动效果分析 workout_analytics] as analytics
+    [健康趋势分析 health_trends] as trends
+    [设备使用统计 device_usage] as usage
+}
+
+package "文件存储 (MinIO)" {
+    [运动视频存储 workout_videos] as videoStorage
+    [用户头像存储 user_avatars] as avatars
+    [训练图片存储 training_images] as images
+    [设备固件存储 device_firmware] as firmware
+}
+
+' 关系定义
+users ||--o{ profiles : "1对1"
+users ||--o{ settings : "1对1"  
+users ||--o{ auths : "1对多"
+users ||--o{ records : "1对多"
+users ||--o{ plans : "1对多"
+users ||--o{ metrics : "1对多"
+users ||--o{ goals : "1对多"
+users ||--o{ friends : "多对多"
+users ||--o{ shares : "1对多"
+users ||--o{ devices : "1对多"
+
+plans ||--o{ records : "1对多"
+types ||--o{ movements : "1对多"
+movements ||--o{ records : "多对多"
+templates ||--o{ plans : "1对多"
+
+records ||--o{ shares : "1对1"
+shares ||--o{ comments : "1对多"
+shares ||--o{ likes : "1对多"
+
+devices ||--o{ sensor : "1对多"
+devices ||--o{ configs : "1对1"
+devices ||--o{ status : "1对1"
+
+' 数据流关系
+records --> analytics : "运动数据分析"
+metrics --> trends : "健康趋势分析"
+sensor --> behaviors : "行为数据分析"
+devices --> usage : "使用统计分析"
+
+records --> sessions : "会话更新"
+shares --> leaderboards : "排行榜更新"
+plans --> popular : "热门缓存"
+analytics --> recommend : "推荐缓存"
+
+videos --> videoStorage : "视频文件存储"
+profiles --> avatars : "头像文件存储"
+courses --> images : "图片文件存储"
+devices --> firmware : "固件文件存储"
+
+' 实时数据流
+sensor --> heartRate : "心率实时写入"
+sensor --> steps : "步数实时写入"
+records --> calories : "卡路里计算写入"
+records --> intensity : "强度数据写入"
+records --> gps : "GPS轨迹写入"
+
+' 表结构说明
+note right of users
+  **用户表结构:**
+  - id (主键)
+  - username (用户名)
+  - email (邮箱)
+  - phone (手机号)
+  - created_at (创建时间)
+  - updated_at (更新时间)
+end note
+
+note right of records
+  **运动记录表结构:**
+  - id (主键)
+  - user_id (用户ID)
+  - plan_id (计划ID)
+  - exercise_type (运动类型)
+  - duration (运动时长)
+  - calories_burned (消耗卡路里)
+  - distance (运动距离)
+  - start_time (开始时间)
+  - end_time (结束时间)
+  - performance_score (表现评分)
+end note
+
+note right of sensor
+  **传感器数据结构:**
+  - device_id (设备ID)
+  - sensor_type (传感器类型)
+  - timestamp (时间戳)
+  - value (数值)
+  - unit (单位)
+  - accuracy (精度)
+end note
+
+note right of heartRate
+  **心率时序数据:**
+  - time (时间戳)
+  - user_id (用户ID)
+  - heart_rate (心率值)
+  - exercise_id (运动ID)
+  - zone (心率区间)
+end note
+
+@enduml 

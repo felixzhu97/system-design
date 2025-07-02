@@ -1,0 +1,71 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title 办公协作系统 - 文档服务组件图 (Level 3)
+
+LAYOUT_WITH_LEGEND()
+
+Container_Boundary(documentService, "文档服务") {
+    Component(docController, "文档控制器", "Express Router", "处理文档相关API请求")
+    Component(docManager, "文档管理器", "Node.js Service", "文档核心业务逻辑")
+    Component(versionController, "版本控制器", "Node.js Service", "文档版本管理")
+    Component(collaborationEngine, "协作引擎", "Socket.io Service", "实时协作处理")
+    Component(permissionManager, "权限管理器", "Node.js Service", "文档权限控制")
+    Component(searchEngine, "搜索引擎", "Elasticsearch Client", "文档内容搜索")
+    Component(docRepository, "文档仓储", "Mongoose ODM", "文档数据访问")
+    Component(versionRepository, "版本仓储", "Mongoose ODM", "版本数据访问")
+    Component(cacheManager, "缓存管理器", "Redis Client", "文档缓存管理")
+    Component(fileProcessor, "文件处理器", "Multer/Sharp", "文件上传处理")
+    Component(previewGenerator, "预览生成器", "LibreOffice API", "文档预览生成")
+    Component(diffCalculator, "差异计算器", "DiffMatchPatch", "文档差异计算")
+    Component(notificationSender, "通知发送器", "EventEmitter", "协作通知发送")
+}
+
+ContainerDb_Ext(documentDb, "文档数据库", "MongoDB", "文档内容存储")
+ContainerDb_Ext(redisCache, "Redis缓存", "Redis", "文档缓存存储")
+ContainerDb_Ext(elasticsearch, "搜索引擎", "Elasticsearch", "全文搜索索引")
+ContainerDb_Ext(fileStorage, "文件存储", "MinIO", "文档文件存储")
+Container_Ext(userService, "用户服务", "Java", "用户信息服务")
+Container_Ext(notificationService, "通知服务", "Java", "消息通知服务")
+Container_Ext(auditService, "审计服务", "Java", "操作审计服务")
+
+' API层调用
+Rel(docController, docManager, "调用", "业务处理")
+Rel(docController, versionController, "调用", "版本管理")
+Rel(docController, collaborationEngine, "调用", "协作处理")
+Rel(docController, permissionManager, "调用", "权限验证")
+
+' 业务层调用
+Rel(docManager, docRepository, "使用", "数据访问")
+Rel(docManager, cacheManager, "使用", "缓存管理")
+Rel(docManager, searchEngine, "使用", "搜索索引")
+Rel(docManager, fileProcessor, "调用", "文件处理")
+Rel(docManager, previewGenerator, "调用", "预览生成")
+
+Rel(versionController, versionRepository, "使用", "版本存储")
+Rel(versionController, diffCalculator, "调用", "差异计算")
+Rel(versionController, cacheManager, "使用", "版本缓存")
+
+Rel(collaborationEngine, docRepository, "使用", "实时读写")
+Rel(collaborationEngine, diffCalculator, "调用", "冲突检测")
+Rel(collaborationEngine, notificationSender, "调用", "协作通知")
+
+Rel(permissionManager, userService, "调用", "用户验证")
+Rel(permissionManager, cacheManager, "使用", "权限缓存")
+
+Rel(notificationSender, notificationService, "调用", "消息发送")
+
+' 数据层调用
+Rel(docRepository, documentDb, "读写", "MongoDB协议")
+Rel(versionRepository, documentDb, "读写", "MongoDB协议")
+Rel(cacheManager, redisCache, "读写", "Redis协议")
+Rel(searchEngine, elasticsearch, "索引", "REST API")
+Rel(fileProcessor, fileStorage, "存储", "S3协议")
+Rel(previewGenerator, fileStorage, "读取", "S3协议")
+
+' 审计调用
+Rel(docManager, auditService, "记录", "操作审计")
+Rel(versionController, auditService, "记录", "版本审计")
+Rel(collaborationEngine, auditService, "记录", "协作审计")
+
+@enduml 
